@@ -3,8 +3,8 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-08
-**当前阶段**：S0 通电验证全部完成（后端 fully 启动）+ 双端 QA 测试通过（166/166）→ S1 T1.1 待启动
-**当前会话焦点**：双端全链路测试（冒烟/功能/契约/性能/压力）→ 166 用例全通过，Web+App 双端均可正常运行
+**当前阶段**：S0 通电验证全部完成（后端 fully 启动）+ 双端 QA 测试通过（166/166）+ Expo 真机 404 修复 + Harness 信噪比优化（P0+P1）→ S1 T1.1 待启动
+**当前会话焦点**：Harness engineering 审查与优化（.cursor/.agents 信噪比）
 
 ---
 
@@ -24,6 +24,13 @@
   - ✅ S0-4 `pnpm db:init`：50 表 + 5 扩展（vector/pg_trgm/citext/uuid-ossp/btree_gin）+ 3 分区子表 + 种子数据。修复 4 个 schema/seed bug（ratings 分区/citext opclass/date_trunc IMMUTABLE/seed uuid）。
   - ✅ S0-5 `pnpm gen:api`：generated.ts 生成
   - ✅ S0-6 后端 fully 启动：`/health` 200 + Swagger `/docs` 可访问。修复 DI 报错（`JwtAuthGuard` 缺 `JwtService`）—— 把 `AuthModule` 的 `JwtModule.registerAsync` 加 `global: true`，14 个 controller 共享全局 `JwtService`。
+- **双端 QA 测试套件**：166 用例全通过（100%）。backend e2e 114 + 根 api.smoke 13 + web Playwright 23 + mobile jest 16。详见 `docs/qa/test-report.md`。修复 6 项阻断（perf 冷启动预热 / react-test-renderer@19 对齐 / expo-router mock / React 19 废弃 testRenderer 改用直接调用+元素树遍历 / MemeCard 命名导入 / 删除 .mjs 脚本）。`expo export --platform ios` bundle 编译成功（1443 模块/4.02MB）。
+- **Expo 真机 404 修复**：iOS Expo Go 连接 dev server 时显示 "+not-found / 404 页面不存在"。根因：`app/` 和 `app/(tabs)/` 缺少 `index.tsx` 入口，Expo Router 启动路由 `/` 找不到匹配回退到 `+not-found`。修复：新增 `app/(tabs)/index.tsx` 用 `Redirect` 跳转 `/(tabs)/feed`，并在 `(tabs)/_layout.tsx` 用 `href: null` 隐藏 index tab。
+- **Harness 信噪比优化（P0+P1）**：审查 `.cursor` + `.agents` 后执行：
+  - P0 skill 瘦身：`.agents/skills/` 340 → 107（236 个无关 skill 归档到 `.cursor/ecc-reference/skills/`，只留项目技术栈 + agent harness 相关）
+  - P1 补核心栈 skill：新建 `drizzle-orm` / `bullmq-queue` / `supabase-auth` 3 个项目专属 SKILL.md（固化 Drizzle 查询约定/pgvector HNSW、BullMQ 异步 AI 任务契约/降级链/配额、Supabase 手机号 OTP+自建 JWT+Realtime 私聊+自建群聊 WS）
+  - P1 修过时引用：重写 `ecc-common-agents.mdc`（`~/.claude/agents/` → Cursor Task `subagent_type` + `.agents/skills/ecc-agent-*` 技能映射表）
+  - 更新 `.cursor/ecc-reference/README.md` Skills 章节（启用数/归档数/启用步骤）
 
 ### 进行中 🔄
 
@@ -92,3 +99,6 @@
 | 2026-07-07 15:34 | T1.0b mobile nativewind 修复 | 诊断 pnpm dev:mobile 报 `Cannot find module 'nativewind/metro'`：脚手架 metro/babel/tailwind/nativewind-env 全是 v4 写法但装的是 v2.0.11（无 metro/types/preset 子路径）→ 升 nativewind ^2.0.11 → ^4.2.6；expo start 成功（Metro 就绪 :8081 可 Expo Go 扫码）；mobile typecheck 0 errors；lint --fix 清 47 个 className 顺序 warning → 0 errors 0 warnings |
 | 2026-07-07 15:58 | S0-6 后端 DI 修复 | `pnpm dev:backend` 报 `JwtAuthGuard` 无法解析 `JwtService`（UserModule 等 14 个 controller 用了 JwtAuthGuard 但各自模块未 import JwtModule）→ 在 `auth.module.ts` 的 `JwtModule.registerAsync` 加 `global: true`，JwtService 全局可注入；后端 fully 启动，`/health` 200，Swagger `/docs` 可访问；S0 通电验证全部完成 |
 | 2026-07-08 00:30 | 双端 QA 测试 | 以双端测试工程师视角跑全链路测试：backend e2e 114/114、根 api.smoke 13/13、web Playwright 23/23、mobile jest 16/16 = **166/166 全通过（100%）**；修复 6 项阻断（perf 冷启动预热、react-test-renderer@19 对齐、expo-router mock、React 19 废弃 testRenderer 改用直接调用+元素树遍历、MemeCard 命名导入、删除 .mjs 脚本）；expo export iOS bundle 编译成功（1443 模块/4.02MB）；报告 `docs/qa/test-report.md`；更新 test-plan §3 指向框架测试 |
+| 2026-07-08 00:50 | ECC 配置全量迁移到 Cursor | 按用户"全量+项目级"要求迁移 [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) 到本项目 Cursor 原生目录（不污染全局）：**规则** 121 条 → `.cursor/rules/ecc-*.mdc`（含优先级规则 `ecc-00-precedence.mdc` 声明项目自有规则优先；语言专属规则用 globs 限定激活）；**技能** 277 个 → `.agents/skills/`（与原有 56 个无同名冲突，合计 340，.agents/ 已被 .gitignore 故不入库但 Cursor 从磁盘加载）；**MCP** 6 个无 key 服务启用到 `.cursor/mcp.json`（context7/sequential-thinking/playwright/chrome-devtools/cloudflare-docs/parallel-search），完整 30+ 模板归档到 `.cursor/ecc-reference/mcp-servers.full.json`；**Hooks** 3 个安全钩子启用到 `.cursor/hooks.json`（提交前密钥检测/敏感文件读取警告/阻断 git --no-verify），适配器+脚本树放 `.cursor/hooks/`+`.cursor/scripts/`（已补丁路径指向 .cursor/），完整模板归档；**Agents** 7 核心（planner/architect/code-reviewer/security-reviewer/build-error-resolver/refactor-cleaner/doc-updater）转技能 `ecc-agent-*`，其余 60 归档到 `.cursor/ecc-reference/agents/`；**commands(93)/contexts(3)** 归档不激活（Cursor 无等价物）；参考文档 `.cursor/ecc-reference/README.md`。未触碰任何项目源码/PRD/技术设计/DDL/openapi。⚠️ 风险：340 技能会增大每会话可用技能清单注入（~10-15k tokens），如需瘦身可按 README 的 .cursorignore 片段排除未用语言技能 |
+| 2026-07-08 01:04 | 修复 Expo 真机 404 | iOS Expo Go 连 dev server 显示 "+not-found / 404 页面不存在"。根因：`app/` 和 `app/(tabs)/` 缺 `index.tsx`，启动路由 `/` 无匹配回退 `+not-found`。修复：新增 `app/(tabs)/index.tsx`（`<Redirect href="/(tabs)/feed" />`）+ `(tabs)/_layout.tsx` 加 `<Tabs.Screen name="index" options={{ href: null }} />` 隐藏空 tab。typecheck/lint 0 新增错误。 |
+| 2026-07-08 01:10 | Harness 信噪比优化 P0+P1 | 审查 `.cursor`+`.agents` 后优化：**P0** skill 瘦身 340→107（236 无关归档到 `.cursor/ecc-reference/skills/`，只留项目栈+harness）；**P1** 新建 3 个项目专属 skill（`drizzle-orm`/`bullmq-queue`/`supabase-auth`，固化查询约定+异步AI契约+混合认证）；**P1** 重写 `ecc-common-agents.mdc`（`~/.claude/agents/`→Cursor `subagent_type`+`ecc-agent-*` 技能映射）；更新 `ecc-reference/README.md`。无源码/DDL/API 改动。 |

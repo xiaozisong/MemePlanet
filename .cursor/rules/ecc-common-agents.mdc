@@ -1,0 +1,76 @@
+---
+description: "Agent orchestration: available agents (Cursor Task subagent_type + project skills), parallel execution, multi-perspective analysis"
+alwaysApply: true
+---
+# Agent Orchestration
+
+> 适配说明：Cursor 子代理走**固定 `subagent_type`**（generalPurpose/explore/shell/cursor-guide/ci-investigator/bugbot/security-review/best-of-n-runner），不直接加载 `~/.claude/agents/*.md`。下表把 ECC 原 agent 映射到 Cursor 可用机制：核心 7 个已转为项目技能 `.agents/skills/ecc-agent-*/SKILL.md`，按需读取其指引即可。
+
+## Available Agents
+
+### Cursor Task 内置 subagent_type（直接调用）
+
+| subagent_type | 用途 | 何时用 |
+|---|---|---|
+| `generalPurpose` | 通用多步任务、复杂代码搜索 | 搜索关键词/文件、不确定能否快速命中时 |
+| `explore` | 只读代码库探索（quick/medium/very thorough） | 找文件、查关键词、回答"代码库如何工作" |
+| `shell` | 命令执行专家 | git 操作、终端任务 |
+| `cursor-guide` | Cursor 产品文档问答 | "在 Cursor 里如何…"类问题 |
+| `ci-investigator` | 诊断单个失败 CI 检查 | PR 检查失败根因 |
+| `bugbot` | Bugbot 风格本地代码评审（用户显式要求时） | 本地改动评审 |
+| `security-review` | 安全评审本地改动（用户显式要求时） | 安全敏感改动 |
+| `best-of-n-runner` | 隔离 worktree 并行 N 次尝试 | best-of-N 实验 |
+
+### 项目转技能的 ECC agent（按需读取 SKILL.md）
+
+位于 `.agents/skills/ecc-agent-*/SKILL.md`，需要其指引时用 Read 读取：
+
+| 技能 | 用途 | 何时用 |
+|---|---|---|
+| `ecc-agent-planner` | 实现规划 | 复杂功能、重构 |
+| `ecc-agent-architect` | 系统设计 | 架构决策 |
+| `ecc-agent-code-reviewer` | 代码评审 | 写完代码后 |
+| `ecc-agent-security-reviewer` | 安全分析 | 提交前、安全敏感代码 |
+| `ecc-agent-build-error-resolver` | 修构建错误 | 构建失败时 |
+| `ecc-agent-refactor-cleaner` | 死代码清理 | 代码维护 |
+| `ecc-agent-doc-updater` | 文档更新 | 更新文档时 |
+
+> 注：ECC 原表的 `tdd-guide` / `e2e-runner` 在 Cursor 侧用 `tdd-workflow` / `e2e-testing` / `webapp-testing` 技能 + `generalPurpose`/`explore` subagent 覆盖；ECC 原 60+ 个 agent .md 归档在 `.cursor/ecc-reference/agents/` 仅供查阅，不自动加载。
+
+## Immediate Agent Usage
+
+No user prompt needed:
+1. Complex feature requests - 读取 `ecc-agent-planner` 技能 + 必要时 `SwitchMode` 到 Plan
+2. Code just written/modified - 读取 `ecc-agent-code-reviewer` 技能 + 跑 `pnpm typecheck`/`pnpm lint`
+3. Bug fix or new feature - 跟随 `tdd-workflow` 技能（RED→GREEN→REFACTOR）
+4. Architectural decision - 读取 `ecc-agent-architect` 技能 + 查 `docs/context/decisions.md`（先与用户讨论，决策变更走 30 协议）
+
+## Parallel Task Execution
+
+ALWAYS use parallel Task execution for independent operations（一条消息发多个 Task 工具调用）:
+
+```markdown
+# GOOD: 并行执行
+一条消息里启动 3 个 Task：
+1. Task 1 (explore): auth 模块安全审计
+2. Task 2 (explore): cache 系统性能评审
+3. Task 3 (generalPurpose): utilities 类型检查
+
+# BAD: 不必要的串行
+先 agent 1，再 agent 2，再 agent 3
+```
+
+## Multi-Perspective Analysis
+
+For complex problems, use split role sub-agents (并行启动多个 Task):
+- Factual reviewer
+- Senior engineer
+- Security expert
+- Consistency reviewer
+- Redundancy checker
+
+## 与项目上下文协议的关系
+
+- 决策类任务 → 必须先查 `docs/context/decisions.md`，变更需用户确认（30 协议）
+- 规划类任务 → 产出到 `docs/context/execution-plan.md`，用 5 态状态字段（⏳/🔄/✅/❌/⏭️）
+- 完成任务 → 更新 `activeContext.md` + `progress.md`（Definition of Done）
