@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.next
+.expo
+coverage
+.turbo
+pnpm-lock.yaml
+docs
+packages/shared/src/api-client/generated.ts
+apps/mobile/ios
+apps/mobile/android

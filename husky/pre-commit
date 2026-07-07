@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpm exec lint-staged
+
+# 上下文一致性软检查（仅警告，不阻断提交；严重错误会提示但允许提交）
+echo "🔍 运行上下文一致性检查..."
+bash scripts/check-context-sync.sh || echo "⚠️  上下文检查有警告/错误，建议处理后再提交（本次不强制阻断）"

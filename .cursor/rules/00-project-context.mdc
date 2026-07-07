@@ -1,0 +1,103 @@
+---
+description: 梗星球项目总上下文 —— 项目简介、技术栈、文档索引、当前阶段、核心约定。每次会话自动加载。
+globs:
+alwaysApply: true
+---
+
+# 梗星球 MemeChatAI · 项目总上下文
+
+> 本规则文件由 Cursor 在每次 Agent 会话自动加载，用于保持跨会话上下文一致性。详细文档见 `docs/`，活状态见 `docs/context/activeContext.md`。
+
+## 一句话定位
+
+面向年轻人的"梗"文化聊天平台 + 内容社区：AI 造梗 → 梗卡评分（神梗/烂梗）→ 梗大军 → 军团 PK 的内容生产与对抗闭环。
+
+## 核心技术栈（已定稿，勿擅自变更）
+
+| 层 | 选型 |
+|---|---|
+| Monorepo | pnpm workspaces（`packages/shared` + `apps/{backend,mobile,web}`） |
+| App | React Native + Expo（Expo Router，5 Tab） |
+| Web / 后台 | Next.js 14 App Router + Tailwind + shadcn/ui |
+| 后端 | NestJS 10+（TS，模块化单体，15 Module） |
+| ORM | Drizzle ORM + PostgreSQL 16 + pgvector |
+| 缓存/队列 | Redis + BullMQ |
+| AI 编排 | Vercel AI SDK + 自建 adapter 抽象层 |
+| LLM | DeepSeek V3 主 + GLM-4 Flash 兜底 |
+| 图像 | SiliconFlow FLUX + 通义万相兜底 |
+| 视频 | **字节豆包 Seedance 2.0 mini（MVP 主力）** + 标准版（Pro 高端）+ SiliconFlow/即梦 fallback |
+| TTS | 火山引擎 |
+| 认证 | Supabase Auth + 自建 JWT |
+| IM | 私聊 Supabase Realtime + 军团群聊自建 NestJS WebSocket |
+| 存储 | Cloudflare R2（S3 兼容，出流量免费） |
+| 部署 | 国内轻量云 2C2G + Cloudflare 边缘 + Docker |
+| 监控 | Sentry + PostHog + UptimeRobot |
+| CI/CD | GitHub Actions |
+
+## 文档索引（docs/）
+
+| 文档 | 用途 | 何时读 |
+|---|---|---|
+| `docs/PRD.md` | 产品需求（10 模块/MVP 范围/路线图） | 改产品逻辑、加功能前 |
+| `docs/TechnicalDesign.md` | 技术架构（选型/成本/ER/时序/Agent） | 改架构、加模块、做技术决策前 |
+| `docs/M1-Sprint-Plan.md` | M1 任务清单（75 任务/甘特/砍项建议） | 规划/执行 M1 编码任务时 |
+| `docs/Database-DDL.md` | 数据库设计说明 | 改表结构、写 SQL 前 |
+| `docs/db/schema.sql` | 50 表 DDL（可直接执行） | 改表、写迁移时 |
+| `docs/db/seed.sql` | 种子数据 | 跑测试、demo 数据时 |
+| `docs/API-Spec.md` | REST API 详设（34 接口） | 写/改接口前 |
+| `docs/openapi.yaml` | OpenAPI 3.1.0（可导入 Swagger） | 生成 TS 类型、Mock 时 |
+| `docs/context/activeContext.md` | 当前活状态（在做啥/下一步/待办） | 每次开新会话先读 |
+| `docs/context/decisions.md` | 决策日志（12 项已定稿） | 想质疑或回顾某决策时 |
+| `docs/context/progress.md` | 进度追踪 + 文件地图 | 看进度、找文件时 |
+
+## 上下文维护协议（自动加载）
+
+`.cursor/rules/30-context-maintenance.mdc` 定义了**何时更新哪个上下文文件**：
+- 完成任务 → 更新 `activeContext.md` + `progress.md`
+- 决策变更 → 先与用户确认，再改 `decisions.md` + 对应设计文档
+- 表结构变更 → 同步改 4 处（schema.sql + Database-DDL.md + Drizzle + openapi.yaml）
+- 接口变更 → 同步改 2 处（openapi.yaml + API-Spec.md）+ 跑 `pnpm gen:api`
+- 会话结束前 → 强制更新 `activeContext.md`（"最后更新"时间戳 + 会话历史 + 下一步）
+- **Definition of Done**：未更新上下文文档的任务不算完成
+
+手动强制同步：对话里输入 `/update-context`（斜杠命令，Agent 按协议全量同步）或说"更新上下文/同步 context"。本地校验：`pnpm check:context`。PR 自动校验：`.github/workflows/context-sync.yml`。
+
+## 当前阶段
+
+```
+设计+决策 ✅ → M1 工程化准备 ✅ → 脚手架通电调试 ⬅ 当前 → M1 编码 S2-S4 ⏳ → M3 上线 gate
+```
+
+**M1 范围**：手机号登录 → 文本造梗（含 Pro Agent）→ 梗卡发布 → 机审 → feed → 评分评论 → RN 真机可演示。
+**关键风险**：M1 P0 = 74 人日，个人月产能 ~22 人日，需按 `M1-Sprint-Plan.md §7.3` 砍到 ~25 人日。
+
+## 核心约定（勿违反）
+
+1. **全栈 TypeScript**：App/Web/Backend/Shared 同语言，业务类型放 `packages/shared`，三端复用。
+2. **个人开发者成本最优**：每个技术选型必须有成本估算，能免费就免费，不能免费用最便宜方案。
+3. **数据库命名 snake_case**，表名复数，主键 uuid（`gen_random_uuid()`），时间戳 `timestamptz`。SQL 是字段命名的权威来源。
+4. **API 统一响应**：`{code, data, message}`，分页 `{list, total, page, page_size, has_more}`，错误码区间 1xxx-9xxx（见 `API-Spec.md §2.5`）。
+5. **AI 异步任务统一模式**：POST 提交 → 202 + job_id → 轮询 GET status 或 WebSocket 推送。状态机 `queued→running→succeeded/failed/timeout`。
+6. **AI 成本硬熔断**：Agent 日预算 ¥80、视频日预算 ¥200，超限自动降级。配额：免费视频 1次/周·Pro 3次/日；Pro Agent 10次/日。
+7. **AIGC 合规**：所有 AI 生成内容带"AI 生成"标识；M3 上线前必须完成生成式 AI 服务备案（上线 gate）。
+8. **Pro 会员承载 AI 成本**：Pro ¥18/月 + 视频按次包，MVP 即开微信支付。
+9. **不擅自改已定稿决策**：12 项核心决策见 `docs/context/decisions.md`，要改必须先与用户讨论。
+
+## 代码风格
+
+- TS strict 模式，`noUncheckedIndexedAccess: true`。
+- ESLint + Prettier + Husky pre-commit + commitlint（conventional commits）。
+- 命名：类 PascalCase，函数/变量 camelCase，常量 UPPER_SNAKE，DB 字段 snake_case。
+- 注释只写"非显而易见的意图/取舍/约束"，不写"这行做什么"的废话注释。
+- 中文回复用户（用户规则）。
+
+## 快速启动命令
+
+```bash
+pnpm install && cp .env.example .env  # 改 DATABASE_URL host 为 localhost
+pnpm db:init                          # 起 PG+Redis 容器 + 跑 schema/seed
+pnpm gen:api                          # 从 openapi.yaml 生成 TS 类型
+pnpm dev:backend                      # 后端 :3000（Swagger /docs, 健康检查 /health）
+pnpm dev:web                          # Web :3001
+pnpm dev:mobile                       # Expo :8081
+```

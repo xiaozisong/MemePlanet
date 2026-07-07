@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.next
+.expo
+coverage
+.turbo
+pnpm-lock.yaml
+pnpm-workspace.yaml
+docs/**
+.github/**
+husky/**
+*.md
+!README.md

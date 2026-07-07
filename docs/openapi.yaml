@@ -1,0 +1,2855 @@
+openapi: 3.1.0
+info:
+  title: 梗星球 MemeChatAI REST API
+  version: 1.0.0
+  description: |
+    梗星球（MemeChatAI）REST API 接口契约，OpenAPI 3.1.0 机器可读版本。
+
+    - 字段命名严格对齐 `db/schema.sql` v1.0.0（snake_case）。
+    - 统一响应包装 `{code, data, message, request_id}`。
+    - 鉴权：JWT Bearer（除标注为无需鉴权的接口）。
+    - 异步 AI 任务：202 + job_id + 轮询/WebSocket。
+    - M1 P0 接口对应 M1 Sprint（2026-07-08 ~ 2026-08-04）必交付范围；
+      M2 接口对应第 2 个月交付；v1.5+ 接口在表格中列出但本文件给最小 schema。
+    - 人类可读详设见 `docs/API-Spec.md`。
+  contact:
+    name: 后端架构 / API 设计
+  license:
+    name: Proprietary
+  x-memestar-doc-version: v1.0.0
+  x-memestar-related:
+    prd: docs/PRD.md v1.1.0
+    tech: docs/TechnicalDesign.md v1.1.0
+    m1-plan: docs/M1-Sprint-Plan.md v1.0.0
+    schema: docs/db/schema.sql v1.0.0
+
+servers:
+  - url: https://api.dev.memestar.cn/api/v1
+    description: dev 本地开发联调
+  - url: https://api.staging.memestar.cn/api/v1
+    description: staging 灰度前联调 + 邀请制灰度
+  - url: https://api.memestar.cn/api/v1
+    description: prod 生产（ICP 备案后启用）
+
+tags:
+  - name: Auth
+    description: 认证 / 授权
+  - name: User
+    description: 用户资料 / 等级 / 兴趣 / 勋章
+  - name: Creation
+    description: 造梗工坊（单次 prompt / Pro Agent）
+  - name: Video
+    description: AI 视频生成
+  - name: Meme
+    description: 梗卡内容流
+  - name: Rating
+    description: 评分与评论
+  - name: Legion
+    description: 梗大军
+  - name: PK
+    description: PK 大战
+  - name: Chat
+    description: 聊天 / IM
+  - name: Recommend
+    description: 推荐 feed
+  - name: Notification
+    description: 通知
+  - name: Pro
+    description: Pro 会员 / 订单 / 支付
+  - name: Admin
+    description: 运营后台
+  - name: AIOrch
+    description: AI 编排（内部 + 管理员）
+  - name: Analytics
+    description: 埋点上报
+  - name: Common
+    description: 公共接口
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ============================================================
+  # Auth
+  # ============================================================
+  /auth/sms/send:
+    post:
+      tags: [Auth]
+      summary: 发送手机号验证码
+      description: |
+        向指定手机号发送 6 位数字验证码，60s 内不可重发。
+        验证码存 Redis（key=`otp:{phone}`，TTL=5min），登录时校验。
+      operationId: sendSmsCode
+      security: []
+      x-memestar-version: M1
+      x-memestar-rate-limit: 1/60s/phone, 10/day/phone, 5/15min/IP
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+            examples:
+              default:
+                value: { phone: "+8613800000000", scene: "login" }
+      responses:
+        '200':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SmsSendResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /auth/sms/login:
+    post:
+      tags: [Auth]
+      summary: 手机号验证码登录（新用户自动注册）
+      operationId: smsLogin
+      security: []
+      x-memestar-version: M1
+      x-memestar-rate-limit: 5/15min/IP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsLoginRequest'
+            examples:
+              default:
+                value:
+                  phone: "+8613800000000"
+                  code: "123456"
+                  device_id: "canvas-hash-xxx"
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthToken'
+        '400':
+          description: 验证码错误或过期
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                wrong_code:
+                  value: { code: 1013, data: null, message: "验证码错误", request_id: "..." }
+                expired:
+                  value: { code: 1014, data: null, message: "验证码已过期", request_id: "..." }
+        '403':
+          description: 用户被封禁
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                banned:
+                  value: { code: 2004, data: null, message: "用户已被封禁", request_id: "..." }
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 刷新 access_token
+      description: 用 refresh_token 换新的 access_token + refresh_token，旧 refresh 即时失效。
+      operationId: refreshToken
+      security: []
+      x-memestar-version: M1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthToken'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: 退出登录
+      description: 撤销当前 refresh_token 并将 access_token 加入 Redis 黑名单。
+      operationId: logout
+      x-memestar-version: M1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: 退出成功（无返回体）
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: 当前登录态校验
+      operationId: getAuthMe
+      x-memestar-version: M1
+      responses:
+        '200':
+          description: 登录态有效
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/UserSummary'
+                          expires_at:
+                            type: string
+                            format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================
+  # User
+  # ============================================================
+  /users/me:
+    get:
+      tags: [User]
+      summary: 我的资料
+      description: 返回当前登录用户的完整资料，含 level/meme_power/energy_balance 等。
+      operationId: getMe
+      x-memestar-version: M1
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [User]
+      summary: 编辑资料
+      description: |
+        部分字段可选更新。昵称 30 天改 1 次（由 user_profiles.nickname_changed_at 控制）。
+        昵称走敏感词 DFA + 阿里云审核。
+      operationId: updateMe
+      x-memestar-version: M1
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: 昵称违规或未到改昵称时间
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{id}:
+    get:
+      tags: [User]
+      summary: 用户主页
+      operationId: getUserHome
+      x-memestar-version: M1
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserHome'
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                not_found:
+                  value: { code: 2001, data: null, message: "用户不存在", request_id: "..." }
+
+  # ============================================================
+  # Creation
+  # ============================================================
+  /creations/single:
+    post:
+      tags: [Creation]
+      summary: 单次 prompt 造梗（文本/图片）
+      description: |
+        同步返回 3 候选（文本）或 1 候选（图片）。
+        - 超时 35s
+        - 能量扣减：文本 1，图片 5（乐观锁）
+        - 24h prompt+style 去重，命中返回原 creation_id（code=6005）
+        - prompt 命中黑名单返回 code=6002
+      operationId: createSingle
+      x-memestar-version: M1
+      x-memestar-rate-limit: 60/hour/user
+      x-memestar-timeout: 35s
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreationSingleRequest'
+            examples:
+              text:
+                value:
+                  mode: "text"
+                  prompt: "如果古代人有微信"
+                  style: "abstract"
+                  template_id: "uuid-template-1"
+              image:
+                value:
+                  mode: "image"
+                  prompt: "李白在朋友圈晒月亮"
+                  style: "anime"
+      responses:
+        '200':
+          description: 生成成功（同步）
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CreationResult'
+        '400':
+          description: 参数错误 / 能量不足 / prompt 重复
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                energy_low:
+                  value: { code: 6001, data: null, message: "能量不足", request_id: "..." }
+                prompt_blacklist:
+                  value: { code: 6002, data: null, message: "prompt 命中黑名单", request_id: "..." }
+                prompt_dup:
+                  value: { code: 6005, data: { creation_id: "uuid-old", cached: true }, message: "24h 内已生成", request_id: "..." }
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /creations/agent:
+    post:
+      tags: [Creation]
+      summary: Pro Agent 造梗提交（异步）
+      description: |
+        Pro 会员专属。3 步精简版：RAG 检索神梗 → 生成 3 候选 → 自评选优。
+        - 异步任务，返回 202 + job_id
+        - 限流 10 次/日/Pro 用户（硬配额）+ 日预算 ¥80 熔断
+        - 失败/超时自动降级为单次 prompt 模式，退回 Agent 能量
+      operationId: submitAgent
+      x-memestar-version: M2
+      x-memestar-rate-limit: 10/day/pro_user
+      x-memestar-async: true
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentSubmitRequest'
+      responses:
+        '202':
+          description: 已接受
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentJobAck'
+        '403':
+          description: 非 Pro 用户
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                not_pro:
+                  value: { code: 1003, data: null, message: "Pro 会员专属功能", request_id: "..." }
+        '429':
+          description: 配额耗尽 / 熔断
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                quota_out:
+                  value: { code: 6004, data: null, message: "Agent 日配额耗尽", request_id: "..." }
+                budget_burn:
+                  value: { code: 6003, data: null, message: "日预算熔断，已自动降级", request_id: "..." }
+
+  /agent-jobs/{id}:
+    get:
+      tags: [Creation]
+      summary: Agent 任务状态查询（轮询）
+      description: |
+        客户端每 2s 轮询一次，最长 60s 后切 WebSocket 推送。
+        status 状态机：queued → running → succeeded / failed / timeout。
+        fallback_used=true 表示已降级为单次 prompt 模式。
+      operationId: getAgentJob
+      x-memestar-version: M2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 任务状态
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AgentJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /prompt-templates:
+    get:
+      tags: [Creation]
+      summary: Prompt 模板库
+      description: 官方 5 个 + UGC（v1.5+）。支持 mode/style/is_official 过滤。
+      operationId: listPromptTemplates
+      x-memestar-version: M1
+      parameters:
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum: [text, image, script]
+        - name: style
+          in: query
+          schema:
+            type: string
+        - name: is_official
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/PromptTemplate'
+
+  # ============================================================
+  # Video
+  # ============================================================
+  /videos:
+    post:
+      tags: [Video]
+      summary: 视频生成提交（异步）
+      description: |
+        异步任务，返回 202 + job_id。
+        - 配额：免费 1 次/周（需任务解锁）/ Pro 3 次/日
+        - 模型：豆包 Seedance 2.0 mini（主力）/ 标准版（Pro 高端）/ SiliconFlow fallback / 图片+TTS 兜底
+        - 时长：5 / 10 / 15 秒
+        - 日预算熔断：超 ¥100 自动降级到图片+TTS，超 ¥200 暂停真视频
+      operationId: submitVideo
+      x-memestar-version: M2
+      x-memestar-rate-limit: free 1/week, pro 3/day
+      x-memestar-async: true
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoSubmitRequest'
+      responses:
+        '202':
+          description: 已接受
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VideoJobAck'
+        '400':
+          description: 能量不足
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                energy_low:
+                  value: { code: 6001, data: null, message: "能量不足", request_id: "..." }
+        '429':
+          description: 配额耗尽 / 熔断
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                quota_out:
+                  value: { code: 3102, data: null, message: "视频配额耗尽", request_id: "..." }
+
+  /videos/{id}/status:
+    get:
+      tags: [Video]
+      summary: 视频生成状态查询
+      description: |
+        客户端每 3s 轮询，最长 180s 后切 Webhook 推送。
+        status：generating / reviewing / published / rejected / timeout。
+        is_fallback=true 表示已降级为图片+TTS+Ken Burns 兜底。
+      operationId: getVideoStatus
+      x-memestar-version: M2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 状态
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VideoStatus'
+
+  # ============================================================
+  # Meme
+  # ============================================================
+  /memes:
+    post:
+      tags: [Meme]
+      summary: 发布梗卡
+      description: |
+        从造梗会话/视频包装为梗卡，入审核队列。
+        - status 流转：draft → pending_audit → published / manual_review / rejected / offline
+        - AI 生成内容强制带 watermarked=true 与 is_ai_generated=true（合规）
+      operationId: publishMeme
+      x-memestar-version: M1
+      x-memestar-rate-limit: 30/hour/user
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemePublishRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MemeCard'
+        '409':
+          description: creation 已发布过
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                already:
+                  value: { code: 3002, data: null, message: "creation 已发布过", request_id: "..." }
+
+  /memes/feed:
+    get:
+      tags: [Meme, Recommend]
+      summary: 推荐 feed（热度召回 v1）
+      description: |
+        游客可读。M1 走热度召回 v1（Redis ZSet + 新品 Top 混合 + 多样性重排）；
+        M2 升级为双塔召回 + LightGBM 排序（走 /recommend/feed）。
+        游标分页。
+      operationId: getMemeFeed
+      security: []
+      x-memestar-version: M1
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+        - name: feed_type
+          in: query
+          schema:
+            type: string
+            enum: [hot, new, personalized, god]
+            default: hot
+        - name: legion_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: tag
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/MemeCardSummary'
+                              next_cursor:
+                                type: string
+                                nullable: true
+
+  /memes/{id}:
+    get:
+      tags: [Meme]
+      summary: 梗卡详情
+      description: 游客可读 published 状态梗卡。返回完整字段含作者摘要、视频、我的评分/收藏。
+      operationId: getMeme
+      security: []
+      x-memestar-version: M1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MemeDetail'
+        '404':
+          description: 梗卡不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                not_found:
+                  value: { code: 3001, data: null, message: "梗卡不存在", request_id: "..." }
+    delete:
+      tags: [Meme]
+      summary: 删除梗卡（软删除）
+      description: 作者或管理员可删，软删除（deleted_at）。
+      operationId: deleteMeme
+      x-memestar-version: M1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 删除成功（无返回体）
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # Rating
+  # ============================================================
+  /memes/{id}/ratings:
+    post:
+      tags: [Rating]
+      summary: 评分（1-5 星）
+      description: |
+        一人一梗一评，24h 内可改分（走 PATCH /ratings/{id}）。
+        - 评分权重：评审官 1.5x、新用户 0.5x、同军团 0.8x、普通 1.0x
+        - 达 200 评分触发神/烂梗判定 job
+        - 青少年模式不可评分
+      operationId: createRating
+      x-memestar-version: M1
+      x-memestar-rate-limit: 60/min/user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCreateRequest'
+      responses:
+        '200':
+          description: 评分成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RatingResult'
+        '409':
+          description: 已评分过
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                already:
+                  value: { code: 4001, data: null, message: "已评分过", request_id: "..." }
+    get:
+      tags: [Rating]
+      summary: 评分列表
+      operationId: listRatings
+      x-memestar-version: M1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "-created_at"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/Rating'
+
+  /memes/{id}/comments:
+    post:
+      tags: [Rating]
+      summary: 评论 / 回复
+      description: 走敏感词 DFA + 可疑走阿里云。parent_id 楼中楼（≤3 层）。
+      operationId: createComment
+      x-memestar-version: M1
+      x-memestar-rate-limit: 30/min/user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+      responses:
+        '201':
+          description: 评论成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Comment'
+        '400':
+          description: 敏感词命中 / 楼层过深
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                sensitive:
+                  value: { code: 4003, data: null, message: "评论含敏感词", request_id: "..." }
+                too_deep:
+                  value: { code: 4004, data: null, message: "评论楼层过深", request_id: "..." }
+    get:
+      tags: [Rating]
+      summary: 评论列表
+      operationId: listComments
+      x-memestar-version: M1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "-like_count,-created_at"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/Comment'
+
+  # ============================================================
+  # Legion
+  # ============================================================
+  /legions:
+    post:
+      tags: [Legion]
+      summary: 创建军团
+      description: |
+        - 创建者需 Lv.3+
+        - 名称唯一（citext 不区分大小写），3-12 字，禁止敏感词与冒充官方
+        - 创建时人审（status=active 但创建后排队人审，违规可 retro-ban）
+        - 创建者自动成为 leader 并占用一个军团名额（≤3）
+      operationId: createLegion
+      x-memestar-version: M2
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LegionCreateRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Legion'
+        '403':
+          description: 等级不足 / 军团数上限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                max_joined:
+                  value: { code: 5003, data: null, message: "已加入军团上限", request_id: "..." }
+        '409':
+          description: 名称重复
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                dup:
+                  value: { code: 5001, data: null, message: "军团名重复", request_id: "..." }
+    get:
+      tags: [Legion]
+      summary: 军团广场列表
+      operationId: listLegions
+      x-memestar-version: M2
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: filter
+          in: query
+          schema:
+            type: string
+          description: "如 theme_tags:contains:抽象"
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "-activity_score"
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/Legion'
+
+  /legions/{id}:
+    get:
+      tags: [Legion]
+      summary: 军团详情
+      description: 含基础字段 + 成员榜 Top10 + 今日战报 + PK 战绩摘要。
+      operationId: getLegion
+      x-memestar-version: M2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LegionDetail'
+
+  /legions/{id}/join:
+    post:
+      tags: [Legion]
+      summary: 加入军团
+      description: |
+        - join_mode=public 立即加入
+        - join_mode=approval 创建 join_request，等待队长审批（status=pending）
+        - 用户已加入军团数 ≤ 3
+      operationId: joinLegion
+      x-memestar-version: M2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 100
+      responses:
+        '200':
+          description: 加入成功 / 待审批
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LegionJoinResult'
+        '403':
+          description: 已加入军团上限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                max_joined:
+                  value: { code: 5003, data: null, message: "已加入军团上限", request_id: "..." }
+
+  # ============================================================
+  # PK
+  # ============================================================
+  /pk/matches:
+    get:
+      tags: [PK]
+      summary: PK 大厅列表
+      operationId: listPkMatches
+      x-memestar-version: M2
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [idle, challenged, accepted, preparing, battling, judging, settled, archived]
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [creation, vote, hotness]
+        - name: is_official
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/PkMatch'
+    post:
+      tags: [PK]
+      summary: 创建 PK（约战/官方）
+      description: |
+        - 鉴权：leader 或运营
+        - legion_b 可为空（系统匹配，进入 challenged）
+        - 跨段位保护：低 2 段以上不可挑战
+        - 单军团同时最多 1 场进行中 PK
+      operationId: createPkMatch
+      x-memestar-version: M2
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PkCreateRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PkMatch'
+        '409':
+          description: PK 状态非法 / 跨段位
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                status:
+                  value: { code: 5101, data: null, message: "已有进行中 PK", request_id: "..." }
+
+  /pk/matches/{id}/vote:
+    post:
+      tags: [PK]
+      summary: 投票
+      description: |
+        - 3 票/日/PK/用户
+        - Redis 实时计数 + DB 异步落盘
+        - 实时比分通过 Redis pubsub → WebSocket 推送
+      operationId: votePk
+      x-memestar-version: M2
+      x-memestar-rate-limit: 3/day/pk/user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [legion_id]
+              properties:
+                legion_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: 投票成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PkVoteResult'
+        '429':
+          description: 票数耗尽
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                out:
+                  value: { code: 5102, data: null, message: "今日投票次数已用尽", request_id: "..." }
+        '409':
+          description: PK 状态非 battling
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                status:
+                  value: { code: 5101, data: null, message: "PK 不在 battling 状态", request_id: "..." }
+
+  # ============================================================
+  # Chat
+  # ============================================================
+  /chat/rooms/{id}/messages:
+    get:
+      tags: [Chat]
+      summary: 消息列表
+      description: 游标分页，30 天前数据归档不可查。
+      operationId: listMessages
+      x-memestar-version: M2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/Message'
+                              next_cursor:
+                                type: string
+                                nullable: true
+    post:
+      tags: [Chat]
+      summary: 发送消息
+      description: |
+        - msg_type: text/image/meme/voice/system
+        - extra 支持 ref_message_id（引用）、mentions（@）、ref_meme_id（梗卡分享）
+        - 新成员前 24h 限 3 条/min
+      operationId: sendMessage
+      x-memestar-version: M2
+      x-memestar-rate-limit: new 3/min, old 30/min
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageSendRequest'
+      responses:
+        '201':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Message'
+
+  # ============================================================
+  # Recommend
+  # ============================================================
+  /recommend/feed:
+    get:
+      tags: [Recommend]
+      summary: 个性化 feed
+      description: |
+        鉴权为是（登录后）。M2 起走双塔召回 + LightGBM 排序。
+        /memes/feed 的个性化版本。
+      operationId: getRecommendFeed
+      x-memestar-version: M2
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/MemeCardSummary'
+                              next_cursor:
+                                type: string
+                                nullable: true
+
+  # ============================================================
+  # Pro / Order
+  # ============================================================
+  /pro/subscriptions:
+    post:
+      tags: [Pro]
+      summary: 订阅 Pro
+      description: 创建订单 + 拉起微信支付。月费 ¥18（1800 分）。
+      operationId: subscribePro
+      x-memestar-version: M2
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProSubscribeRequest'
+      responses:
+        '201':
+          description: 订单创建成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/OrderCreated'
+        '409':
+          description: 已订阅
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                already:
+                  value: { code: 7003, data: null, message: "Pro 已订阅且未过期", request_id: "..." }
+
+  /orders/wx-pay/callback:
+    post:
+      tags: [Pro]
+      summary: 微信支付回调
+      description: |
+        微信支付 v3 规范回调。
+        - 路径前缀 /api/internal/webhooks/orders/wx-pay（不走红框包装）
+        - 验签：平台证书 RSA-SHA256 + timestamp 防重放
+        - 解密：AES-256-GCM resource.ciphertext
+        - 业务：更新 orders/payments/pro_subscriptions/video_packages
+        - 响应 200 + {"code":"SUCCESS","message":"OK"}（微信规范）
+        - 幂等：(order_id, channel_txn_id) 唯一约束防重
+        - 重试：微信按 15s/15s/30s/3m/10m/20m/30m/30m/1h/2h/6h/6h 重试 12 次
+      operationId: wxPayCallback
+      security: []
+      x-memestar-version: M2
+      x-memestar-auth: HMAC-SHA256 + RSA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: 微信支付 v3 回调格式（含 resource.ciphertext 加密体）
+      responses:
+        '200':
+          description: 处理成功（微信规范）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: SUCCESS
+                  message:
+                    type: string
+                    example: OK
+
+  # ============================================================
+  # Notification
+  # ============================================================
+  /notifications:
+    get:
+      tags: [Notification]
+      summary: 通知列表
+      operationId: listNotifications
+      x-memestar-version: M1
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [rating, god_meme, pk, reward, violation, pro, agent_done, comment, follow]
+        - name: is_read
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Paged'
+                          - type: object
+                            properties:
+                              list:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/Notification'
+
+  # ============================================================
+  # Common
+  # ============================================================
+  /health:
+    get:
+      tags: [Common]
+      summary: 健康检查
+      operationId: health
+      security: []
+      x-memestar-version: M1
+      responses:
+        '200':
+          description: 健康
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                  uptime:
+                    type: integer
+
+components:
+  # ============================================================
+  # Security
+  # ============================================================
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer Token。Header 格式：`Authorization: Bearer <access_token>`。
+        access_token 有效期 2h，refresh_token 30d。
+
+  # ============================================================
+  # Parameters
+  # ============================================================
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    PageSize:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 50
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+      description: 写操作幂等键，24h 内相同 key 返回首次响应。
+    UserIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  # ============================================================
+  # Responses
+  # ============================================================
+  responses:
+    Unauthorized:
+      description: 未认证 / token 失效
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            invalid:
+              value: { code: 1001, data: null, message: "token 无效", request_id: "..." }
+            expired:
+              value: { code: 1002, data: null, message: "token 过期", request_id: "..." }
+    Forbidden:
+      description: 无权限
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            forbidden:
+              value: { code: 1003, data: null, message: "无权限", request_id: "..." }
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            not_found:
+              value: { code: 3001, data: null, message: "资源不存在", request_id: "..." }
+    BadRequest:
+      description: 参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            bad:
+              value: { code: 9004, data: null, message: "参数校验失败", request_id: "..." }
+    RateLimited:
+      description: 限流
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            rate:
+              value: { code: 9003, data: null, message: "请求过于频繁", request_id: "..." }
+
+  # ============================================================
+  # Schemas
+  # ============================================================
+  schemas:
+    # ---------- 统一包装 ----------
+    ApiResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+          description: 0=成功，非 0=业务错误码
+          example: 0
+        data:
+          description: 业务数据，错误时为 null
+        message:
+          type: string
+          example: ok
+        request_id:
+          type: string
+          description: 32 位 ULID，链路追踪
+          example: 01HQK8X9J2RT7N1V4Y6Z3B5M6P
+
+    Paged:
+      type: object
+      required: [list, total, page, page_size, has_more]
+      properties:
+        list:
+          type: array
+          items: {}
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        has_more:
+          type: boolean
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        request_id:
+          type: string
+
+    # ---------- Auth ----------
+    SmsSendRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          description: E.164 格式，含国家码
+          example: "+8613800000000"
+        scene:
+          type: string
+          enum: [login, bind, reset]
+          default: login
+
+    SmsSendResponse:
+      type: object
+      properties:
+        sent:
+          type: boolean
+          example: true
+        expire_in:
+          type: integer
+          description: 验证码有效期（秒）
+          example: 300
+        next_send_in:
+          type: integer
+          description: 下次可发送间隔（秒）
+          example: 60
+
+    SmsLoginRequest:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+        device_id:
+          type: string
+          description: 设备指纹，用于风控
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+          format: uuid
+
+    AuthToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+          format: uuid
+        expires_in:
+          type: integer
+          example: 7200
+        token_type:
+          type: string
+          example: Bearer
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    # ---------- User ----------
+    UserSummary:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+        level:
+          type: integer
+        meme_power:
+          type: integer
+        is_pro:
+          type: boolean
+        is_new_user:
+          type: boolean
+        need_interest_tags:
+          type: boolean
+
+    UserProfile:
+      type: object
+      description: 当前用户资料，对齐 users + user_profiles 表
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          enum: [male, female, other, unknown]
+        birthday:
+          type: string
+          format: date
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        level:
+          type: integer
+        meme_power:
+          type: integer
+          description: 梗力值
+        defense_value:
+          type: integer
+          description: 破防值
+        energy_balance:
+          type: integer
+          description: 梗能量余额
+        legion_count:
+          type: integer
+          description: 已加入军团数（≤3）
+        is_pro:
+          type: boolean
+        interest_tags:
+          type: array
+          items:
+            type: string
+        badges:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, banned, teen_mode, deleted]
+        last_login_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        nickname:
+          type: string
+          maxLength: 32
+        avatar_url:
+          type: string
+          maxLength: 512
+        gender:
+          type: string
+          enum: [male, female, other, unknown]
+        bio:
+          type: string
+          maxLength: 140
+        birthday:
+          type: string
+          format: date
+
+    UserHome:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        nickname:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        level:
+          type: integer
+        meme_power:
+          type: integer
+        defense_value:
+          type: integer
+        is_pro:
+          type: boolean
+        is_following:
+          type: boolean
+        legion_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        stats:
+          type: object
+          properties:
+            meme_count:
+              type: integer
+            god_meme_count:
+              type: integer
+            avg_score:
+              type: number
+              format: float
+            pk_wins:
+              type: integer
+        badges:
+          type: array
+          items:
+            type: string
+
+    # ---------- Creation ----------
+    CreationSingleRequest:
+      type: object
+      required: [mode, prompt]
+      properties:
+        mode:
+          type: string
+          enum: [text, image]
+        prompt:
+          type: string
+          maxLength: 500
+        style:
+          type: string
+          description: text=abstract/yin_yang/pun/twist/meme_caption；image=realistic/anime/expression_pack/oil_paint
+        template_id:
+          type: string
+          format: uuid
+          nullable: true
+        regenerate_from:
+          type: string
+          format: uuid
+          nullable: true
+          description: 基于 creation_id 重新生成
+
+    CreationResult:
+      type: object
+      properties:
+        creation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, ready, published, failed]
+        mode:
+          type: string
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreationCandidate'
+        energy_cost:
+          type: integer
+        model_version:
+          type: string
+          example: deepseek-v3
+        cached:
+          type: boolean
+          description: 是否命中 Redis prompt 缓存
+
+    CreationCandidate:
+      type: object
+      properties:
+        candidate_id:
+          type: string
+          format: uuid
+        idx:
+          type: integer
+        content:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        self_score:
+          type: number
+          format: float
+          nullable: true
+          description: Agent 自评分（仅 agent 模式）
+        self_reason:
+          type: string
+          nullable: true
+
+    AgentSubmitRequest:
+      type: object
+      required: [mode, prompt]
+      properties:
+        mode:
+          type: string
+          enum: [text]
+        prompt:
+          type: string
+          maxLength: 500
+        style:
+          type: string
+        template_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    AgentJobAck:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        creation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued]
+        poll_url:
+          type: string
+          example: /api/v1/agent-jobs/uuid-job-1
+        estimated_seconds:
+          type: integer
+          example: 25
+
+    AgentJob:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        creation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued, running, succeeded, failed, timeout]
+        steps_total:
+          type: integer
+          example: 3
+        steps_done:
+          type: integer
+        fallback_used:
+          type: boolean
+          description: true=已降级为单次 prompt 模式
+        cost_estimate:
+          type: number
+          format: float
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreationCandidate'
+        chosen_idx:
+          type: integer
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    PromptTemplate:
+      type: object
+      description: 对齐 prompt_templates 表
+      properties:
+        template_id:
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [text, image, script]
+        name:
+          type: string
+        style:
+          type: string
+        is_official:
+          type: boolean
+        use_count:
+          type: integer
+        variables:
+          type: array
+          items:
+            type: string
+        example_output:
+          type: object
+
+    # ---------- Video ----------
+    VideoSubmitRequest:
+      type: object
+      required: [source_type, duration]
+      properties:
+        creation_id:
+          type: string
+          format: uuid
+          nullable: true
+        source_type:
+          type: string
+          enum: [text_to_video, image_to_video, fallback_image_tts]
+        duration:
+          type: integer
+          enum: [5, 10, 15]
+        voice_id:
+          type: string
+          enum: [funny, northeast, queen, robot]
+        subtitle_text:
+          type: string
+
+    VideoJobAck:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        video_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [queued]
+        poll_url:
+          type: string
+        is_fallback:
+          type: boolean
+        estimated_seconds:
+          type: integer
+
+    VideoStatus:
+      type: object
+      description: 对齐 meme_videos 表
+      properties:
+        video_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [generating, reviewing, published, rejected, timeout]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        is_fallback:
+          type: boolean
+        model_version:
+          type: string
+          example: seedance-2-mini
+        file_url:
+          type: string
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+        duration:
+          type: integer
+        voice_id:
+          type: string
+          nullable: true
+        subtitle_text:
+          type: string
+          nullable: true
+        ai_cost:
+          type: number
+          format: float
+        error:
+          type: string
+          nullable: true
+
+    # ---------- Meme ----------
+    MemePublishRequest:
+      type: object
+      required: [type, title, is_ai_generated]
+      properties:
+        creation_id:
+          type: string
+          format: uuid
+          nullable: true
+        video_id:
+          type: string
+          format: uuid
+          nullable: true
+        type:
+          type: string
+          enum: [text, image, video]
+        title:
+          type: string
+          maxLength: 140
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 5
+        legion_id:
+          type: string
+          format: uuid
+          nullable: true
+        cover_url:
+          type: string
+          nullable: true
+        is_ai_generated:
+          type: boolean
+
+    MemeCard:
+      type: object
+      description: 对齐 meme_cards 表
+      properties:
+        meme_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        creation_id:
+          type: string
+          format: uuid
+          nullable: true
+        type:
+          type: string
+          enum: [text, image, video]
+        cover_url:
+          type: string
+          nullable: true
+        title:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        legion_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [draft, pending_audit, published, manual_review, rejected, offline]
+        god_trash_status:
+          type: string
+          enum: [pending, god, trash]
+        is_ai_generated:
+          type: boolean
+        watermarked:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    MemeCardSummary:
+      type: object
+      description: feed 列表项
+      properties:
+        meme_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        author_nickname:
+          type: string
+        author_avatar_url:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [text, image, video]
+        cover_url:
+          type: string
+          nullable: true
+        title:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        legion_id:
+          type: string
+          format: uuid
+          nullable: true
+        score_avg:
+          type: number
+          format: float
+        score_count:
+          type: integer
+        comment_count:
+          type: integer
+        share_count:
+          type: integer
+        hot_score:
+          type: number
+          format: float
+        god_trash_status:
+          type: string
+          enum: [pending, god, trash]
+        is_ai_generated:
+          type: boolean
+        published_at:
+          type: string
+          format: date-time
+
+    MemeDetail:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MemeCardSummary'
+        - type: object
+          properties:
+            author:
+              $ref: '#/components/schemas/UserSummary'
+            legion:
+              type: object
+              nullable: true
+              properties:
+                legion_id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                avatar_url:
+                  type: string
+            favorite_count:
+              type: integer
+            view_count:
+              type: integer
+            completion_rate:
+              type: number
+              format: float
+            video:
+              $ref: '#/components/schemas/VideoStatus'
+              nullable: true
+            my_rating:
+              type: integer
+              nullable: true
+              description: 我的评分（1-5），未评分为 null
+            my_favorite:
+              type: boolean
+            published_at:
+              type: string
+              format: date-time
+              nullable: true
+            created_at:
+              type: string
+              format: date-time
+
+    # ---------- Rating / Comment ----------
+    RatingCreateRequest:
+      type: object
+      required: [star]
+      properties:
+        star:
+          type: integer
+          minimum: 1
+          maximum: 5
+        dimensions:
+          type: object
+          properties:
+            laugh:
+              type: integer
+              minimum: 1
+              maximum: 5
+            creative:
+              type: integer
+              minimum: 1
+              maximum: 5
+            spread:
+              type: integer
+              minimum: 1
+              maximum: 5
+        is_god_trash_vote:
+          type: boolean
+          description: 二元判定（神/烂梗）
+        comment:
+          type: string
+          maxLength: 200
+
+    Rating:
+      type: object
+      description: 对齐 ratings 表
+      properties:
+        score_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        user_nickname:
+          type: string
+        user_avatar_url:
+          type: string
+          nullable: true
+        star:
+          type: integer
+        is_judge:
+          type: boolean
+        is_god_trash_vote:
+          type: boolean
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    RatingResult:
+      type: object
+      properties:
+        score_id:
+          type: string
+          format: uuid
+        meme_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        star:
+          type: integer
+        is_judge:
+          type: boolean
+        weight:
+          type: number
+          format: float
+        meme_score_avg:
+          type: number
+          format: float
+        meme_score_count:
+          type: integer
+        god_trash_triggered:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    CommentCreateRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          maxLength: 500
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        ref_meme_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: 引用梗卡（造梗接龙）
+        is_meme_card:
+          type: boolean
+          description: 评论本身是否为新梗卡
+
+    Comment:
+      type: object
+      description: 对齐 comments 表
+      properties:
+        comment_id:
+          type: string
+          format: uuid
+        meme_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        content:
+          type: string
+        like_count:
+          type: integer
+        is_god_comment:
+          type: boolean
+        status:
+          type: string
+          enum: [published, hidden, deleted]
+        created_at:
+          type: string
+          format: date-time
+
+    # ---------- Legion ----------
+    LegionCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 12
+        slogan:
+          type: string
+          maxLength: 140
+        avatar_url:
+          type: string
+        theme_tags:
+          type: array
+          items:
+            type: string
+        join_mode:
+          type: string
+          enum: [public, approval]
+          default: approval
+
+    Legion:
+      type: object
+      description: 对齐 legions 表
+      properties:
+        legion_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slogan:
+          type: string
+          nullable: true
+        avatar_url:
+          type: string
+          nullable: true
+        theme_tags:
+          type: array
+          items:
+            type: string
+        leader_id:
+          type: string
+          format: uuid
+        level:
+          type: integer
+        activity_score:
+          type: integer
+        member_count:
+          type: integer
+        member_cap:
+          type: integer
+        join_mode:
+          type: string
+          enum: [public, approval]
+        badges:
+          type: array
+          items:
+            type: string
+        pk_wins:
+          type: integer
+        pk_losses:
+          type: integer
+        status:
+          type: string
+          enum: [active, frozen, dissolved]
+        created_at:
+          type: string
+          format: date-time
+
+    LegionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Legion'
+        - type: object
+          properties:
+            top_members:
+              type: array
+              items:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  nickname:
+                    type: string
+                  avatar_url:
+                    type: string
+                  contribution:
+                    type: integer
+                  role:
+                    type: string
+            today_report:
+              type: object
+              properties:
+                new_members:
+                  type: integer
+                new_memes:
+                  type: integer
+                pk_progress:
+                  type: string
+
+    LegionJoinResult:
+      type: object
+      properties:
+        membership_id:
+          type: string
+          format: uuid
+        legion_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [leader, vice_leader, member]
+        contribution:
+          type: integer
+        joined_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [joined, pending]
+
+    # ---------- PK ----------
+    PkCreateRequest:
+      type: object
+      required: [type, legion_a, theme, start_at, end_at]
+      properties:
+        type:
+          type: string
+          enum: [creation, vote, hotness]
+        legion_a:
+          type: string
+          format: uuid
+        legion_b:
+          type: string
+          format: uuid
+          nullable: true
+          description: 为空表示系统匹配
+        theme:
+          type: string
+          maxLength: 140
+        start_at:
+          type: string
+          format: date-time
+        end_at:
+          type: string
+          format: date-time
+        is_official:
+          type: boolean
+          default: false
+
+    PkMatch:
+      type: object
+      description: 对齐 pk_matches 表
+      properties:
+        pk_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [creation, vote, hotness]
+        legion_a:
+          type: object
+          properties:
+            legion_id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            avatar_url:
+              type: string
+        legion_b:
+          type: object
+          properties:
+            legion_id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            avatar_url:
+              type: string
+        theme:
+          type: string
+        start_at:
+          type: string
+          format: date-time
+        end_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [idle, challenged, accepted, preparing, battling, judging, settled, archived]
+        score_a:
+          type: number
+          format: float
+        score_b:
+          type: number
+          format: float
+        winner_id:
+          type: string
+          format: uuid
+          nullable: true
+        mvp_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        is_official:
+          type: boolean
+        my_votes_today:
+          type: integer
+
+    PkVoteResult:
+      type: object
+      properties:
+        vote_id:
+          type: string
+          format: uuid
+        pk_id:
+          type: string
+          format: uuid
+        legion_id:
+          type: string
+          format: uuid
+        my_votes_today:
+          type: integer
+        votes_remaining_today:
+          type: integer
+        current_scores:
+          type: object
+          properties:
+            legion_a:
+              type: number
+              format: float
+            legion_b:
+              type: number
+              format: float
+        voted_at:
+          type: string
+          format: date-time
+
+    # ---------- Chat ----------
+    MessageSendRequest:
+      type: object
+      required: [msg_type]
+      properties:
+        msg_type:
+          type: string
+          enum: [text, image, meme, voice, system]
+        content:
+          type: string
+          nullable: true
+        extra:
+          type: object
+          properties:
+            ref_message_id:
+              type: string
+              format: uuid
+              nullable: true
+            mentions:
+              type: array
+              items:
+                type: string
+                format: uuid
+            ref_meme_id:
+              type: string
+              format: uuid
+              nullable: true
+
+    Message:
+      type: object
+      description: 对齐 messages 表
+      properties:
+        message_id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        sender_nickname:
+          type: string
+        sender_avatar_url:
+          type: string
+          nullable: true
+        msg_type:
+          type: string
+          enum: [text, image, meme, voice, system]
+        content:
+          type: string
+          nullable: true
+        extra:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    # ---------- Pro / Order ----------
+    ProSubscribeRequest:
+      type: object
+      required: [plan, channel]
+      properties:
+        plan:
+          type: string
+          enum: [monthly, yearly]
+        auto_renew:
+          type: boolean
+          default: true
+        channel:
+          type: string
+          enum: [wechat, alipay, apple]
+
+    OrderCreated:
+      type: object
+      description: 对齐 orders 表
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        sub_id:
+          type: string
+          format: uuid
+          nullable: true
+        product_type:
+          type: string
+          enum: [pro, video_pkg]
+        amount_cents:
+          type: integer
+          example: 1800
+        channel:
+          type: string
+        status:
+          type: string
+          enum: [pending, paid, failed, refunded]
+        wx_pay_params:
+          type: object
+          nullable: true
+          description: 微信支付拉起参数（appid/timestamp/noncestr/package/sign_type/pay_sign）
+        created_at:
+          type: string
+          format: date-time
+
+    # ---------- Notification ----------
+    Notification:
+      type: object
+      description: 对齐 notifications 表
+      properties:
+        notif_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [rating, god_meme, pk, reward, violation, pro, agent_done, comment, follow]
+        title:
+          type: string
+        body:
+          type: string
+        payload:
+          type: object
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time

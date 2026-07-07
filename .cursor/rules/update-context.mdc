@@ -1,0 +1,67 @@
+---
+description: 斜杠命令 /update-context —— 全量同步上下文文档。手动触发，按 30-context-maintenance 协议检查并更新所有上下文文件。
+globs:
+alwaysApply: false
+---
+
+# /update-context · 上下文全量同步命令
+
+> 用户输入 `/update-context` 或 `更新上下文` / `同步 context` 时触发。按 `.cursor/rules/30-context-maintenance.mdc` 协议全量检查并同步上下文文档。
+
+## 执行步骤（严格按顺序）
+
+### 1. 读取当前状态
+- 读 `docs/context/activeContext.md`（上次状态）
+- 读 `docs/context/progress.md`（已完成/待做清单）
+- 跑 `git status` + `git log --oneline -10`（看本会话改了什么）
+- 跑 `bash scripts/check-context-sync.sh`（自动校验一致性，识别漂移点）
+
+### 2. 报告漂移
+向用户汇报：
+- 本会话改了哪些文件
+- 哪些上下文文档需要同步（根据 check-context-sync.sh 输出）
+- 哪些决策/表/接口变更需要用户确认（涉及时暂停问用户）
+
+### 3. 同步上下文文档（自主可改的）
+按 `30-context-maintenance.mdc` 协议更新：
+- **`docs/context/activeContext.md`**：
+  - "最后更新"时间戳改为今天
+  - "当前状态"三区（已完成/进行中/待启动）准确反映 git status
+  - "下一步"列清下次会话该做什么
+  - "会话历史"表加一行本会话摘要（时间 + 任务 + 产出）
+- **`docs/context/progress.md`**：
+  - "已完成清单"勾选本会话完成的项
+  - "总体进度"表更新完成度
+  - "已知问题/技术债"区更新
+  - "关键数字速查"如有变化则更新
+- **`.cursor/rules/20-m1-sprint.mdc`**（如本会话推进了 M1）：
+  - "待用户确认"区更新
+  - M1 退出标准 Checklist 勾选已完成项
+
+### 4. 暂停问用户（涉及确认才改的）
+如有以下变更，**暂停并问用户确认后再改**：
+- 决策变更 → `docs/context/decisions.md`
+- 产品需求变更 → `docs/PRD.md`
+- 架构变更 → `docs/TechnicalDesign.md`
+- 技术栈/编码约定变更 → `00-project-context.mdc` / `10-coding-conventions.mdc`
+
+### 5. 同步设计文档（如本次改了表/接口）
+- 改了表 → 确认 `schema.sql` + `Database-DDL.md` + Drizzle schema + `openapi.yaml` 四处一致 + 跑 `pnpm --filter @memestar/backend db:generate`
+- 改了接口 → 确认 `openapi.yaml` + `API-Spec.md` 两处一致 + 跑 `pnpm gen:api`
+
+### 6. 生成同步报告
+最终向用户输出：
+```
+✅ 上下文同步完成
+- activeContext.md: 已更新（状态/下一步/会话历史）
+- progress.md: 已更新（进度/技术债）
+- 漂移检测: check-context-sync.sh 通过/失败 N 项
+- 待用户确认: 列出需确认的决策/设计变更
+- 下次会话起点: <下一步任务>
+```
+
+## 注意
+
+- 本命令不修改代码，只同步文档。
+- 涉及"必须用户确认后改"的文件，必须暂停问用户，不得擅自修改。
+- 如 `check-context-sync.sh` 报告严重漂移，先向用户报告再决定如何修复。

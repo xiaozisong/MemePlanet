@@ -1,0 +1,136 @@
+name: Context Sync Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  context-sync:
+    name: 上下文一致性 + activeContext 更新检查
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要完整历史以比对 diff
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: 运行上下文一致性校验
+        id: sync-check
+        run: |
+          bash scripts/check-context-sync.sh
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: 检查 activeContext.md 是否随源码变更更新
+        id: active-check
+        run: |
+          # 获取 PR 改动的文件
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          echo "改动的文件："
+          echo "$CHANGED_FILES"
+
+          # 判断是否改了源码（apps/ packages/ docs/db/ docs/openapi.yaml）
+          SOURCE_CHANGED=$(echo "$CHANGED_FILES" | rg -c "^(apps/|packages/|docs/db/|docs/openapi\.yaml)" || echo 0)
+          # 判断是否改了 activeContext
+          ACTIVE_CHANGED=$(echo "$CHANGED_FILES" | rg -c "docs/context/activeContext\.md" || echo 0)
+
+          echo "source_changed=$SOURCE_CHANGED" >> $GITHUB_OUTPUT
+          echo "active_changed=$ACTIVE_CHANGED" >> $GITHUB_OUTPUT
+
+          if [ "$SOURCE_CHANGED" -gt 0 ] && [ "$ACTIVE_CHANGED" -eq 0 ]; then
+            echo "warn=1" >> $GITHUB_OUTPUT
+            echo "⚠️  本 PR 改了源码（$SOURCE_CHANGED 个文件）但未更新 docs/context/activeContext.md，上下文可能漂移" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "warn=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 检查决策/设计文档是否被擅改（无关联 ADR/讨论）
+        id: decision-check
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          # 受保护文档：改了就必须有对应的 decisions.md 或 activeContext 变更
+          PROTECTED_CHANGED=$(echo "$CHANGED_FILES" | rg -c "^(docs/PRD\.md|docs/TechnicalDesign\.md|docs/context/decisions\.md|\.cursor/rules/00-|\.cursor/rules/10-)" || echo 0)
+          echo "protected_changed=$PROTECTED_CHANGED" >> $GITHUB_OUTPUT
+          if [ "$PROTECTED_CHANGED" -gt 0 ]; then
+            echo "ℹ️  本 PR 修改了受保护文档（PRD/TechnicalDesign/decisions/核心规则），请人工 review 确认已与用户讨论" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 汇总 PR 评论
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const syncExit = '${{ steps.sync-check.outputs.exit_code }}';
+            const sourceChanged = '${{ steps.active-check.outputs.source_changed }}';
+            const activeChanged = '${{ steps.active-check.outputs.active_changed }}';
+            const warn = '${{ steps.active-check.outputs.warn }}';
+            const protectedChanged = '${{ steps.decision-check.outputs.protected_changed }}';
+
+            let body = '## 📋 上下文同步检查报告\n\n';
+
+            // 一致性校验
+            if (syncExit === '0') {
+              body += '✅ **上下文一致性校验通过**（check-context-sync.sh）\n\n';
+            } else if (syncExit === '1') {
+              body += '⚠️ **上下文一致性校验有警告**（check-context-sync.sh，退出码 1）\n\n';
+            } else if (syncExit === '2') {
+              body += '❌ **上下文一致性校验失败**（check-context-sync.sh，退出码 2，存在严重漂移）\n\n';
+            }
+
+            // activeContext 更新检查
+            if (warn === '1') {
+              body += `⚠️ **activeContext.md 未随源码更新**：本 PR 改了 ${sourceChanged} 个源码文件，但未更新 \`docs/context/activeContext.md\`。\n`;
+              body += '   建议在合并前跑 `/update-context` 或手动更新 activeContext 的"会话历史"与"当前状态"。\n\n';
+            } else if (sourceChanged > 0) {
+              body += `✅ **activeContext.md 已随源码更新**（源码 ${sourceChanged} 文件 / activeContext ${activeChanged} 文件）\n\n`;
+            } else {
+              body += 'ℹ️ 本 PR 未改源码，无需更新 activeContext\n\n';
+            }
+
+            // 受保护文档检查
+            if (protectedChanged > 0) {
+              body += '🔒 **受保护文档被修改**：本 PR 改了 PRD/TechnicalDesign/decisions/核心规则文件，请 reviewer 确认：\n';
+              body += '   - 是否已与用户讨论并获确认？\n';
+              body += '   - 是否同步更新了对应的 ADR（decisions.md）？\n\n';
+            }
+
+            body += '---\n_由 `.github/workflows/context-sync.yml` 自动生成_';
+
+            // 找已有的 bot 评论并更新，避免重复
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes('上下文同步检查报告'));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: 失败时阻断合并（仅严重错误）
+        if: steps.sync-check.outputs.exit_code == '2'
+        run: |
+          echo "❌ 上下文严重漂移，阻断合并"
+          exit 1

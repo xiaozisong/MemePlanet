@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging (Light Cloud)
+    runs-on: ubuntu-latest
+    needs: []
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build backend
+        run: pnpm build:backend
+
+      - name: Build web
+        run: pnpm build:web
+
+      - name: Build & push Docker image
+        run: |
+          docker build -f Dockerfile.backend -t memestar-backend:${{ github.sha }} .
+          echo "TODO: push to registry and SSH deploy to light cloud"
+        # TODO: 接入容器 registry + SSH 部署脚本
+        # env:
+        #   REGISTRY: ${{ secrets.REGISTRY }}
+        #   IMAGE: ${{ secrets.IMAGE }}
+
+      - name: Deploy to light cloud (placeholder)
+        run: |
+          echo "TODO: ssh ${{ secrets.DEPLOY_HOST }} 'cd /opt/memechatai && docker compose pull && docker compose up -d'"
+          echo "TODO: run db migrations"
+          echo "TODO: post-deploy health check"
+
+  deploy-web:
+    name: Deploy Web to Vercel / CF Pages
+    runs-on: ubuntu-latest
+    needs: []
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel (placeholder)
+        run: |
+          echo "TODO: vercel deploy --prod --token ${{ secrets.VERCEL_TOKEN }}"

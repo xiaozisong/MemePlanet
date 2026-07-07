@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "梗星球 MemeChatAI",
+    "slug": "memechatai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "memechatai",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F0F12"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "xyz.memestar.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "用于造梗上传图片",
+        "NSPhotoLibraryUsageDescription": "用于选择梗图素材"
+      }
+    },
+    "android": {
+      "package": "xyz.memestar.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F0F12"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-updates",
+        {
+          "username": "memestar",
+          "runtimeVersion": "0.1.0"
+        }
+      ]
+    ],
+    "updates": {
+      "url": "https://u.expo.dev/your-project-id",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": "0.1.0",
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      },
+      "router": {
+        "origin": "https://memechatai.app"
+      }
+    }
+  }
+}

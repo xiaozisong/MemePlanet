@@ -1,0 +1,59 @@
+{
+  "name": "memechatai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "梗星球 MemeChatAI - AI 造梗 + 内容评分社区 + 阵营化社交 + 实时聊天",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "dev:backend": "pnpm --filter @memestar/backend dev",
+    "dev:web": "pnpm --filter @memestar/web dev",
+    "dev:mobile": "pnpm --filter @memestar/mobile start",
+    "build": "pnpm -r --filter '!@memestar/mobile' build",
+    "build:backend": "pnpm --filter @memestar/backend build",
+    "build:web": "pnpm --filter @memestar/web build",
+    "build:shared": "pnpm --filter @memestar/shared build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\" --ignore-path .prettierignore",
+    "test": "pnpm -r test",
+    "db:init": "bash scripts/db-init.sh",
+    "db:studio": "pnpm --filter @memestar/backend db:studio",
+    "db:migrate": "pnpm --filter @memestar/backend db:migrate",
+    "gen:api": "bash scripts/gen-api-types.sh",
+    "check:context": "bash scripts/check-context-sync.sh",
+    "prepare": "husky install",
+    "clean": "pnpm -r exec rm -rf dist .turbo node_modules .expo && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@types/node": "^20.16.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "openapi-typescript": "^7.4.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

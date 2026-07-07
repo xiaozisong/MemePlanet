@@ -1,0 +1,82 @@
+---
+description: 梗星球编码约定 —— 代码结构、模块划分、AI 编排、错误处理、提交规范。在 apps/ 或 packages/ 下工作时自动加载。
+globs: apps/**,packages/**
+alwaysApply: false
+---
+
+# 梗星球编码约定
+
+## 后端（apps/backend，NestJS）
+
+### 目录结构
+- `src/modules/<module>/` —— 每个业务 Module 含 `.module.ts` + `.controller.ts` + `.service.ts` + `<module>.dto.ts`（用 zod schema）。
+- 15 个 Module：auth/user/meme/creation/video/rating/legion/pk/chat/recommend/audit/admin/notification/analytics/ai-orch。
+- `src/common/` —— 全局过滤器/拦截器/守卫/装饰器/管道。
+- `src/config/` —— 配置（env/jwt/redis/ai provider/r2/supabase）。
+- `src/database/` —— Drizzle 配置 + schema 引用 + migrate。
+- `src/workers/` —— BullMQ worker（agent-job / video-job）。
+- `src/modules/ai-orch/` —— AI 编排层：adapters/ + policy-engine.ts + interfaces.ts。
+
+### 强制规则
+- **统一响应拦截器** `ResponseInterceptor` 已全局注册，Controller 直接 return data，不要手动包 `{code,data,message}`。
+- **全局异常过滤器** `AllExceptionsFilter` 已注册，Service 抛 NestJS 内置异常（`BadRequestException` 等）或自定义业务异常，错误码用 `HttpStatus` + 业务码。
+- **JWT 鉴权**：用 `@UseGuards(JwtAuthGuard)` + `@CurrentUser()` 装饰器取当前用户；公开接口用 `@Public()`。
+- **DTO 校验**：用 zod schema + `ZodValidationPipe`（或 class-validator + `ValidationPipe`），禁止裸接 req.body。
+- **AI 调用必走 AIOrchModule**：禁止在业务 Service 直接调 LLM/Image/Video provider，必须通过 `AIOrchestrator` → adapter，便于降级/熔断/成本追踪。
+- **异步 AI 任务**：POST 提交后入 BullMQ 队列返回 202 + job_id，Worker 消费，结果通过轮询或 WebSocket 推送。
+- **数据库访问**：注入 `@Inject(DRIZZLE)` 获取 Drizzle 实例，禁止裸用 `pg.Pool` 写 SQL 字符串（用 Drizzle 查询构建器）。
+- **成本追踪**：每次 AI 调用写 `ai_cost_logs` 表，Policy Engine 按日预算熔断。
+
+### AI 编排层（ai-orch）契约
+- `LLMProvider` / `ImageProvider` / `VideoProvider` / `TTSProvider` 接口见 `adapters/interfaces.ts`。
+- 新增 provider 实现 interface + 在 `adapters/index.ts` 注册 + 在 Policy Engine 配降级链。
+- 降级链：DeepSeek → GLM → Qwen；SiliconFlow FLUX → 通义万相；豆包 Seedance → 即梦 → SiliconFlow → 图片+TTS 兜底。
+- Pro 造梗 Agent 3 步：RAG 检索（pgvector top5）→ 生成 3 候选 → LLM 自评选优。仅 Pro，10 次/日硬配额。
+
+## 前端 App（apps/mobile，RN + Expo Router）
+
+- 用 Expo Router `app/` 目录路由，5 Tab：feed/create/legion/pk/profile。
+- 状态管理：Zustand（客户端状态）+ TanStack Query（服务器状态）。
+- API client 复用 `@memestar/shared` 的 api-client（基于 fetch）。
+- 消息存储：`expo-sqlite` 缓存最近 100 条/会话。
+- 热更新：Expo Update（绕过商店审核）。
+- 不要用 react-navigation 手动配置，统一走 Expo Router。
+
+## Web（apps/web，Next.js 14 App Router）
+
+- App Router（`app/` 目录），不要用 Pages Router。
+- 落地页 `(marketing)/` + 运营后台 `admin/`。
+- Tailwind + shadcn/ui，不要裸写 CSS。
+- 服务器组件优先，客户端组件用 `'use client'` 标注。
+
+## 共享层（packages/shared）
+
+- 只放：TS 类型（对齐 schema.sql）、API client、常量/枚举、AI prompt 模板。
+- 不要放业务逻辑、不要放 React/RN 组件。
+- 改类型时同步改 `docs/openapi.yaml` 并跑 `pnpm gen:api` 重新生成。
+
+## 数据库
+
+- 字段命名以 `docs/db/schema.sql` 为权威，禁止与 SQL 不一致。
+- 改表结构：先改 `schema.sql` + `Database-DDL.md`，再生成 Drizzle migration（`pnpm --filter @memestar/backend db:generate`）。
+- pgvector 用 HNSW 索引（不是 IVFFlat），余弦距离 `vector_cosine_ops`。
+- 软删除仅限 `users/meme_cards/legions/comments`（用 `deleted_at`），互动表物理删除。
+
+## 提交规范（commitlint conventional）
+
+```
+<type>(<scope>): <subject>
+```
+- type：feat/fix/refactor/perf/test/docs/chore/style/ci
+- scope：backend/frontend/mobile/shared/db/docs/ci
+- 例：`feat(backend): 实现手机号验证码登录`、`fix(db): 修正 meme_cards 索引`
+
+## 禁止事项
+
+- ❌ 不要在业务 Service 直接调 AI provider，必走 AIOrchModule。
+- ❌ 不要用 Taro/uni-app（已定稿 RN+Expo）。
+- ❌ 不要引入 Go/Java 写业务（MVP 全 NestJS，PK 服务未来按需迁 Go）。
+- ❌ 不要用商业 IM 云（网易云信/融云），私聊走 Supabase Realtime，群聊自建。
+- ❌ 不要用 SiliconFlow 视频模型作为 MVP 主力（已定稿豆包 Seedance）。
+- ❌ 不要写"这行代码做了什么"的废话注释，只写意图/取舍/约束。
+- ❌ 不要擅自改 12 项已定稿决策，要改先与用户讨论。
