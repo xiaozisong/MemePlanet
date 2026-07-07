@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { VideoAdapter } from './interfaces.js';
-import type { VideoRequest, VideoTaskHandle, VideoResult, ProviderHealth, CostEstimate } from '../interfaces.js';
+import type {
+  VideoRequest,
+  VideoTaskHandle,
+  VideoResult,
+  ProviderHealth,
+  CostEstimate,
+} from '../interfaces.js';
 
 /**
  * 字节火山方舟 豆包 Seedance 2.0 Video Adapter（MVP 主力）
@@ -23,7 +29,9 @@ export class DoubaoAdapter implements VideoAdapter {
   async submit(req: VideoRequest): Promise<VideoTaskHandle> {
     if (!this.apiKey) throw new Error('VOLCANO_API_KEY missing');
     // TODO: 调火山方舟提交任务，记录 external_task_id + webhook_secret
-    this.logger.log(`doubao submit: type=${req.sourceType} dur=${req.duration} tier=${req.tier ?? 'mini'}`);
+    this.logger.log(
+      `doubao submit: type=${req.sourceType} dur=${req.duration} tier=${req.tier ?? 'mini'}`,
+    );
     void this.appId;
     return { taskId: 'placeholder', status: 'queued' };
   }

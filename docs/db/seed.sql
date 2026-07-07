@@ -14,7 +14,7 @@
 -- 实际部署时通过 Supabase 创建后由 Webhook 同步过来；此处预置一条记录便于本地调试。
 INSERT INTO users (user_id, supabase_uid, nickname, avatar_url, status, is_official, level, meme_power, energy_balance)
 VALUES (
-    '00000000-0000-0000-0000-admin0001'::uuid,
+    '00000000-0000-0000-0000-a00000000001'::uuid,
     NULL,
     '梗星球运营官',
     'https://cdn.example.com/avatars/official.png',
@@ -28,7 +28,7 @@ ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO user_profiles (user_id, interest_tags, badges, privacy, notification_pref)
 VALUES (
-    '00000000-0000-0000-0000-admin0001'::uuid,
+    '00000000-0000-0000-0000-a00000000001'::uuid,
     '["官方","运营","审核"]'::jsonb,
     '["official"]'::jsonb,
     '{}'::jsonb,
@@ -44,7 +44,7 @@ ON CONFLICT (user_id) DO NOTHING;
 INSERT INTO prompt_templates (template_id, mode, name, system_prompt, user_template, style, variables, is_official, status)
 VALUES
 (
-    'tpl-0001-abstract-0001-0001'::uuid,
+    '00000000-0000-0000-0000-c00000000001'::uuid,
     'text',
     '抽象段子',
     '你是 Z 世代抽象文化段子手。请基于用户给的关键词，生成 1 条 50 字以内的抽象段子，要求：信息密度高、跳脱逻辑、有"破防"笑点；不要俗套、不要解释。输出 JSON 数组，每条一个元素。',
@@ -55,7 +55,7 @@ VALUES
     'active'
 ),
 (
-    'tpl-0002-yin-yang-0001-0001'::uuid,
+    '00000000-0000-0000-0000-c00000000002'::uuid,
     'text',
     '阴阳怪气',
     '你是擅长阴阳怪气表达的段子手。用"看似夸赞实则嘲讽"的句式生成段子，要求反讽精准、不直接攻击、留白让读者会心一笑。输出 JSON 数组。',
@@ -66,7 +66,7 @@ VALUES
     'active'
 ),
 (
-    'tpl-0003-homophone-0001-0001'::uuid,
+    '00000000-0000-0000-0000-c00000000003'::uuid,
     'text',
     '谐音梗',
     '你是中文谐音梗创作专家。请基于关键词挖掘同音/近音/谐音联想，生成 3 条谐音梗候选，要求谐音自然、不生硬、有"哦~原来如此"的笑点。输出 JSON 数组。',
@@ -77,7 +77,7 @@ VALUES
     'active'
 ),
 (
-    'tpl-0004-twist-0001-0001'::uuid,
+    '00000000-0000-0000-0000-c00000000004'::uuid,
     'text',
     '反转梗',
     '你是擅长结尾反转的段子手。结构：铺垫情境 → 抛出预期 → 结尾反转打破预期。要求 50 字以内、反转必须出人意料但又自洽。输出 JSON 数组。',
@@ -88,7 +88,7 @@ VALUES
     'active'
 ),
 (
-    'tpl-0005-meme-caption-0001-0001'::uuid,
+    '00000000-0000-0000-0000-c00000000005'::uuid,
     'image',
     '表情包配文',
     '你是表情包文案专家。请基于用户描述的场景，生成适合叠加在图片上的简短配文（≤15 字），要求：口语化、强反差、易传播。输出 JSON 数组，每条含 caption 字段。',
@@ -160,28 +160,28 @@ ON CONFLICT (word, category) DO NOTHING;
 INSERT INTO legions (legion_id, name, slogan, leader_id, level, activity_score, member_count, member_cap, join_mode, theme_tags, status)
 VALUES
 (
-    'lg-0001-abstract-0001-0001'::uuid,
+    '00000000-0000-0000-0000-d00000000001'::uuid,
     '抽象艺术团',
     '生活太抽象，我们更抽象',
-    '00000000-0000-0000-0000-admin0001'::uuid,
+    '00000000-0000-0000-0000-a00000000001'::uuid,
     3, 1200, 1, 500, 'approval',
     '["抽象","段子","整活"]'::jsonb,
     'active'
 ),
 (
-    'lg-0002-yin-yang-0001-0001'::uuid,
+    '00000000-0000-0000-0000-d00000000002'::uuid,
     '阴阳怪气联盟',
     '表面笑嘻嘻，心里 mmp',
-    '00000000-0000-0000-0000-admin0001'::uuid,
+    '00000000-0000-0000-0000-a00000000001'::uuid,
     2, 800, 1, 500, 'public',
     '["阴阳","反讽","互联网"]'::jsonb,
     'active'
 ),
 (
-    'lg-0003-emoji-0001-0001'::uuid,
+    '00000000-0000-0000-0000-d00000000003'::uuid,
     '表情包研究所',
     '万物皆可表情包',
-    '00000000-0000-0000-0000-admin0001'::uuid,
+    '00000000-0000-0000-0000-a00000000001'::uuid,
     1, 300, 1, 500, 'public',
     '["表情包","梗图","二次元"]'::jsonb,
     'active'
@@ -191,9 +191,9 @@ ON CONFLICT (legion_id) DO NOTHING;
 -- leader 自动成为各军团成员
 INSERT INTO legion_members (legion_id, user_id, role, contribution)
 VALUES
-('lg-0001-abstract-0001-0001'::uuid, '00000000-0000-0000-0000-admin0001'::uuid, 'leader', 100),
-('lg-0002-yin-yang-0001-0001'::uuid, '00000000-0000-0000-0000-admin0001'::uuid, 'leader', 80),
-('lg-0003-emoji-0001-0001'::uuid,    '00000000-0000-0000-0000-admin0001'::uuid, 'leader', 50)
+('00000000-0000-0000-0000-d00000000001'::uuid, '00000000-0000-0000-0000-a00000000001'::uuid, 'leader', 100),
+('00000000-0000-0000-0000-d00000000002'::uuid, '00000000-0000-0000-0000-a00000000001'::uuid, 'leader', 80),
+('00000000-0000-0000-0000-d00000000003'::uuid,    '00000000-0000-0000-0000-a00000000001'::uuid, 'leader', 50)
 ON CONFLICT (legion_id, user_id) DO NOTHING;
 
 -- 军团等级配置（1-5 级样例）
@@ -216,12 +216,12 @@ INSERT INTO meme_cards (
     god_trash_status, status, is_ai_generated, watermarked, published_at
 )
 VALUES (
-    'meme-0001-god-0001-0001-0001'::uuid,
-    '00000000-0000-0000-0000-admin0001'::uuid,
+    '00000000-0000-0000-0000-e00000000001'::uuid,
+    '00000000-0000-0000-0000-a00000000001'::uuid,
     'text',
     '我的生活就像薛定谔的猫，没打开盒子里面前，我既是富的也是穷的——打开之后，就只是穷的。',
     '["抽象","反转","薛定谔"]'::jsonb,
-    'lg-0001-abstract-0001-0001'::uuid,
+    '00000000-0000-0000-0000-d00000000001'::uuid,
     4.65,
     233,
     18,
@@ -239,7 +239,7 @@ ON CONFLICT (meme_id) DO NOTHING;
 -- 实际生产由 RAG Worker 调 bge-m3 生成。
 INSERT INTO meme_embeddings (meme_id, embedding, model, style_tags, is_god_meme)
 VALUES (
-    'meme-0001-god-0001-0001-0001'::uuid,
+    '00000000-0000-0000-0000-e00000000001'::uuid,
     (
         -- 构造一个 768 维的示例向量（归一化前每维 0.036，实际生产由 bge-m3 生成）。
         -- pgvector 支持 text 形式 cast：'[0.036,0.036,...]'::vector(768)
@@ -254,7 +254,7 @@ ON CONFLICT (meme_id) DO NOTHING;
 -- 神梗判定记录
 INSERT INTO god_trash_judgments (meme_id, result, score_avg, score_count, one_star_rate)
 VALUES (
-    'meme-0001-god-0001-0001-0001'::uuid,
+    '00000000-0000-0000-0000-e00000000001'::uuid,
     'god',
     4.65,
     233,
@@ -272,7 +272,7 @@ ON CONFLICT (name) DO UPDATE SET use_count = meme_tags.use_count + 1;
 
 -- 关联梗卡与标签
 INSERT INTO meme_card_tags (meme_id, tag_id)
-SELECT 'meme-0001-god-0001-0001-0001'::uuid, tag_id FROM meme_tags
+SELECT '00000000-0000-0000-0000-e00000000001'::uuid, tag_id FROM meme_tags
 WHERE name IN ('抽象','反转','薛定谔')
 ON CONFLICT DO NOTHING;
 
@@ -281,7 +281,7 @@ ON CONFLICT DO NOTHING;
 -- =============================================================================
 INSERT INTO users (user_id, nickname, status, level, meme_power, energy_balance, is_pro)
 VALUES (
-    '00000000-0000-0000-0000-user00001'::uuid,
+    '00000000-0000-0000-0000-b00000000001'::uuid,
     '整活新秀小明',
     'active',
     5,
@@ -293,7 +293,7 @@ ON CONFLICT (user_id) DO NOTHING;
 
 INSERT INTO user_profiles (user_id, interest_tags, badges)
 VALUES (
-    '00000000-0000-0000-0000-user00001'::uuid,
+    '00000000-0000-0000-0000-b00000000001'::uuid,
     '["抽象","谐音梗","二次元"]'::jsonb,
     '["first_god_meme","7day_streak"]'::jsonb
 )

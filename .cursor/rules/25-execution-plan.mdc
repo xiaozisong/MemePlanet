@@ -1,0 +1,79 @@
+---
+description: M1 详细执行计划上下文 —— docs/context/execution-plan.md 的 Agent 入口，定义"读 plan / 推进 plan / 更新 plan"协议。每次会话自动加载，确保 Agent 稳定读取并滚动更新执行计划。
+globs:
+alwaysApply: true
+---
+
+# M1 执行计划上下文（Agent 自动加载）
+
+> 本规则文件是 `docs/context/execution-plan.md` 的 Agent 入口。**每次会话自动加载**，确保 Agent 知道"当前做到哪 / 下一步做什么 / 怎么更新 plan"。
+
+## 核心约定
+
+**执行计划权威文件**：`docs/context/execution-plan.md`（活状态，Agent 推进时滚动更新）
+
+本文件与 `30-context-maintenance.mdc` 配合使用：
+- `30-context-maintenance.mdc` 定义"何时更新哪个上下文文件"（宏观协议）
+- 本规则定义"如何读取与推进 `execution-plan.md`"（执行视图协议）
+
+## 会话开头自检（强制，每次会话开头执行）
+
+1. **读 `docs/context/execution-plan.md` §0 总体路线图** → 知道当前 Sprint
+2. **读当前 Sprint 章节** → 找到第一个 `状态 = ⏳ pending` 的任务（这就是下一步要做的事）
+3. **读 `docs/context/activeContext.md`** → 确认无上下文漂移
+4. **若代码状态与本文件 `状态` 字段不一致** → 主动向用户报告"上下文漂移"，询问以哪个为准
+
+## 推进一个任务的流程（强制）
+
+1. 把目标任务 `状态` 从 `⏳ pending` 改为 `🔄 in_progress`
+2. 同步更新 `docs/context/activeContext.md` 的"进行中"区
+3. 编码/测试 → 跑 `pnpm typecheck` + `pnpm lint`（修掉引入的 lint 错误）
+4. 验收标准全部满足后，`状态` 改为 `✅ done`，并在任务行尾追加 `完成日期: YYYY-MM-DD`
+5. 更新 `docs/context/activeContext.md`：把该任务从"进行中"移到"已完成"，"会话历史"加一行
+6. 更新 `docs/context/progress.md`：勾选对应已完成项
+7. 涉及表结构变更 → 同步改 4 处（schema.sql + Database-DDL.md + Drizzle + openapi.yaml）+ `pnpm db:generate`
+8. 涉及接口变更 → 同步改 2 处（openapi.yaml + API-Spec.md）+ `pnpm gen:api`
+
+## 完成 Sprint 的流程
+
+1. 该 Sprint 所有任务 `状态 = ✅ done` + 所有测试通过 + Sprint 退出标准全部勾选
+2. 更新 `execution-plan.md` §0 总体路线图：该 Sprint `状态` 改为 `✅ 完成`
+3. 更新 `activeContext.md`：当前 Sprint 切到下一个，"下一步"区调整
+4. 更新 `progress.md`："总体进度"表对应 Sprint 状态改为"完成"
+
+## 状态字段约定（强制使用这 5 种）
+
+- `⏳ pending`：未启动
+- `🔄 in_progress`：进行中
+- `✅ done`：已完成（必须追加 `完成日期: YYYY-MM-DD`）
+- `❌ blocked`：阻塞（必须追加 `阻塞原因`）
+- `⏭️ deferred`：延后到 M2（必须追加 `去向`）
+
+## 文件优先级（冲突时以此为准）
+
+`docs/context/execution-plan.md`（执行视图，活状态）> `docs/context/activeContext.md`（会话焦点，活状态）> `docs/context/progress.md`（Sprint 级进度，活状态）> `docs/M1-Sprint-Plan.md`（设计期 75 任务总清单，静态参考）
+
+## Definition of Done（任务完成标准）
+
+一个任务算"完成"必须同时满足：
+- [ ] 代码实现通过 `pnpm typecheck` + `pnpm lint`（无新增错误）
+- [ ] 任务验收标准全部满足
+- [ ] `execution-plan.md` 对应任务 `状态` 字段已更新为 `✅ done` + 追加完成日期
+- [ ] `activeContext.md` 已同步更新
+- [ ] 涉及表结构/接口变更已同步对应文档（4 处 / 2 处）
+
+**未更新 `execution-plan.md` 状态字段的任务不算完成**——下一会话会因找不到进度而迷失。
+
+## 当前阶段速查
+
+```
+S0 脚手架通电 ⏳ → S1 用户+AI 编排 ⏳ → S2 造梗+梗卡+机审 ⏳ → S3 feed+评分+RN ⏳ → S4 合规+Demo ⏳
+```
+
+**M1 核心闭环**（砍后 25 人日编码 + 5.5 人日测试 + 1 人日通电 ≈ 31 人日）：手机号登录 → 文本造梗 3 候选 → 梗卡发布 → 机审 → 推荐 feed → 评分评论 → RN 真机可用 + 合规草稿启动。
+
+**产能警示**：个人开发者 4 周有效产能 ~22~26 人日，本计划 ~31 人日偏高。**若 S1/S2 末滞后 > 1.5 天**，立即触发 `execution-plan.md §6.2` 二次砍项。
+
+## 与 `/update-context` 斜杠命令的关系
+
+`/update-context` 是全量上下文同步命令（见 `update-context.mdc`），它会**包含**本文件定义的 `execution-plan.md` 状态同步。日常推进任务时按本规则流程更新即可，无需每次跑全量同步。

@@ -14,26 +14,11 @@ export default function TabsLayout() {
         headerTintColor: '#fff',
       }}
     >
-      <Tabs.Screen
-        name="feed"
-        options={{ title: 'Feed', tabBarIcon: tabIcon('🔥') }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{ title: '造梗', tabBarIcon: tabIcon('✨') }}
-      />
-      <Tabs.Screen
-        name="legion"
-        options={{ title: '军团', tabBarIcon: tabIcon('🛡️') }}
-      />
-      <Tabs.Screen
-        name="pk"
-        options={{ title: 'PK', tabBarIcon: tabIcon('⚔️') }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{ title: '我的', tabBarIcon: tabIcon('👤') }}
-      />
+      <Tabs.Screen name="feed" options={{ title: 'Feed', tabBarIcon: tabIcon('🔥') }} />
+      <Tabs.Screen name="create" options={{ title: '造梗', tabBarIcon: tabIcon('✨') }} />
+      <Tabs.Screen name="legion" options={{ title: '军团', tabBarIcon: tabIcon('🛡️') }} />
+      <Tabs.Screen name="pk" options={{ title: 'PK', tabBarIcon: tabIcon('⚔️') }} />
+      <Tabs.Screen name="profile" options={{ title: '我的', tabBarIcon: tabIcon('👤') }} />
     </Tabs>
   );
 }

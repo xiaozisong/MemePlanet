@@ -150,7 +150,7 @@ fi
 # -----------------------------------------------------------------------------
 # 8. 进度文件存在性
 # -----------------------------------------------------------------------------
-for f in docs/context/activeContext.md docs/context/decisions.md docs/context/progress.md; do
+for f in docs/context/activeContext.md docs/context/decisions.md docs/context/progress.md docs/context/execution-plan.md; do
   if [ -f "$f" ]; then
     add_ok "$f 存在"
   else
@@ -176,6 +176,7 @@ EXPECTED_RULES=(
   ".cursor/rules/00-project-context.mdc"
   ".cursor/rules/10-coding-conventions.mdc"
   ".cursor/rules/20-m1-sprint.mdc"
+  ".cursor/rules/25-execution-plan.mdc"
   ".cursor/rules/30-context-maintenance.mdc"
   ".cursor/rules/update-context.mdc"
 )

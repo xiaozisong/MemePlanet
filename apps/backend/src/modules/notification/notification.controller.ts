@@ -9,17 +9,17 @@ export class NotificationController {
   constructor(private readonly notifs: NotificationService) {}
 
   @Get()
-  async list(@CurrentUser() user) {
+  async list(@CurrentUser() user: CurrentUser) {
     return this.notifs.list(user.sub);
   }
 
   @Post(':id/read')
-  async markRead(@CurrentUser() user, @Param('id') id: string) {
+  async markRead(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
     return this.notifs.markRead(user.sub, id);
   }
 
   @Post('read-all')
-  async markAllRead(@CurrentUser() user) {
+  async markAllRead(@CurrentUser() user: CurrentUser) {
     return this.notifs.markAllRead(user.sub);
   }
 }

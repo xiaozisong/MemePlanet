@@ -18,7 +18,9 @@
 
 ## 1. 设计总览
 
-`schema.sql` 为生产级 DDL 脚本，幂等可重复执行（全部使用 `IF NOT EXISTS` / `ON CONFLICT DO NOTHING`），覆盖 13 个业务域共 **50 张表**（含 4 张分区默认子表 `ratings_default` / `messages_default` / `audit_logs_default` / `ai_cost_logs_default`），**106 个索引**，3 个向量表，4 张分区表，2 个视图，2 个物化视图，1 个公共触发器函数（`set_updated_at`）以及 1 个全文检索维护函数（`meme_title_tsv_trigger`）。
+`schema.sql` 为生产级 DDL 脚本，幂等可重复执行（全部使用 `IF NOT EXISTS` / `ON CONFLICT DO NOTHING`），覆盖 13 个业务域共 **49 张表**（含 3 张分区默认子表 `messages_default` / `audit_logs_default` / `ai_cost_logs_default`），**106 个索引**，3 个向量表，3 张分区表，2 个视图，2 个物化视图，1 个公共触发器函数（`set_updated_at`）以及 1 个全文检索维护函数（`meme_title_tsv_trigger`）。
+
+> **设计变更记录（2026-07-07，S0 通电验证发现）**：`ratings` 原设计按月分区，但 `UNIQUE(meme_id, user_id)` 跨分区无法实现（PG16 要求分区表唯一约束包含分区键），且"一人一梗一评"语义优先级高于分区收益。MVP 阶段改为普通表，保留 `UNIQUE(meme_id, user_id)`；未来数据量超 ~1000 万再加分区（届时需数据迁移）。
 
 `seed.sql` 在 `schema.sql` 基础上提供 15 类种子数据（运营账号、官方 Prompt、TTS 音色、敏感词样例、军团、神梗、普通用户、物化视图初始刷新等），同样幂等。
 
@@ -75,9 +77,9 @@
 | 策略 | 说明 | 示例 |
 | --- | --- | --- |
 | 部分索引（Partial） | 用 `WHERE` 过滤高频查询子集，减小索引体积 | `idx_meme_cards_hot_score ... WHERE status = 'published' AND deleted_at IS NULL` |
-| 表达式索引 | 对函数表达式建索引 | `idx_pk_votes_user_date ON (user_id, date_trunc('day', voted_at))`、`idx_ai_cost_daily ON (date_trunc('day', created_at), module)` |
+| 表达式索引 | 对函数表达式建索引 | `idx_pk_votes_user_date`、`idx_ai_cost_daily` 原用 `date_trunc('day', …)`，因 timestamptz 上 date_trunc 是 STABLE 非 IMMUTABLE 改为普通索引（按天聚合用范围查询命中） |
 | 模糊检索 GIN | `pg_trgm` + `gin_trgm_ops` 支持中文 LIKE / 相似度 | `idx_users_nickname_trgm`、`idx_meme_tags_name_trgm`、`idx_sensitive_words_word_trgm` |
-| 大小写不敏感 GIN | `citext` 列用 `citext_ops` | `idx_legions_name_trgm ON legions USING gin (name citext_ops)` |
+| 大小写不敏感 GIN | `citext` 列 cast 为 `text` 后用 `gin_trgm_ops`（citext 无原生 GIN opclass） | `idx_legions_name_trgm ON legions USING gin ((name::text) gin_trgm_ops)` |
 | 全文检索 GIN | `tsvector` 列 + 触发器维护 | `idx_meme_cards_title_tsv` |
 | 向量 HNSW | `vector_cosine_ops` 余弦距离 | `idx_meme_embeddings_hnsw ... WITH (m = 16, ef_construction = 64)` |
 | 复合索引 | 按查询模式 `(filter, sort)` 顺序建 | `idx_creations_user_created (user_id, created_at DESC)` |
@@ -168,7 +170,7 @@
 
 | 表名 | 用途 | 关键字段 | 关键索引 | 关联关系 |
 | --- | --- | --- | --- | --- |
-| `ratings` | 评分（按月分区） | `(score_id, created_at)` PK、`meme_id` FK、`user_id` FK、`star 1-5`、`dimensions jsonb`(laugh/creative/spread)、`is_judge`、`weight`(0.5/1.0/1.5)、`is_god_trash_vote`、`UNIQUE(meme_id, user_id)` | `idx_ratings_meme_created`、`idx_ratings_user_created`、`idx_ratings_dimensions_gin` | N:1 ← meme_cards；N:1 ← users |
+| `ratings` | 评分 | `score_id` PK、`meme_id` FK、`user_id` FK、`star 1-5`、`dimensions jsonb`(laugh/creative/spread)、`is_judge`、`weight`(0.5/1.0/1.5)、`is_god_trash_vote`、`UNIQUE(meme_id, user_id)` | `idx_ratings_meme_created`、`idx_ratings_user_created`、`idx_ratings_dimensions_gin` | N:1 ← meme_cards；N:1 ← users |
 | `comments` | 评论（楼中楼 + 造梗接龙） | `comment_id` PK、`meme_id` FK、`user_id` FK、`parent_id` FK(self)、`content`、`like_count`、`is_god_comment`、`is_meme_card`、`ref_meme_id` FK、`status`、`deleted_at` | `idx_comments_meme_created`(partial 未删)、`idx_comments_parent`(partial)、`idx_comments_user_created`、`idx_comments_god_comment`(partial) | N:1 ← meme_cards；N:1 ← users(self ref)；1:N → comment_likes |
 | `comment_likes` | 评论点赞 | `(user_id, comment_id)` PK | `idx_comment_likes_comment` | N:1 ← users；N:1 ← comments |
 | `shares` | 转发记录（站内/站外） | `share_id` PK、`meme_id` FK、`user_id` FK、`channel`(in_app/wechat/douyin/qq/link) | `idx_shares_meme_created` | N:1 ← meme_cards；N:1 ← users |
@@ -178,7 +180,7 @@
 
 | 表名 | 用途 | 关键字段 | 关键索引 | 关联关系 |
 | --- | --- | --- | --- | --- |
-| `legions` | 梗大军 | `legion_id` PK、`name citext UNIQUE`、`slogan`、`theme_tags jsonb`、`leader_id` FK、`level`、`activity_score`、`member_count`、`member_cap`、`join_mode`(public/approval)、`pk_wins/pk_losses`、`status`、`deleted_at` | `idx_legions_level_activity`(partial 未删)、`idx_legions_status`(partial)、`idx_legions_theme_tags`(gin)、`idx_legions_name_trgm`(gin citext_ops) | 1:N → legion_members / meme_cards.legion_id / chat_rooms.legion_id / pk_matches(legion_a/b/winner)；N:1 ← users(leader) |
+| `legions` | 梗大军 | `legion_id` PK、`name citext UNIQUE`、`slogan`、`theme_tags jsonb`、`leader_id` FK、`level`、`activity_score`、`member_count`、`member_cap`、`join_mode`(public/approval)、`pk_wins/pk_losses`、`status`、`deleted_at` | `idx_legions_level_activity`(partial 未删)、`idx_legions_status`(partial)、`idx_legions_theme_tags`(gin)、`idx_legions_name_trgm`(gin (name::text) gin_trgm_ops) | 1:N → legion_members / meme_cards.legion_id / chat_rooms.legion_id / pk_matches(legion_a/b/winner)；N:1 ← users(leader) |
 | `legion_members` | 军团成员 | `membership_id` PK、`legion_id` FK、`user_id` FK、`role`(leader/vice_leader/member)、`contribution`、`joined_at`、`left_at`、`UNIQUE(legion_id, user_id)` | `idx_legion_members_user`(partial left_at IS NULL)、`idx_legion_members_legion`(partial)、`idx_legion_members_role`(partial leader/vice_leader) | N:1 ← legions；N:1 ← users |
 | `legion_levels` | 军团等级配置 | `level` int PK、`name`、`activity_required`、`member_cap`、`badges_unlocked jsonb`、`extra jsonb` | — | 配置表，无外键 |
 
@@ -190,7 +192,7 @@
 | --- | --- | --- | --- | --- |
 | `pk_matches` | PK 比赛 | `pk_id` PK、`type`(creation/vote/hotness)、`legion_a/b` FK、`theme`、`start_at/end_at`、`status`(idle/challenged/accepted/preparing/battling/judging/settled/archived)、`score_a/b`、`winner_id` FK、`mvp_user_id` FK、`reward_state jsonb`、`is_official`、`chk_pk_legions(legion_a<>legion_b)` | `idx_pk_status_end`、`idx_pk_legion_a`、`idx_pk_legion_b`、`idx_pk_winner`(partial)、`idx_pk_official`(partial) | N:1 ← legions(a/b/winner)；N:1 ← users(mvp)；1:N → pk_submissions / pk_votes / pk_rewards |
 | `pk_submissions` | PK 提交的梗卡 | `submission_id` PK、`pk_id` FK、`meme_id` FK、`legion_id` FK、`user_id` FK、`UNIQUE(pk_id, meme_id)` | `idx_pk_submissions_pk_legion` | N:1 ← pk_matches；N:1 ← meme_cards；N:1 ← legions；N:1 ← users |
-| `pk_votes` | PK 投票（每人每天每场 ≤3 票，应用层+Redis 控制） | `vote_id` PK、`pk_id` FK、`user_id` FK、`legion_id` FK、`voted_at` | `idx_pk_votes_pk_legion`、`idx_pk_votes_user_date`(表达式 date_trunc('day', voted_at))；部分唯一索引示例以注释保留 | N:1 ← pk_matches；N:1 ← users；N:1 ← legions |
+| `pk_votes` | PK 投票（每人每天每场 ≤3 票，应用层+Redis 控制） | `vote_id` PK、`pk_id` FK、`user_id` FK、`legion_id` FK、`voted_at` | `idx_pk_votes_pk_legion`、`idx_pk_votes_user_date`(user_id, voted_at)；部分唯一索引示例以注释保留 | N:1 ← pk_matches；N:1 ← users；N:1 ← legions |
 | `pk_rewards` | PK 奖励发放记录 | `reward_id` PK、`pk_id` FK、`user_id` FK、`legion_id` FK、`reward_type`(win_member/mvp/loser_participation)、`meme_power`、`activity_score`、`badge_code`、`pro_days`、`metadata jsonb` | `idx_pk_rewards_user`、`idx_pk_rewards_pk` | N:1 ← pk_matches；N:1 ← users；N:1 ← legions |
 
 ### 4.8 聊天域 / Chat Domain（4 表）
@@ -231,7 +233,7 @@
 
 | 表名 | 用途 | 关键字段 | 关键索引 | 关联关系 |
 | --- | --- | --- | --- | --- |
-| `ai_cost_logs` | AI 调用成本日志（日预算熔断看板数据源，按月分区） | `(log_id, created_at)` PK、`user_id` FK、`module`(creation/image/video/tts/audit/agent/judge)、`provider`(deepseek/glm/siliconflow/volcano/aliyun)、`model`、`tokens_in/out`、`images`、`video_secs`、`cost_cents`(分)、`latency_ms`、`status`、`request_id` | `idx_ai_cost_user`、`idx_ai_cost_module`、`idx_ai_cost_provider`、`idx_ai_cost_daily`(表达式 date_trunc('day', created_at), module) | N:1 ← users |
+| `ai_cost_logs` | AI 调用成本日志（日预算熔断看板数据源，按月分区） | `(log_id, created_at)` PK、`user_id` FK、`module`(creation/image/video/tts/audit/agent/judge)、`provider`(deepseek/glm/siliconflow/volcano/aliyun)、`model`、`tokens_in/out`、`images`、`video_secs`、`cost_cents`(分)、`latency_ms`、`status`、`request_id` | `idx_ai_cost_user`、`idx_ai_cost_module`、`idx_ai_cost_provider`、`idx_ai_cost_daily`(created_at, module) | N:1 ← users |
 
 ### 4.13 向量域 / Vector Domain（3 表）
 
@@ -318,28 +320,29 @@ LIMIT 3;
 
 | 父表 | 分区键 | 默认分区 | 用途 |
 | --- | --- | --- | --- |
-| `ratings` | `created_at` | `ratings_default` | 评分写入量大，按月切分便于过期清理与索引重建 |
 | `messages` | `created_at` | `messages_default` | 消息表是热点；30 天前数据归档 OSS Parquet |
 | `audit_logs` | `created_at` | `audit_logs_default` | 审核日志只增不改，按月分区 + 冷数据下沉 |
 | `ai_cost_logs` | `created_at` | `ai_cost_logs_default` | 对齐 §14 成本看板日聚合，按月分区便于按月归档 |
 
+> `ratings` 原在分区表清单中，2026-07-07 S0 通电验证时因 `UNIQUE(meme_id, user_id)` 与分区键冲突改为普通表，详见 §1 变更记录。
+
 ### 6.2 主键与外键约束
 
-- 分区表主键必须包含分区键：四张分区表均使用 `(业务主键 uuid, created_at)` 复合主键。
-- 分区表不能直接挂外键引用，但 `ratings.meme_id` / `messages.room_id` 等外键已在 SQL 中通过 `REFERENCES` 声明（PG16 支持分区表外键）。
+- 分区表主键必须包含分区键：三张分区表均使用 `(业务主键 uuid, created_at)` 复合主键。
+- 分区表不能直接挂外键引用，但 `messages.room_id` 等外键已在 SQL 中通过 `REFERENCES` 声明（PG16 支持分区表外键）。
 - 父表上的索引会被自动传播到所有子分区（包括未来新建的月分区）。
 
 ### 6.3 未来按月建分区模板
 
-MVP 阶段仅建 `DEFAULT` 分区兜底；当某月数据量预计超过单分区舒适区（建议 ~1000 万行）时，按月预先建分区。模板如下（以 `ratings` 为例，其余三表同理）：
+MVP 阶段仅建 `DEFAULT` 分区兜底；当某月数据量预计超过单分区舒适区（建议 ~1000 万行）时，按月预先建分区。模板如下（以 `messages` 为例，其余两表同理）：
 
 ```sql
 -- 2026 年 7 月分区
-CREATE TABLE IF NOT EXISTS ratings_2026_07 PARTITION OF ratings
+CREATE TABLE IF NOT EXISTS messages_2026_07 PARTITION OF messages
   FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
 
 -- 2026 年 8 月分区
-CREATE TABLE IF NOT EXISTS ratings_2026_08 PARTITION OF ratings
+CREATE TABLE IF NOT EXISTS messages_2026_08 PARTITION OF messages
   FOR VALUES FROM ('2026-08-01') TO ('2026-09-01');
 
 -- messages / audit_logs / ai_cost_logs 同理
@@ -359,7 +362,7 @@ CREATE TABLE IF NOT EXISTS ai_cost_logs_2026_07 PARTITION OF ai_cost_logs
 
 - `messages` 30 天前数据归档到 OSS Parquet：通过 `pg_dump --table=messages_YYYY_MM` 或 `COPY ... TO PROGRAM` 导出到对象存储后 `DETACH PARTITION`。
 - `audit_logs` / `ai_cost_logs` 保留 12 个月在线，更老分区转冷存储。
-- `ratings` 由于被 `score_avg`、`score_count` 聚合后回写到 `meme_cards`，原表保留 6 个月即可，老分区可 DROP。
+- `ratings` 由于被 `score_avg`、`score_count` 聚合后回写到 `meme_cards`，原表保留 6 个月即可，老数据可直接 DELETE（普通表，不涉及分区 DETACH）。
 
 ---
 
@@ -475,12 +478,12 @@ docs/db/
 - 关注 `Seq Scan`：若大表出现顺序全表扫描，检查 WHERE 是否命中部分索引的过滤条件（部分索引需要查询条件完全匹配 `WHERE` 子句才能命中）。
 - 关注 `Sort` 是否被索引消除：热门 feed 应该走 `idx_meme_cards_hot_score` 而 `Index Scan Backward`，无需显式排序。
 - 向量查询若 `distance` 排序未走 HNSW，确认是否设置了 `hnsw.ef_search` 且查询 ORDER BY 用 `<=>` 算子。
-- JOIN 膨胀：检查 `ratings` / `messages` 是否被外键索引覆盖（父表索引自动传播到分区子表）。
+- JOIN 膨胀：检查 `messages` 是否被外键索引覆盖（父表索引自动传播到分区子表）。`ratings` 已改为普通表，直接走 `idx_ratings_meme_created`。
 - 物化视图刷新慢：检查 `mv_user_meme_power` 的 `LEFT JOIN meme_cards` 是否命中 `idx_meme_cards_author_created`；可改 `REFRESH ... CONCURRENTLY` 避免阻塞读。
 
 ### 10.3 未来分区启用步骤
 
-1. 监控 `ratings_default` / `messages_default` / `audit_logs_default` / `ai_cost_logs_default` 行数，超过阈值（建议 1000 万）启动分区切分。
+1. 监控 `messages_default` / `audit_logs_default` / `ai_cost_logs_default` 行数，超过阈值（建议 1000 万）启动分区切分。`ratings` 已改为普通表，不在此列。
 2. 在月底前由 cron 执行下月分区 `CREATE TABLE IF NOT EXISTS <parent>_YYYY_MM PARTITION OF ...`。
 3. 若 `DEFAULT` 分区已有历史数据，需 `ALTER TABLE <parent> DETACH PARTITION <parent>_default`，把数据 `INSERT INTO <parent>_YYYY_MM SELECT ...` 迁回，再重建 `DEFAULT`。
 4. 父表索引会自动传播到新分区；物化视图无需调整。

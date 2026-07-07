@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable, map } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { RAW_RESPONSE_KEY } from '../decorators/raw-response.decorator';
@@ -19,10 +14,7 @@ export interface EnvelopeData<T> {
 export class ResponseInterceptor<T> implements NestInterceptor<T, EnvelopeData<T> | T> {
   constructor(private readonly reflector: Reflector = new Reflector()) {}
 
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler<T>,
-  ): Observable<EnvelopeData<T> | T> {
+  intercept(context: ExecutionContext, next: CallHandler<T>): Observable<EnvelopeData<T> | T> {
     const isRaw = this.reflector.getAllAndOverride<boolean>(RAW_RESPONSE_KEY, [
       context.getHandler(),
       context.getClass(),

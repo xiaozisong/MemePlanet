@@ -10,13 +10,13 @@ export class VideoController {
   constructor(private readonly videos: VideoService) {}
 
   @Post()
-  async create(@CurrentUser() user, @Body() body: CreateVideoDto) {
+  async create(@CurrentUser() user: CurrentUser, @Body() body: CreateVideoDto) {
     const dto = CreateVideoSchema.parse(body);
     return this.videos.submit(user.sub, dto);
   }
 
   @Get(':id/status')
-  async status(@CurrentUser() user, @Param('id') id: string) {
+  async status(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
     return this.videos.getStatus(user.sub, id);
   }
 

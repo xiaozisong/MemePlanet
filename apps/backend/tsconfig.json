@@ -17,8 +17,8 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["src/*"],
-      "@memestar/shared": ["../../packages/shared/src"],
-      "@memestar/shared/*": ["../../packages/shared/src/*"]
+      "@memestar/shared": ["../../packages/shared/dist"],
+      "@memestar/shared/*": ["../../packages/shared/dist/*"]
     }
   },
   "include": ["src/**/*"],

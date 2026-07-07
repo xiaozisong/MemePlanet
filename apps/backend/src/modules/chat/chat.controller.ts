@@ -10,13 +10,13 @@ export class ChatController {
   constructor(private readonly chat: ChatService) {}
 
   @Get('rooms')
-  async rooms(@CurrentUser() user) {
+  async rooms(@CurrentUser() user: CurrentUser) {
     return this.chat.listRooms(user.sub);
   }
 
   @Get('rooms/:roomId/messages')
   async messages(
-    @CurrentUser() user,
+    @CurrentUser() user: CurrentUser,
     @Param('roomId') roomId: string,
     @Query('cursor') cursor?: string,
   ) {
@@ -24,7 +24,7 @@ export class ChatController {
   }
 
   @Post('messages')
-  async send(@CurrentUser() user, @Body() body: SendMessageDto) {
+  async send(@CurrentUser() user: CurrentUser, @Body() body: SendMessageDto) {
     const dto = SendMessageSchema.parse(body);
     return this.chat.send(user.sub, dto);
   }

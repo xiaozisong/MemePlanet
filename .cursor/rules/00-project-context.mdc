@@ -47,6 +47,7 @@ alwaysApply: true
 | `docs/API-Spec.md` | REST API 详设（34 接口） | 写/改接口前 |
 | `docs/openapi.yaml` | OpenAPI 3.1.0（可导入 Swagger） | 生成 TS 类型、Mock 时 |
 | `docs/context/activeContext.md` | 当前活状态（在做啥/下一步/待办） | 每次开新会话先读 |
+| `docs/context/execution-plan.md` | M1 详细执行计划（S0+S1~S4 技术点级） | 推进 M1 编码任务时读，每完成一项更新状态字段 |
 | `docs/context/decisions.md` | 决策日志（12 项已定稿） | 想质疑或回顾某决策时 |
 | `docs/context/progress.md` | 进度追踪 + 文件地图 | 看进度、找文件时 |
 
@@ -81,7 +82,7 @@ alwaysApply: true
 6. **AI 成本硬熔断**：Agent 日预算 ¥80、视频日预算 ¥200，超限自动降级。配额：免费视频 1次/周·Pro 3次/日；Pro Agent 10次/日。
 7. **AIGC 合规**：所有 AI 生成内容带"AI 生成"标识；M3 上线前必须完成生成式 AI 服务备案（上线 gate）。
 8. **Pro 会员承载 AI 成本**：Pro ¥18/月 + 视频按次包，MVP 即开微信支付。
-9. **不擅自改已定稿决策**：12 项核心决策见 `docs/context/decisions.md`，要改必须先与用户讨论。
+9. **不擅自改已定稿决策**：13 项核心决策见 `docs/context/decisions.md`，要改必须先与用户讨论。
 
 ## 代码风格
 

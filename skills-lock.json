@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "skills": {
+    "agent-browser": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "computedHash": "52d7bf4b8fef0ac6a5e93e67cc6101f16571cfa66aa6d75955274954ccc12152"
+    },
+    "appium": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/appium/SKILL.md",
+      "computedHash": "73a405f0b96e3a24e2e9de5509469aa20805c186f043e226ae1362878cedab0b"
+    },
+    "code-generator": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-generator/SKILL.md",
+      "computedHash": "b855bf3c0dc0b26df7e6c57dec2ea09193e12113009d77d5d3a70a50c00aa39b"
+    },
+    "cypress": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/cypress/SKILL.md",
+      "computedHash": "58c03d766cff732e90176c4a35fd23bba019cb3e65e5e622e6b3e84a815cd07d"
+    },
+    "dart-sass": {
+      "source": "full-stack-skills/build-skills",
+      "sourceType": "github",
+      "skillPath": "skills/dart-sass/SKILL.md",
+      "computedHash": "834df8ca6d005bae1bc1dec8824c6ed4e954063398431d170ff75afaa836a081"
+    },
+    "detox": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/detox/SKILL.md",
+      "computedHash": "73c342d53591f9efcefb1233bfdf134c540eaef3b4946476d65852c6889b2a61"
+    },
+    "docker-ai-ml": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-ai-ml/SKILL.md",
+      "computedHash": "650bb2e8a7c18f9798df77738e8247aac7ea8972eecfc82b6821b860d59136c0"
+    },
+    "docker-basics": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-basics/SKILL.md",
+      "computedHash": "e1c155f23267a6c34658d032f48b9889ef28b27195a7ba47a0f1c84ed55b3ab7"
+    },
+    "docker-build": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-build/SKILL.md",
+      "computedHash": "9b773410d62e9eb2719cee5fc236d672203c946e3ef042bb67fecb5c328cc2e4"
+    },
+    "docker-buildx": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-buildx/SKILL.md",
+      "computedHash": "d5bcd802ab56dc6b11a45650b2c4ea1c29689580acde5f8c68d15d032f329625"
+    },
+    "docker-cicd": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-cicd/SKILL.md",
+      "computedHash": "7bdbea5c44e63a75ef23de47c5ba1e70896abff456f2b63c558b1aa16cfa1551"
+    },
+    "docker-compose": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-compose/SKILL.md",
+      "computedHash": "a2c57a9ef9b6b61ff97d934bf77e7888e01445b3b0e12901053568331ff0c4b1"
+    },
+    "docker-dockerfile": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-dockerfile/SKILL.md",
+      "computedHash": "5d0e3e0c99ff50552138f98fd2d86b9b1b9352b7a727398e59c59ad3def0df1b"
+    },
+    "docker-hub": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-hub/SKILL.md",
+      "computedHash": "4b4268f9a35b48f5b20f04734b665d042bf06437df78655518f76c9220bcdd97"
+    },
+    "docker-networking": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-networking/SKILL.md",
+      "computedHash": "9ab0a9557ca8fe8b582ad34e6d0ba91ded966f461f36f0009f16a9a0df41b55b"
+    },
+    "docker-production": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-production/SKILL.md",
+      "computedHash": "134156edae40644228e5b45535f8d67d1cc45c306e2203c0a53f87bfa3c1b3ec"
+    },
+    "docker-run": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-run/SKILL.md",
+      "computedHash": "9ec2e3d856b333079e197ba97344e9002b7b231861ac7ac1feb53609240a1c9a"
+    },
+    "docker-scout": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-scout/SKILL.md",
+      "computedHash": "3d9f9198dad343842371d1c2c847aa19ab764db761e6ad67ff9b43dfe259e93f"
+    },
+    "docker-security": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-security/SKILL.md",
+      "computedHash": "ff0f56da72d65bf189e60d20198a07c52896bedcb2ce936f461da27a05fd18e7"
+    },
+    "docker-storage": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-storage/SKILL.md",
+      "computedHash": "eb0d1bd6e3655f8baa2f8f8eca2e47cd452daf6e656a0334bd6f2ee1fe0ae1dd"
+    },
+    "docker-testcontainers": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-testcontainers/SKILL.md",
+      "computedHash": "892dacae159ea30688c9b07ff0c53a5608ee747c6c06542e0bf72b51bc5b836b"
+    },
+    "docker-troubleshooting": {
+      "source": "full-stack-skills/docker-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-troubleshooting/SKILL.md",
+      "computedHash": "56d0072e7c80b67003af660f3fd8450f5ad9746765817e63cc665f492d6b45b1"
+    },
+    "documentation-builder": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-builder/SKILL.md",
+      "computedHash": "20e0f384dff72c11b61203206ac061f0a8b38f3552ea52c9246ee8d0093a1d20"
+    },
+    "elasticsearch": {
+      "source": "full-stack-skills/database-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elasticsearch/SKILL.md",
+      "computedHash": "dc69aca7c37f0fad924383dc9e1b8db3ff643eff8e6966a96988dc346ea1d413"
+    },
+    "flutter": {
+      "source": "full-stack-skills/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter/SKILL.md",
+      "computedHash": "ed11dfbbb55c677afc622169795e9b6e497d5739ba684e1bc92abcb6a6b287ca"
+    },
+    "flutter-project-creater": {
+      "source": "full-stack-skills/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-project-creater/SKILL.md",
+      "computedHash": "33b0ff8efbf4443dbe3c3fa846cf795c9084d2bac5aaa1549288ed6d7ad31cc7"
+    },
+    "frontend-design": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "bfaf213101a833a324b2db66e85192e09000b0d35fd21d44338253c8c67158d3"
+    },
+    "java-code-comments": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/java-code-comments/SKILL.md",
+      "computedHash": "3ee17f150cc3ec71175a993ace64875662fb1682e7d976bfb6ffea9f751e4629"
+    },
+    "jest": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/jest/SKILL.md",
+      "computedHash": "d41a182d450d1531804a1bda2f5ed6764246a79a21b7f598198d2c728c239455"
+    },
+    "junit": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/junit/SKILL.md",
+      "computedHash": "2008686a2634a0e0a8e271d708ab3091b9892f7064ce7ff53696b89ebca96f1c"
+    },
+    "maven-search": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/maven-search/SKILL.md",
+      "computedHash": "1b34586c55ecbda4bb5757f133f0e45ce0d779fcaa7b062e1b7c4c8651320af7"
+    },
+    "mcp-builder": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "computedHash": "8ac5bdbf1e04a8091a93036b273df52487ab0b99d8aa9fbe58c784abc8ab0fc3"
+    },
+    "mybatis-plus-generator": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mybatis-plus-generator/SKILL.md",
+      "computedHash": "a5779eba60197dec9ef9fe2062220488ee78240d5365475d46b866b8c082d406"
+    },
+    "mysql": {
+      "source": "full-stack-skills/database-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mysql/SKILL.md",
+      "computedHash": "8c8854b6fcda544e175fd93d5d0f72541e30f72c7e9a958a7bfb4ee03e4e1059"
+    },
+    "nextjs": {
+      "source": "full-stack-skills/react-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nextjs/SKILL.md",
+      "computedHash": "231d3b764a34697e4a9ffe393840cd3aab3afa16bbcc43dc497b197d9a14f0a0"
+    },
+    "oracle": {
+      "source": "full-stack-skills/database-skills",
+      "sourceType": "github",
+      "skillPath": "skills/oracle/SKILL.md",
+      "computedHash": "90b2d852723ee06b8a7c5b016970c2f5f8b82467e414a69344c0b586a302b252"
+    },
+    "parcel": {
+      "source": "full-stack-skills/build-skills",
+      "sourceType": "github",
+      "skillPath": "skills/parcel/SKILL.md",
+      "computedHash": "0150b172b67539256ccb5d3a58255791c6dcb659c5507239d713d414d8507fc0"
+    },
+    "playwright": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/playwright/SKILL.md",
+      "computedHash": "0317ccb387a16005a1b346f5324fed925b476552935fc34631aa4bc8f5cc5fd9"
+    },
+    "postgresql": {
+      "source": "full-stack-skills/database-skills",
+      "sourceType": "github",
+      "skillPath": "skills/postgresql/SKILL.md",
+      "computedHash": "bb328311bd579e1c6d12ae3517b0c3e5c3fdb4115419032087ec17868db13fa1"
+    },
+    "pytest": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/pytest/SKILL.md",
+      "computedHash": "668dd0a00440f758c96d17c9109fb6bece0a3917ab54648099f4da5a21b1fd36"
+    },
+    "react": {
+      "source": "full-stack-skills/react-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react/SKILL.md",
+      "computedHash": "70a73d7612ea4c7f670918e69d21baead467bb92caead038e4c48d688f6bd43e"
+    },
+    "react-hooks": {
+      "source": "full-stack-skills/react-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-hooks/SKILL.md",
+      "computedHash": "079750fd524a2fe7acf03b228df8d8fc23a12c99214d9df529b23fb563ddab75"
+    },
+    "react-native": {
+      "source": "full-stack-skills/react-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-native/SKILL.md",
+      "computedHash": "983bca15f84d7a720007ff6b9affbfe933b5c00664cc4dc6ea3b1ebab38dcf5a"
+    },
+    "react-native-project-creater": {
+      "source": "full-stack-skills/react-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-project-creater/SKILL.md",
+      "computedHash": "f93a9491af6bfeb1d7617170e8405bcaf70213e4374b05891ac388be82b862e9"
+    },
+    "redis": {
+      "source": "full-stack-skills/database-skills",
+      "sourceType": "github",
+      "skillPath": "skills/redis/SKILL.md",
+      "computedHash": "2874155f6b9354c1b951c37042f00b60e2ed1824c5fc82eeb396430404dbf026"
+    },
+    "redux": {
+      "source": "full-stack-skills/react-skills",
+      "sourceType": "github",
+      "skillPath": "skills/redux/SKILL.md",
+      "computedHash": "09e7eb7117c2b0d6dbd2fd40bd037981d2792f754ff22af27ef02d1dc8eeb8db"
+    },
+    "rollup": {
+      "source": "full-stack-skills/build-skills",
+      "sourceType": "github",
+      "skillPath": "skills/rollup/SKILL.md",
+      "computedHash": "ac86e140891fc83186c9250a9a2a03c0077555fe680e0c5f82966441fd700448"
+    },
+    "rspack": {
+      "source": "full-stack-skills/build-skills",
+      "sourceType": "github",
+      "skillPath": "skills/rspack/SKILL.md",
+      "computedHash": "6b2fca7fee544ba6b082f21d9e25147b385abb8869cbcb4eeadae2b7b344c9e6"
+    },
+    "selenium": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/selenium/SKILL.md",
+      "computedHash": "f8a5dc644457ed54d2f27c2c380ed0cce9f80beacce2652a2069b17b619a45bf"
+    },
+    "test-writer": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/test-writer/SKILL.md",
+      "computedHash": "9af50c554a3c613b260586339b3d0892b1cc391f4d0e69e351c703bf1d1296ff"
+    },
+    "theme-factory": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/theme-factory/SKILL.md",
+      "computedHash": "4a572a81e4a22c96fda7f0d0fb66249d3cdf570949f84bca01ad53259a807a6a"
+    },
+    "vite": {
+      "source": "full-stack-skills/build-skills",
+      "sourceType": "github",
+      "skillPath": "skills/vite/SKILL.md",
+      "computedHash": "112e8080f60cd914a79a68f80dc9986ecac7009cb018f82642cde1ba08a120bf"
+    },
+    "vitest": {
+      "source": "full-stack-skills/testing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/vitest/SKILL.md",
+      "computedHash": "e2ed6c6181688ff621a43b3dbd4691d7f9efe9fc765e742bd4ff5dc3b5207c93"
+    },
+    "web-artifacts-builder": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-artifacts-builder/SKILL.md",
+      "computedHash": "5412f015fd071ecfccf84dfde07b6fecdb391c860fcbde106e6e316eab56fd57"
+    },
+    "webapp-testing": {
+      "source": "full-stack-skills/dev-utils-skills",
+      "sourceType": "github",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "computedHash": "5b1c8d465a46b0c86e1028bbef18a9096f6c2e6c2af6d5aeeac76f1dce31e709"
+    },
+    "webpack": {
+      "source": "full-stack-skills/build-skills",
+      "sourceType": "github",
+      "skillPath": "skills/webpack/SKILL.md",
+      "computedHash": "6b2920088d01c685bf394f66d1a74ac918762a353d24c85e8e754f6015e784b8"
+    }
+  }
+}

@@ -10,7 +10,7 @@ export class AuditController {
   constructor(private readonly audit: AuditService) {}
 
   @Post('report')
-  async report(@CurrentUser() user, @Body() body: unknown) {
+  async report(@CurrentUser() user: CurrentUser, @Body() body: unknown) {
     const dto = ReportSchema.parse(body);
     return this.audit.report(user.sub, dto);
   }

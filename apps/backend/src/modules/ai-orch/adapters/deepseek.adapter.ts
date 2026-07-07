@@ -38,7 +38,8 @@ export class DeepSeekAdapter implements LLMAdapter {
   }
 
   estimateCost(tokensIn: number, tokensOut: number): CostEstimate {
-    const yuan = (tokensIn / 1_000_000) * this.pricePerMTokens.input +
+    const yuan =
+      (tokensIn / 1_000_000) * this.pricePerMTokens.input +
       (tokensOut / 1_000_000) * this.pricePerMTokens.output;
     return { costCents: Math.round(yuan * 100), currency: 'CNY' };
   }

@@ -10,7 +10,7 @@ export class RatingController {
   constructor(private readonly ratings: RatingService) {}
 
   @Post()
-  async rate(@CurrentUser() user, @Body() body: CreateRatingDto) {
+  async rate(@CurrentUser() user: CurrentUser, @Body() body: CreateRatingDto) {
     const dto = CreateRatingSchema.parse(body);
     return this.ratings.rate(user.sub, dto);
   }
@@ -21,7 +21,7 @@ export class RatingController {
   }
 
   @Post('comments')
-  async createComment(@CurrentUser() user, @Body() body: unknown) {
+  async createComment(@CurrentUser() user: CurrentUser, @Body() body: unknown) {
     const dto = CreateCommentSchema.parse(body);
     return this.ratings.createComment(user.sub, dto);
   }

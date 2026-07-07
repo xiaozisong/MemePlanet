@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import '../src/styles/global.css';
 import { ApiProvider } from '../src/api/provider.js';
 
 // Sentry / PostHog 在生产环境按 EXPO_PUBLIC_* 初始化

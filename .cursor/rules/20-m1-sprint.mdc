@@ -61,11 +61,11 @@ INF(基础设施) → USER(用户/登录) → AIO(AI编排 LLM Adapter) → CRE(
 - [ ] AIGC 备案材料草稿完成
 - [ ] 基础设施（PG/Redis/R2/CI）全部就位
 
-## 待用户确认（阻塞 M1 推进）
+## 待用户确认（M1 推进相关）
 
-1. **砍项清单是否接受**：`M1-Sprint-Plan.md §7.3` 20 条砍项建议，是否全部接受？或有调整？
-2. **脚手架是否先通电验证**：是否要我代执行 `pnpm install` + `pnpm db:init` + `pnpm dev:backend` 验证脚手架能跑（需你本地先开 Docker Desktop）？
-3. **M1 S2 起点**：砍项确认后，从 S2（用户系统 + AI 编排 LLM Adapter 真实接入）开始编码？
+1. **AI/短信/内容安全 key 申请**：S1/S2 阻塞项，建议尽早提交：DeepSeek + GLM-4-Flash + 阿里云短信签名（审核 1~3 天）+ 阿里云内容安全 + Supabase 项目。
+
+> 已解决（保留历史）：① ratings 表设计变更已确认 → ADR-013（普通表）✅；② 砍项清单已按 25 人日核心闭环采纳 ✅；③ 脚手架通电已代执行完成（S0 + T1.0）✅；④ M1 编码起点已明确为 S1 T1.1（Drizzle schema 对齐）✅。
 
 ## M2 预告
 

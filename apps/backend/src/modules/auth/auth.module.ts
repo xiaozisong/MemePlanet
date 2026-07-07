@@ -10,6 +10,7 @@ import { AuthService } from './auth.service.js';
     ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
+      global: true,
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({

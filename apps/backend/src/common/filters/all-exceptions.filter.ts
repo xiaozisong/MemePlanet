@@ -42,7 +42,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     if (status >= 500) {
-      this.logger.error(`[${traceId ?? '-'}] ${request.method} ${request.url} -> ${status}`, exception as Error);
+      this.logger.error(
+        `[${traceId ?? '-'}] ${request.method} ${request.url} -> ${status}`,
+        exception as Error,
+      );
     }
 
     response.status(status).json({

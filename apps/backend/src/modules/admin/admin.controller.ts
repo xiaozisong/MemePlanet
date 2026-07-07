@@ -16,7 +16,10 @@ export class AdminController {
   }
 
   @Post('audit/:auditId/action')
-  async auditAction(@Param('auditId') id: string, @Body() body: { action: string; reason?: string }) {
+  async auditAction(
+    @Param('auditId') id: string,
+    @Body() body: { action: string; reason?: string },
+  ) {
     return this.admin.auditAction(id, body.action, body.reason);
   }
 

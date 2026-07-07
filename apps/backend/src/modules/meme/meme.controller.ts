@@ -11,10 +11,7 @@ export class MemeController {
 
   @Public()
   @Get('feed')
-  async feed(
-    @Query('page') page?: string,
-    @Query('pageSize') pageSize?: string,
-  ) {
+  async feed(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
     return this.memes.feed(Number(page ?? 1), Number(pageSize ?? 20));
   }
 
@@ -26,7 +23,7 @@ export class MemeController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@CurrentUser() user, @Body() body: CreateMemeDto) {
+  async create(@CurrentUser() user: CurrentUser, @Body() body: CreateMemeDto) {
     const dto = CreateMemeSchema.parse(body);
     return this.memes.publish(user.sub, dto);
   }

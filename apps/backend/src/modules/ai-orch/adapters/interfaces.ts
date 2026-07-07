@@ -14,7 +14,9 @@ export interface ImageAdapter {
   readonly name: string;
   readonly model: string;
   readonly pricePerImage: number; // 元/张
-  generate(req: import('../interfaces.js').ImageRequest): Promise<import('../interfaces.js').ImageResult[]>;
+  generate(
+    req: import('../interfaces.js').ImageRequest,
+  ): Promise<import('../interfaces.js').ImageResult[]>;
   health(): Promise<ProviderHealth>;
   estimateCost(images: number): CostEstimate;
 }
@@ -23,7 +25,9 @@ export interface VideoAdapter {
   readonly name: string;
   readonly model: string;
   readonly pricePerSecond: number; // 元/秒
-  submit(req: import('../interfaces.js').VideoRequest): Promise<import('../interfaces.js').VideoTaskHandle>;
+  submit(
+    req: import('../interfaces.js').VideoRequest,
+  ): Promise<import('../interfaces.js').VideoTaskHandle>;
   poll(taskId: string): Promise<import('../interfaces.js').VideoResult>;
   health(): Promise<ProviderHealth>;
   estimateCost(seconds: number): CostEstimate;
@@ -33,7 +37,9 @@ export interface TTSAdapter {
   readonly name: string;
   readonly model: string;
   readonly pricePer1kChars: number;
-  synthesize(req: import('../interfaces.js').TTSRequest): Promise<import('../interfaces.js').TTSResult>;
+  synthesize(
+    req: import('../interfaces.js').TTSRequest,
+  ): Promise<import('../interfaces.js').TTSResult>;
   health(): Promise<ProviderHealth>;
   estimateCost(chars: number): CostEstimate;
 }

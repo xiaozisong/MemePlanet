@@ -435,7 +435,9 @@ CREATE INDEX IF NOT EXISTS idx_video_jobs_external   ON video_jobs (external_tas
 -- 7. 互动域 / Interaction Domain
 -- =============================================================================
 
--- 7.1 ratings  评分（按月分区）
+-- 7.1 ratings  评分
+-- 注：原设计按月分区，但 UNIQUE(meme_id, user_id) 跨分区无法实现（PG16 要求分区表唯一约束包含分区键）。
+--     MVP 阶段数据量小，改为普通表保留"一人一梗一评"唯一约束；未来数据量超 ~1000 万再加分区（届时需数据迁移）。
 CREATE TABLE IF NOT EXISTS ratings (
     score_id          uuid NOT NULL DEFAULT gen_random_uuid(),
     meme_id           uuid NOT NULL REFERENCES meme_cards(meme_id) ON DELETE CASCADE,
@@ -447,21 +449,15 @@ CREATE TABLE IF NOT EXISTS ratings (
     is_god_trash_vote boolean NOT NULL DEFAULT false,   -- 用户二元判定
     comment           text,
     created_at        timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (score_id, created_at),
+    PRIMARY KEY (score_id),
     UNIQUE (meme_id, user_id)
-) PARTITION BY RANGE (created_at);
-
--- MVP 单分区（默认分区兜底所有未匹配数据）
-CREATE TABLE IF NOT EXISTS ratings_default PARTITION OF ratings DEFAULT;
--- 未来按月分区模板（启用时取消注释）：
--- CREATE TABLE IF NOT EXISTS ratings_2026_07 PARTITION OF ratings
---   FOR VALUES FROM ('2026-07-01') TO ('2026-08-01');
+);
 
 CREATE INDEX IF NOT EXISTS idx_ratings_meme_created   ON ratings (meme_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ratings_user_created   ON ratings (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ratings_dimensions_gin ON ratings USING gin (dimensions);
 
-COMMENT ON TABLE ratings IS '评分表：一人一梗一评，按 created_at 月分区（MVP 单默认分区）';
+COMMENT ON TABLE ratings IS '评分表：一人一梗一评（UNIQUE meme_id+user_id），普通表（MVP 不分区，未来数据量大再加分区）';
 
 -- 7.2 comments  评论
 CREATE TABLE IF NOT EXISTS comments (
@@ -551,7 +547,7 @@ CREATE TABLE IF NOT EXISTS legions (
 CREATE INDEX IF NOT EXISTS idx_legions_level_activity ON legions (level, activity_score DESC) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_legions_status         ON legions (status) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_legions_theme_tags     ON legions USING gin (theme_tags);
-CREATE INDEX IF NOT EXISTS idx_legions_name_trgm      ON legions USING gin (name citext_ops);
+CREATE INDEX IF NOT EXISTS idx_legions_name_trgm      ON legions USING gin ((name::text) gin_trgm_ops);
 
 DROP TRIGGER IF EXISTS trg_legions_updated_at ON legions;
 CREATE TRIGGER trg_legions_updated_at BEFORE UPDATE ON legions
@@ -648,10 +644,12 @@ CREATE TABLE IF NOT EXISTS pk_votes (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pk_votes_pk_legion   ON pk_votes (pk_id, legion_id);
-CREATE INDEX IF NOT EXISTS idx_pk_votes_user_date   ON pk_votes (user_id, date_trunc('day', voted_at));
+CREATE INDEX IF NOT EXISTS idx_pk_votes_user_date   ON pk_votes (user_id, voted_at);
+-- 注：原设计用 date_trunc('day', voted_at) 表达式索引，但 timestamptz 上 date_trunc 是 STABLE 非 IMMUTABLE，无法建索引。
+--     改用 (user_id, voted_at) 普通索引，按天分组在应用层用范围查询（voted_at >= date AND voted_at < date+1）命中。
 -- 部分唯一索引：每用户每场每天唯一一票（应用层允许 3 票则改为不唯一，此处保留示例）
 -- CREATE UNIQUE INDEX IF NOT EXISTS uq_pk_votes_per_day
---   ON pk_votes (pk_id, user_id, date_trunc('day', voted_at));
+--   ON pk_votes (pk_id, user_id, (voted_at AT TIME ZONE 'Asia/Shanghai')::date);
 
 -- 9.4 pk_rewards  PK 奖励发放记录
 CREATE TABLE IF NOT EXISTS pk_rewards (
@@ -951,7 +949,9 @@ CREATE TABLE IF NOT EXISTS ai_cost_logs_default PARTITION OF ai_cost_logs DEFAUL
 CREATE INDEX IF NOT EXISTS idx_ai_cost_user    ON ai_cost_logs (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_cost_module  ON ai_cost_logs (module, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_cost_provider ON ai_cost_logs (provider, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_ai_cost_daily   ON ai_cost_logs (date_trunc('day', created_at), module);
+CREATE INDEX IF NOT EXISTS idx_ai_cost_daily   ON ai_cost_logs (created_at, module);
+-- 注：原设计用 date_trunc('day', created_at) 表达式索引，但 timestamptz 上 date_trunc 是 STABLE 非 IMMUTABLE，无法建索引。
+--     改用 (created_at, module) 普通索引，按天聚合在应用层用范围查询命中。
 
 COMMENT ON TABLE ai_cost_logs IS 'AI 调用成本日志：日预算熔断看板数据源，按月分区';
 

@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { JwtPayload } from '../guards/jwt-auth.guard';
 
-export interface CurrentUser extends JwtPayload {}
+export type CurrentUser = JwtPayload;
 
 export const CurrentUser = createParamDecorator(
   (data: keyof JwtPayload | undefined, ctx: ExecutionContext) => {

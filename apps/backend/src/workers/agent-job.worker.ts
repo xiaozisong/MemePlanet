@@ -22,15 +22,24 @@ export class AgentJobWorker {
         //   2) Generate: DeepSeek V3 生成 3 候选
         //   3) Self-Score: 结构化输出打分选最优
         //   失败降级：单次 prompt 模式返回 3 候选 + 退能量
-        const step = (job.data.step as keyof typeof AGENT_STEPS | undefined) ?? AGENT_STEPS.GENERATE;
+        const step =
+          (job.data.step as keyof typeof AGENT_STEPS | undefined) ?? AGENT_STEPS.GENERATE;
         this.logger.log(`  - 处理 ${step}`);
         return { ok: true };
       },
-      { connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number(process.env.REDIS_PORT ?? 6379) } },
+      {
+        connection: {
+          host: process.env.REDIS_HOST ?? 'localhost',
+          port: Number(process.env.REDIS_PORT ?? 6379),
+        },
+      },
     );
 
     const events = new QueueEvents('agent_jobs', {
-      connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number(process.env.REDIS_PORT ?? 6379) },
+      connection: {
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: Number(process.env.REDIS_PORT ?? 6379),
+      },
     });
     events.on('failed', ({ jobId, failedReason }) =>
       this.logger.error(`agent job ${jobId} failed: ${failedReason}`),

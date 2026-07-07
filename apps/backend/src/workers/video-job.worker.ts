@@ -21,11 +21,19 @@ export class VideoJobWorker {
         //       4) 上传 R2 5) 入审核队列
         return { ok: true };
       },
-      { connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number(process.env.REDIS_PORT ?? 6379) } },
+      {
+        connection: {
+          host: process.env.REDIS_HOST ?? 'localhost',
+          port: Number(process.env.REDIS_PORT ?? 6379),
+        },
+      },
     );
 
     const events = new QueueEvents('video_jobs', {
-      connection: { host: process.env.REDIS_HOST ?? 'localhost', port: Number(process.env.REDIS_PORT ?? 6379) },
+      connection: {
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: Number(process.env.REDIS_PORT ?? 6379),
+      },
     });
     events.on('failed', ({ jobId, failedReason }) =>
       this.logger.error(`video job ${jobId} failed: ${failedReason}`),

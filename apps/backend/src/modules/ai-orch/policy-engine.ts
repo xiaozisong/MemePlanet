@@ -8,13 +8,22 @@ import {
   DoubaoAdapter,
   VolcanoTTSAdapter,
 } from './adapters/index.js';
-import type {
-  LLMAdapter,
-  ImageAdapter,
-  VideoAdapter,
-  TTSAdapter,
-} from './adapters/interfaces.js';
+import type { LLMAdapter, ImageAdapter, VideoAdapter, TTSAdapter } from './adapters/interfaces.js';
 import { AI_PROVIDER, POLICY } from '@memestar/shared';
+
+interface AIProviderConfig {
+  apiKey?: string;
+  baseUrl?: string;
+  appId?: string;
+  tts?: { appId?: string; token?: string; cluster?: string };
+}
+interface AIConfig {
+  deepseek?: AIProviderConfig;
+  glm?: AIProviderConfig;
+  siliconflow?: AIProviderConfig;
+  tongyi?: AIProviderConfig;
+  volcano?: AIProviderConfig;
+}
 
 interface ProviderState {
   errorCount: number;
@@ -38,7 +47,7 @@ export class PolicyEngine {
   private readonly tts: TTSAdapter | undefined;
 
   constructor(config: ConfigService) {
-    const ai = config.get('ai') as Record<string, Record<string, string | undefined>> | undefined;
+    const ai = config.get<AIConfig>('ai');
     const deepseekKey = ai?.deepseek?.apiKey;
     const glmKey = ai?.glm?.apiKey;
     const sfKey = ai?.siliconflow?.apiKey;
@@ -107,18 +116,20 @@ export class PolicyEngine {
     const total = s.errorCount + s.successCount;
     if (total >= 10 && s.errorCount / total > POLICY.CIRCUIT_ERROR_RATE_THRESHOLD) {
       s.circuitOpenUntil = Date.now() + POLICY.CIRCUIT_OPEN_DURATION_MS;
-      this.logger.warn(`⚡ 熔断触发: ${name} 错误率=${(s.errorCount / total).toFixed(2)}，开放 5min`);
+      this.logger.warn(
+        `⚡ 熔断触发: ${name} 错误率=${(s.errorCount / total).toFixed(2)}，开放 5min`,
+      );
     }
     this.states.set(name, s);
   }
 
-  private fresh(name: string): ProviderState {
+  private fresh(_name: string): ProviderState {
     return { errorCount: 0, successCount: 0, circuitOpenUntil: 0 };
   }
 
-  private async runChain<T>(
-    chain: ReadonlyArray<{ name: string }>,
-    call: (provider: { name: string }) => Promise<T>,
+  private async runChain<T, P extends { name: string }>(
+    chain: ReadonlyArray<P>,
+    call: (provider: P) => Promise<T>,
     primaryName: string,
   ): Promise<T> {
     let lastErr: unknown;

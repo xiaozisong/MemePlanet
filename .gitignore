@@ -40,6 +40,9 @@ apps/mobile/.dart_tool/
 
 # ---- TypeScript ----
 *.d.ts.map
+# shared 包源码目录下的编译产物（tsc 误生成时排除）
+packages/shared/src/**/*.js
+packages/shared/src/**/*.js.map
 
 # ---- Testing ----
 coverage/
@@ -74,6 +77,8 @@ lerna-debug.log*
 *.swo
 *~
 .history/
+# Cursor Agent 本地运行时产物
+.agents/
 
 # ---- OS ----
 .DS_Store

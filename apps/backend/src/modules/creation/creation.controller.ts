@@ -10,23 +10,27 @@ export class CreationController {
   constructor(private readonly creations: CreationService) {}
 
   @Post()
-  async create(@CurrentUser() user, @Body() body: CreateCreationDto) {
+  async create(@CurrentUser() user: CurrentUser, @Body() body: CreateCreationDto) {
     const dto = CreateCreationSchema.parse(body);
     return this.creations.start(user.sub, dto);
   }
 
   @Get(':id')
-  async status(@CurrentUser() user, @Param('id') id: string) {
+  async status(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
     return this.creations.getStatus(user.sub, id);
   }
 
   @Post(':id/choose')
-  async choose(@CurrentUser() user, @Param('id') id: string, @Body() body: { idx: number }) {
+  async choose(
+    @CurrentUser() user: CurrentUser,
+    @Param('id') id: string,
+    @Body() body: { idx: number },
+  ) {
     return this.creations.chooseCandidate(user.sub, id, body.idx);
   }
 
   @Post(':id/regenerate')
-  async regenerate(@CurrentUser() user, @Param('id') id: string) {
+  async regenerate(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
     return this.creations.regenerate(user.sub, id);
   }
 }

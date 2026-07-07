@@ -9,7 +9,7 @@ export class RecommendController {
 
   @UseGuards(JwtAuthGuard)
   @Get('feed')
-  async feed(@CurrentUser() user, @Query('page') page?: string) {
+  async feed(@CurrentUser() user: CurrentUser, @Query('page') page?: string) {
     return this.reco.personalizedFeed(user.sub, Number(page ?? 1));
   }
 }

@@ -11,7 +11,7 @@ export class AnalyticsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('event')
-  async track(@CurrentUser() user, @Body() body: unknown) {
+  async track(@CurrentUser() user: CurrentUser, @Body() body: unknown) {
     const dto = TrackEventSchema.parse(body);
     return this.analytics.track(user?.sub, dto);
   }

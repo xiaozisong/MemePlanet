@@ -23,20 +23,20 @@ export class LegionController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@CurrentUser() user, @Body() body: CreateLegionDto) {
+  async create(@CurrentUser() user: CurrentUser, @Body() body: CreateLegionDto) {
     const dto = CreateLegionSchema.parse(body);
     return this.legions.create(user.sub, dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/join')
-  async join(@CurrentUser() user, @Param('id') id: string) {
+  async join(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
     return this.legions.join(user.sub, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/leave')
-  async leave(@CurrentUser() user, @Param('id') id: string) {
+  async leave(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
     return this.legions.leave(user.sub, id);
   }
 }

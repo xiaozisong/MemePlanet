@@ -3,8 +3,8 @@ import { View, Text } from 'react-native';
 
 export default function SettingsScreen() {
   return (
-    <View className="flex-1 bg-ink p-4">
-      <Text className="text-white text-2xl font-bold">设置</Text>
+    <View className="bg-ink flex-1 p-4">
+      <Text className="text-2xl font-bold text-white">设置</Text>
     </View>
   );
 }

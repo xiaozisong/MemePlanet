@@ -23,14 +23,14 @@ export class PKController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@CurrentUser() user, @Body() body: CreatePKDto) {
+  async create(@CurrentUser() user: CurrentUser, @Body() body: CreatePKDto) {
     const dto = CreatePKSchema.parse(body);
     return this.pk.create(user.sub, dto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/vote')
-  async vote(@CurrentUser() user, @Param('id') id: string, @Body() body: unknown) {
+  async vote(@CurrentUser() user: CurrentUser, @Param('id') id: string, @Body() body: unknown) {
     const dto = PKVoteSchema.parse(body);
     return this.pk.vote(user.sub, id, dto.legionId);
   }
