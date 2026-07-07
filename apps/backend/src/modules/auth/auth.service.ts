@@ -39,6 +39,10 @@ export class AuthService {
     if (!match) throw new UnauthorizedException('缺少 token');
     // TODO: 校验旧 token + 滚动签发新 token
     const payload = await this.jwt.verifyAsync<JwtPayload>(match[1] as string);
-    return { token: await this.jwt.signAsync(payload) };
+    // jsonwebtoken 拒绝对已含 iat/exp 的 payload 再设 expiresIn，滚动签发前需剔除保留字段
+    const { iat, exp, ...claims } = payload as JwtPayload & { iat?: number; exp?: number };
+    void iat;
+    void exp;
+    return { token: await this.jwt.signAsync(claims) };
   }
 }

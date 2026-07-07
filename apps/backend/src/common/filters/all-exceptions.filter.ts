@@ -8,6 +8,15 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+// zod 错误识别（避免在 filter 里硬依赖 zod 类型，按结构判定）
+function isZodError(e: unknown): e is { errors: { message: string }[] } {
+  return (
+    e instanceof Error &&
+    (e.constructor?.name === 'ZodError' || (e as { name?: string }).name === 'ZodError') &&
+    Array.isArray((e as { errors?: unknown }).errors)
+  );
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -36,6 +45,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : message;
         code = (r.code as number | undefined) ?? status * 100;
       }
+    } else if (isZodError(exception)) {
+      // zod 校验失败统一映射为 400 Bad Request
+      status = HttpStatus.BAD_REQUEST;
+      code = 40000;
+      message =
+        (exception as { errors?: { message: string }[] }).errors
+          ?.map((e) => e.message)
+          .join('; ') ?? '参数校验失败';
     } else if (exception instanceof Error) {
       message = exception.message;
       this.logger.error(exception.stack ?? exception.message);

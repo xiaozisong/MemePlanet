@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { apiClient } from './client.js';
+import { apiClient } from './client';
 
 const ApiContext = createContext(apiClient);
 

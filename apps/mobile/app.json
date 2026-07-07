@@ -41,7 +41,10 @@
           "username": "memestar",
           "runtimeVersion": "0.1.0"
         }
-      ]
+      ],
+      "@sentry/react-native",
+      "expo-asset",
+      "expo-font"
     ],
     "updates": {
       "url": "https://u.expo.dev/your-project-id",

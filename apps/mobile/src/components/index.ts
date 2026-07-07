@@ -1,1 +1,1 @@
-export { MemeCard } from './MemeCard.js';
+export { MemeCard } from './MemeCard';

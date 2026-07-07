@@ -22,10 +22,10 @@
         "src/*"
       ],
       "@memestar/shared": [
-        "../../packages/shared/src"
+        "../../packages/shared/dist"
       ],
       "@memestar/shared/*": [
-        "../../packages/shared/src/*"
+        "../../packages/shared/dist/*"
       ]
     }
   },

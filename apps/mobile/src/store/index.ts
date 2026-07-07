@@ -1,1 +1,1 @@
-export * from './user.store.js';
+export * from './user.store';

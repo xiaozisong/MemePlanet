@@ -48,6 +48,9 @@ packages/shared/src/**/*.js.map
 coverage/
 *.lcov
 .nyc_output/
+apps/web/playwright-report/
+apps/web/test-results/
+apps/mobile/dist/
 
 # ---- Env ----
 .env
