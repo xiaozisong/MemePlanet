@@ -1,11 +1,7 @@
 import React from 'react';
 import { MemeCard } from '../src/components/MemeCard';
+import type { MemeCardData } from '../src/components/MemeCard';
 
-/**
- * React 19 已废弃 react-test-renderer（create 后立即 unmount，toJSON 恒为 null）。
- * 这里改为直接调用函数组件拿到 React 元素树（普通 JS 对象），手动递归遍历
- * props.children 收集字符串叶子，验证渲染内容。
- */
 function collectStrings(node: unknown): string[] {
   const out: string[] = [];
   const walk = (n: unknown): void => {
@@ -31,26 +27,42 @@ function collectStrings(node: unknown): string[] {
   return out;
 }
 
-function render<C extends React.ComponentType>(Component: C, props?: React.ComponentProps<C>): string[] {
-  const el = (Component as (p: React.ComponentProps<C>) => React.ReactElement)(props as React.ComponentProps<C>);
-  return collectStrings(el);
+function makeMockMeme(title: string): MemeCardData {
+  return {
+    meme_id: 'test-1',
+    title,
+    author_nickname: '测试用户',
+    author_avatar_url: null,
+    type: 'text',
+    cover_url: null,
+    score_avg: 8.5,
+    score_count: 10,
+    comment_count: 5,
+    favorite_count: 20,
+    share_count: 3,
+    is_ai_generated: false,
+    tags: [],
+    published_at: '2026-07-08T12:00:00Z',
+  };
 }
 
 describe('[Component] MemeCard 组件', () => {
   test('渲染 title 文案', () => {
-    const texts = render(MemeCard, { title: '测试梗卡' });
+    const el = MemeCard({ meme: makeMockMeme('测试梗卡'), onPress: undefined });
+    const texts = collectStrings(el);
     expect(texts.some((t) => t.includes('测试梗卡'))).toBe(true);
   });
 
   test('不同 title 多次渲染不抛错', () => {
     for (let i = 0; i < 5; i++) {
-      const texts = render(MemeCard, { title: `梗${i}` });
+      const el = MemeCard({ meme: makeMockMeme(`梗${i}`), onPress: undefined });
+      const texts = collectStrings(el);
       expect(texts.some((t) => t.includes(`梗${i}`))).toBe(true);
     }
   });
 
   test('渲染产物是合法 React 元素', () => {
-    const el = (MemeCard as (p: { title: string }) => React.ReactElement)({ title: 'x' });
+    const el = MemeCard({ meme: makeMockMeme('x'), onPress: undefined });
     expect(React.isValidElement(el)).toBe(true);
   });
 });

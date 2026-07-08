@@ -6,10 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import '../src/styles/global.css';
 import { ApiProvider } from '../src/api/provider';
-
-// Sentry / PostHog 在生产环境按 EXPO_PUBLIC_* 初始化
-// import * as Sentry from '@sentry/react-native';
-// if (process.env.EXPO_PUBLIC_SENTRY_DSN) Sentry.init({ dsn: process.env.EXPO_PUBLIC_SENTRY_DSN });
+import { colors } from '@/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,9 +26,11 @@ export default function RootLayout() {
           <StatusBar style="light" />
           <Stack
             screenOptions={{
-              headerStyle: { backgroundColor: '#0F0F12' },
-              headerTintColor: '#fff',
-              contentStyle: { backgroundColor: '#0F0F12' },
+              headerStyle: { backgroundColor: colors.ink.DEFAULT },
+              headerTintColor: colors.text.primary,
+              headerTitleStyle: { fontSize: 18, fontWeight: '700' as const },
+              headerShadowVisible: false,
+              contentStyle: { backgroundColor: colors.ink.DEFAULT },
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -2,7 +2,7 @@
 
 > 记录"什么做完了 / 什么没做 / 已知问题 / 文件在哪"。配合 `activeContext.md`（当前焦点）与 `decisions.md`（决策）使用。
 
-**最后更新**：2026-07-07
+**最后更新**：2026-07-08
 
 ---
 
@@ -11,12 +11,14 @@
 | 阶段 | 状态 | 完成度 |
 |---|---|---|
 | 产品+技术设计 | ✅ 完成 | 100% |
-| 立项决策（12 项） | ✅ 完成 | 100% |
+| 立项决策（13 项） | ✅ 完成 | 100% |
 | M1 工程化准备（Sprint/DDL/API） | ✅ 完成 | 100% |
 | 项目脚手架 | ✅ 文件完成 + 通电验证 | 100%（S0 通过） |
 | M1 详细执行计划 | ✅ 完成 | 100%（S0+S1~S4，~31 人日） |
-| 脚手架通电调试（S0） | ✅ 部分完成 | 85%（S0-1~S0-5+S0-7 done，S0-6 后端 DI 装配推 S1 T1.2） |
+| 脚手架通电调试（S0） | ✅ 完成 | 100%（S0-1~S0-6 全 done） |
 | S1 T1.0 脚手架 TS 补丁 | ✅ 完成 | 100%（~60 个 TS 错误全修，typecheck+lint 通过） |
+| 双端 QA 测试套件 | ✅ 完成 | 100%（166 用例全通过，Web+App 双端可运行） |
+| Mobile UI 设计系统 | ✅ 完成 | 100%（design tokens + SVG 图标 + 通用组件 + 5 页优化 + typecheck/lint 全 0） |
 | M1 S1 用户系统+AI 编排 | ⏳ 待启动 | 0%（T1.1 起点） |
 | M1 S2 造梗+梗卡+审核 | ⏳ 待启动 | 0% |
 | M1 S3 feed+评分+RN | ⏳ 待启动 | 0% |
@@ -38,6 +40,27 @@
 - [x] `API-Spec.md`（15 Module 接口表 + 34 接口详设 + WS/Webhook 契约）
 - [x] `openapi.yaml`（OpenAPI 3.1.0，29 path/34 操作/43 schema）
 - [x] `context/activeContext.md` + `context/decisions.md` + `context/progress.md` + `context/execution-plan.md`（M1 详细执行计划，S0+S1~S4 技术点级粒度）
+
+### 双端 QA 测试套件（166 用例，100% 通过）
+- [x] `apps/backend/test/e2e/`（6 spec：冒烟/鉴权/全量路由/功能/压力/性能，114 用例，Jest+supertest）
+- [x] `tests/backend/api.smoke.test.ts`（根级黑盒冒烟，13 用例）
+- [x] `apps/web/tests/e2e/` + `apps/web/playwright.config.ts`（3 spec：冒烟/路由/功能，23 用例，Playwright chromium）
+- [x] `apps/mobile/__tests__/` + `apps/mobile/__mocks__/`（2 spec：组件/13 屏渲染冒烟，16 用例，Jest+ts-jest + RN/expo-router mock）
+- [x] `apps/mobile/jest.config.js` + `apps/backend/test/jest.e2e.config.json` + `jest.config.js`（根）
+- [x] `docs/qa/test-plan.md` + `docs/qa/test-report.md`（测试计划 + 报告）
+- [x] `expo export --platform ios` bundle 编译验证通过（1443 模块 / 4.02 MB）
+
+### Mobile UI 设计系统（第一期 + 第二期修复）
+- [x] `apps/mobile/src/theme/` 设计系统目录：`colors.ts`（含 `colors` 嵌套 + `colorsFlat` 扁平）+ `spacing.ts` + `typography.ts` + `radius.ts` + `shadow.ts`
+- [x] `apps/mobile/src/theme/tailwind-colors.cjs`：CommonJS 颜色映射，给 `tailwind.config.js` 引用（单源 truth）
+- [x] `apps/mobile/tailwind.config.js` 更新：colors 改为 `require('./src/theme/tailwind-colors.cjs')`，间距/字号/圆角/阴影同步 theme tokens
+- [x] `apps/mobile/src/components/icons/Icons.tsx` + `index.ts`：30+ SVG 图标（Home/Sparkles/Shield/Swords/User + Heart/Comment/Share/Bookmark/Star 等）
+- [x] `apps/mobile/app/(tabs)/_layout.tsx`：Tab 栏 emoji 替换为 SVG 图标，颜色用 theme tokens
+- [x] 通用组件：`PrimaryButton`（4 variant + 3 size + loading）+ `UserAvatar`（5 size + badge）+ `LoadingSkeleton`（4 variant + 动画）+ `FullPageLoading` + `EmptyState`
+- [x] 页面优化：Feed（骨架屏/空状态/下拉刷新）+ 登录页（品牌区/输入框/CTA）+ 造梗入口（4 模式卡片）+ 个人主页（头像/数据/Tab/菜单）
+- [x] 类型修复：装 `@types/jest` + `@types/node`；`tsconfig.json` `types` 加 `"node"`；`colorsFlat` 解决嵌套 vs 扁平访问；`app/_layout.tsx` 删除 RN 不支持的 `elevation/shadowOpacity`；`feed.tsx` `RefreshControl tintColor` 改 `themeColors.brand!`
+- [x] `pnpm --filter @memestar/mobile typecheck` = 0 errors
+- [x] `pnpm --filter @memestar/mobile lint` = 0 errors / 0 warnings
 
 ### 代码脚手架（215 文件）
 - [x] 根配置：`package.json` / `pnpm-workspace.yaml` / `tsconfig.base.json` / `.editorconfig` / `.gitignore` / `.npmrc` / `.nvmrc` / `.env.example` / `.prettierrc` / `.eslintrc.cjs` / `commitlint.config.cjs`
@@ -66,7 +89,7 @@
 
 ## 未完成 / 待做
 
-### 通电验证（S0，已完成 85%）
+### 通电验证（S0，已完成 100%）
 - [x] 启动 Docker Desktop（28.1.1 + Compose v2.35.1）
 - [x] `cp .env.example .env` 并改 4 处 host 为 `localhost`（POSTGRES_HOST/REDIS_HOST/REDIS_URL/DATABASE_URL）
 - [x] `pnpm install`（1921 包）
@@ -74,7 +97,7 @@
 - [x] `pnpm gen:api`（generated.ts 生成）
 - [x] `docker exec ... \dt` 验证 50 表（2 users + 3 legions + 1 meme + 5 templates + 4 tts + 20 sensitive words）
 - [x] `pnpm typecheck + lint` 无错误（T1.0 修 ~60 个 TS 编译错误后通过）
-- [ ] `pnpm dev:backend` 验证后端 fully 启动 + Swagger + `/health`（TS 编译 0 errors，Nest 启动到 DI 阶段；JwtModule 装配推 S1 T1.2）
+- [x] `pnpm dev:backend` 验证后端 fully 启动 + Swagger + `/health`（S0-6：JwtModule.registerAsync 加 `global: true`，14 controller 共享全局 JwtService；`/health` 200 + `/docs` 可访问）
 
 ### S1 T1.0 脚手架 TS 补丁（已完成）
 - [x] 装缺依赖 `dotenv` + `socket.io` + `@types/socket.io`
@@ -83,7 +106,7 @@
 - [x] 修 TS2339 policy-engine（~5 处）：runChain 泛型加 `P extends {name:string}` + 新增 `AIConfig`/`AIProviderConfig` 类型
 
 ### M1 编码任务（按 `execution-plan.md` 推进，每完成一项更新状态字段）
-- [ ] S1 用户系统+AI 编排（9.7 人日，W2）：T1.0 已完成，从 T1.1 开始（Drizzle schema 对齐）→ T1.2（JWT 中间件 + JwtModule 装配，解锁后端 fully 启动）
+- [ ] S1 用户系统+AI 编排（9.7 人日，W2）：T1.0 已完成，从 T1.1 开始（Drizzle schema 对齐）→ T1.2（Supabase Auth + JWT 中间件 + RBAC 装饰器；JwtModule 全局装配已完成）
 - [ ] S2 造梗+梗卡+机审（8.5 人日，W3）
 - [ ] S3 feed+评分+RN（11.0 人日，W4）
 - [ ] S4 合规+Demo+收尾（5.6 人日，W5）
@@ -102,10 +125,14 @@
 - `.env.example` 的 `DATABASE_URL` 默认 host 是 `postgres`（docker 内部名），从宿主机跑 backend 要改 `localhost`（已在 .env 改）
 - M1 P0 工时 74 人日 vs 个人月产能 22 人日，已按 `M1-Sprint-Plan.md §7.3` 砍到 ~25 人日核心闭环（用户已采纳）
 - **改 shared 源码后需 `pnpm build:shared` 才生效**（T1.0 把 backend paths 指向 shared/dist）。开发时建议开 `pnpm --filter @memestar/shared dev` watch 自动重建
-- **ratings 表设计变更待用户正式确认**：S0 修复分区表 UNIQUE 冲突，改为普通表（保留 UNIQUE(meme_id,user_id)）。用户曾选"暂不决定"，暂保留现状。如不认可需回滚 + 改用应用层+Redis 锁保证唯一
-- **后端 DI 装配未完成**：脚手架 NestJS Module 只建了骨架，JwtModule 等未装配到各 Module。S1 T1.2 装配 JwtModule 后后端可 fully 启动
+- **ratings 表设计变更**：S0 修复分区表 UNIQUE 冲突，改为普通表（保留 UNIQUE(meme_id,user_id)）。用户已确认（ADR-013，2026-07-07）
+- ~~**后端 DI 装配未完成**~~ → ✅ 已解决（S0-6：JwtModule.registerAsync 加 `global: true`，后端 fully 启动）
 - Drizzle schema.ts 仍是占位（S1 T1.1 用 drizzle-kit introspect 生成真实 schema）
 - S0 修复的 4 个 schema/seed bug 已同步到 schema.sql + Database-DDL.md（ratings 分区/citext opclass/date_trunc IMMUTABLE/seed uuid），Drizzle 占位待 S1 T1.1 同步
+- **mobile package.json 声明与实际安装版本漂移**：声明 `expo ^51 / react 18.2 / RN 0.74.5`，实际装 `expo 54 / react 19.1 / RN 0.81.5`（expo-router 6 的 @radix-ui peer 拉入 React 19）。功能可用（expo start + bundle 编译 + 测试均通过），但建议后续对齐 package.json 声明或固化到 SDK 54
+- **React 19 废弃 react-test-renderer**：`toJSON()` 恒为 null、`create()` 后立即 unmount。mobile 测试已改用"直接调用函数组件 + 手动遍历 React 元素树"绕开。后续可评估迁 `@testing-library/react-native`（需解决 jest-expo ESM 兼容）
+- **真机预览受 Wi-Fi AP 隔离影响**：企业/校园 Wi-Fi 阻断设备互访，需手机热点或 tunnel（ngrok 需 authtoken，国内可能慢）
+- **ecc 规则集为 untracked 外部资产**：`.cursor/rules/ecc-*.mdc`（~120 个语言规则）+ `.cursor/ecc-reference/` + `ecc_src/`（嵌入式 git 仓库）+ `.cursor/hooks/` 为外部安装的 ruleset，非 MemeChatAI 项目代码，未纳入版本控制。如需追踪应单独 commit（`ecc_src/` 不应直接 git add）
 - **mobile typecheck 报错（nativewind className 类型缺失）**：~~`apps/mobile/app/(tabs)/*.tsx` 用了 `className` 但 TS 不识别~~ → ✅ 已修（T1.0b 升 nativewind 到 v4.2.6，`nativewind/types` 子路径可用）
 - **nativewind v4 拉入 reanimated 4.5.1 peer 警告**：reanimated 4.5 要求 RN 0.83-0.86，当前 RN 0.74.5。安装有 peer 警告但不阻断 expo start 启动。若运行时动画报错，需降 reanimated 到 3.x（兼容 RN 0.74）或锁 nativewind 到不拉 reanimated 4 的版本。MVP 骨架页无动画，暂不影响预览
 
@@ -155,14 +182,16 @@
 
 | 项 | 值 |
 |---|---|
-| 文档总数 | 9 份 md + 1 份 yaml + 2 份 sql |
+| 文档总数 | 9 份 md + 1 份 yaml + 2 份 sql + 2 份 QA（test-plan/test-report） |
 | 脚手架文件 | 215（backend 100 / mobile 34 / web 27 / shared 29 / 根 25） |
-| Cursor 规则 | 5 个 MDC（00 总上下文 / 10 编码 / 20 M1 Sprint / 25 执行计划 / 30 上下文维护） |
+| Cursor 规则 | 6 个 MDC（00 总上下文 / 10 编码 / 20 M1 Sprint / 25 执行计划 / 30 上下文维护 / update-context） |
 | NestJS Module | 15 个 |
 | 数据库表 | 50 张（46 业务 + 4 分区默认子表） |
 | 数据库索引 | 106 个 |
 | pgvector 表 | 3 张（meme_embeddings / user_interest_embeddings / prompt_template_embeddings） |
 | API 接口 | 34 个操作（M1 P0 = 13 个） |
+| 测试用例 | 166 个（backend e2e 114 + 根 api.smoke 13 + web Playwright 23 + mobile jest 16），通过率 100% |
+| 决策 ADR | 13 项 |
 | M1 任务 | 75 个（P0 = 74 人日，砍后 ≈ 25 人日编码 + 5.5 人日测试 + 1 人日通电 ≈ 31 人日） |
 | MVP 月成本估算 | 灰度 DAU 500：¥400~¥1200；DAU 1w：¥3585~¥16855 |
 | Pro 定价 | ¥18/月 + 视频按次包 |

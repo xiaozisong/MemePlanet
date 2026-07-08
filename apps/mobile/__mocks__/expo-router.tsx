@@ -7,8 +7,7 @@ import React from 'react';
 
 type Props = { children?: React.ReactNode; [k: string]: unknown };
 
-const Passthrough = ({ children }: Props) =>
-  children != null ? <>{children}</> : null;
+const Passthrough = ({ children }: Props) => (children != null ? <>{children}</> : null);
 
 export const Stack = Object.assign(Passthrough, {
   Screen: (_props: unknown) => null,

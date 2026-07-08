@@ -8,8 +8,10 @@ import React from 'react';
 
 type Props = { children?: React.ReactNode; [k: string]: unknown };
 
-const host = (tag: string) => ({ children, ...rest }: Props) =>
-  React.createElement(tag, rest as Record<string, unknown>, children);
+const host =
+  (tag: string) =>
+  ({ children, ...rest }: Props) =>
+    React.createElement(tag, rest as Record<string, unknown>, children);
 
 export const View = host('View');
 export const Text = host('Text');

@@ -3,8 +3,8 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-08
-**当前阶段**：S0 通电验证全部完成（后端 fully 启动）+ 双端 QA 测试通过（166/166）+ Expo 真机 404 修复 + Harness 信噪比优化（P0+P1）→ S1 T1.1 待启动
-**当前会话焦点**：Harness engineering 审查与优化（.cursor/.agents 信噪比）
+**当前阶段**：S0 通电验证全部完成（后端 fully 启动）+ 双端 QA 测试通过（166/166）+ Expo 真机 404 修复 + Harness 信噪比优化（P0+P1）+ Harness 路由分类层 + **Mobile UI 设计系统第一期** → S1 T1.1 待启动
+**当前会话焦点**：Mobile UI 设计系统建立（design tokens + SVG 图标 + 定制组件 + 页面优化）
 
 ---
 
@@ -31,6 +31,14 @@
   - P1 补核心栈 skill：新建 `drizzle-orm` / `bullmq-queue` / `supabase-auth` 3 个项目专属 SKILL.md（固化 Drizzle 查询约定/pgvector HNSW、BullMQ 异步 AI 任务契约/降级链/配额、Supabase 手机号 OTP+自建 JWT+Realtime 私聊+自建群聊 WS）
   - P1 修过时引用：重写 `ecc-common-agents.mdc`（`~/.claude/agents/` → Cursor Task `subagent_type` + `.agents/skills/ecc-agent-*` 技能映射表）
   - 更新 `.cursor/ecc-reference/README.md` Skills 章节（启用数/归档数/启用步骤）
+- **Harness 路由分类层**：按技术方向把 107 活动 skill + 6 MCP + 127 rule + 3 hook 归类到 `.cursor/routes/`（7 技术方向 + 3 辅助）：`01-frontend` / `02-backend` / `03-ai-orchestration` / `04-infra-devops` / `05-quality-testing` / `06-agent-harness` / `07-project-context` / `08-mcp-servers` / `09-hooks` / `10-dormant`；每文件含「skill→用途→何时读」「rule→globs→加载时机」「典型任务→工具选择」路由表；新增 alwaysApply 规则 `05-harness-routes.mdc` 强制 Agent 做任务前查路由。资产保持扁平（Cursor 加载契约），路由层做分类导航。
+|- **Mobile UI 设计系统第一期**：按字节跳动 UI/UX 设计标准完成以下改造（不含 RN 模拟器截图验证，TypeScript typecheck=0 + lint=0 通过）：
+  - **设计系统**：`src/theme/` 目录（colors.ts / spacing.ts / typography.ts / radius.ts / shadow.ts）+ `colorsFlat` 扁平映射 + `tailwind-colors.cjs` 同步文件
+  - **SVG 图标**：30+ 品牌 SVG 图标（Icons.tsx）+ Tab 栏 5 图标用 SVG 替换 emoji + barrel `index.ts`
+  - **通用组件**：`PrimaryButton`（4 variant + 3 size + loading）+ `UserAvatar`（5 size + badge）+ `LoadingSkeleton`（4 variant + 动画）+ `FullPageLoading` + `EmptyState`
+  - **页面优化**：Feed 卡片（骨架屏/空状态/下拉刷新/互动栏）+ 登录页（品牌区/输入框/CTA/服务条款/分隔线）+ 造梗工坊入口（4 模式卡片）+ 个人主页（头像区/数据行/内容 Tab/菜单）
+  - **类型修复**：修 ~20 处颜色引用类型错误（嵌套 `colors.brand.DEFAULT` vs 扁平 `themeColors.brand`）+ 装 @types/jest + @types/node + tsconfig 加 `node` types
+  - **Tailwind 对齐**：`tailwind.config.js` colors 内联改为引用 `theme/tailwind-colors.cjs`（单源 truth），间距/字号/圆角/阴影同步
 
 ### 进行中 🔄
 
@@ -102,3 +110,5 @@
 | 2026-07-08 00:50 | ECC 配置全量迁移到 Cursor | 按用户"全量+项目级"要求迁移 [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) 到本项目 Cursor 原生目录（不污染全局）：**规则** 121 条 → `.cursor/rules/ecc-*.mdc`（含优先级规则 `ecc-00-precedence.mdc` 声明项目自有规则优先；语言专属规则用 globs 限定激活）；**技能** 277 个 → `.agents/skills/`（与原有 56 个无同名冲突，合计 340，.agents/ 已被 .gitignore 故不入库但 Cursor 从磁盘加载）；**MCP** 6 个无 key 服务启用到 `.cursor/mcp.json`（context7/sequential-thinking/playwright/chrome-devtools/cloudflare-docs/parallel-search），完整 30+ 模板归档到 `.cursor/ecc-reference/mcp-servers.full.json`；**Hooks** 3 个安全钩子启用到 `.cursor/hooks.json`（提交前密钥检测/敏感文件读取警告/阻断 git --no-verify），适配器+脚本树放 `.cursor/hooks/`+`.cursor/scripts/`（已补丁路径指向 .cursor/），完整模板归档；**Agents** 7 核心（planner/architect/code-reviewer/security-reviewer/build-error-resolver/refactor-cleaner/doc-updater）转技能 `ecc-agent-*`，其余 60 归档到 `.cursor/ecc-reference/agents/`；**commands(93)/contexts(3)** 归档不激活（Cursor 无等价物）；参考文档 `.cursor/ecc-reference/README.md`。未触碰任何项目源码/PRD/技术设计/DDL/openapi。⚠️ 风险：340 技能会增大每会话可用技能清单注入（~10-15k tokens），如需瘦身可按 README 的 .cursorignore 片段排除未用语言技能 |
 | 2026-07-08 01:04 | 修复 Expo 真机 404 | iOS Expo Go 连 dev server 显示 "+not-found / 404 页面不存在"。根因：`app/` 和 `app/(tabs)/` 缺 `index.tsx`，启动路由 `/` 无匹配回退 `+not-found`。修复：新增 `app/(tabs)/index.tsx`（`<Redirect href="/(tabs)/feed" />`）+ `(tabs)/_layout.tsx` 加 `<Tabs.Screen name="index" options={{ href: null }} />` 隐藏空 tab。typecheck/lint 0 新增错误。 |
 | 2026-07-08 01:10 | Harness 信噪比优化 P0+P1 | 审查 `.cursor`+`.agents` 后优化：**P0** skill 瘦身 340→107（236 无关归档到 `.cursor/ecc-reference/skills/`，只留项目栈+harness）；**P1** 新建 3 个项目专属 skill（`drizzle-orm`/`bullmq-queue`/`supabase-auth`，固化查询约定+异步AI契约+混合认证）；**P1** 重写 `ecc-common-agents.mdc`（`~/.claude/agents/`→Cursor `subagent_type`+`ecc-agent-*` 技能映射）；更新 `ecc-reference/README.md`。无源码/DDL/API 改动。 |
+| 2026-07-08 01:29 | Harness 路由分类层 | 按技术方向把 107 skill + 6 MCP + 127 rule + 3 hook 归类到 `.cursor/routes/`（7 方向 + 3 辅助，每文件含 skill/rule/MCP/任务路由表）；新增 alwaysApply `05-harness-routes.mdc` 指引 Agent 做任务前查路由；资产保持扁平（Cursor 加载契约），路由层做分类导航。无源码/DDL/API 改动。 |
+| 2026-07-08 15:11 | Mobile UI 设计系统第二期修复 | 修第一期遗留类型错误：colors.ts 加 `colorsFlat` 扁平映射（解决嵌套 `colors.brand.DEFAULT` vs 字符串 key `colors['text-muted']` 不匹配）；改 `LoadingSkeleton`/`PrimaryButton`/`UserAvatar`/`login.tsx`/`feed.tsx` 用 `colorsFlat as themeColors`；装 `@types/jest` + `@types/node`，`tsconfig.json` `types` 加 `"node"`；`tailwind.config.js` 颜色内联改为 `require('./src/theme/tailwind-colors.cjs')`（单源 truth）；`app/_layout.tsx` 删除 `headerStyle.elevation/shadowOpacity`（RN 不支持）；`(tabs)/feed.tsx` `RefreshControl tintColor` 改 `themeColors.brand!`；`create.tsx`/`profile.tsx` 删未用 import；`create.tsx` `tagBgStyleMap` 类型改 `Record<string, { backgroundColor: string }>`；`pnpm lint --fix` 清 47 个 prettier warning。**最终：typecheck=0 errors / lint=0 errors / 0 warnings**。 |

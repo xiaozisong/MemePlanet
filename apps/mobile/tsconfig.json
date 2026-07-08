@@ -13,7 +13,8 @@
     "types": [
       "react-native",
       "react",
-      "jest"
+      "jest",
+      "node"
     ],
     "noEmit": true,
     "baseUrl": "./",
