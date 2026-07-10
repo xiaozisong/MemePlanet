@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, ActivityIndicator, Animated } from 'react-native';
-import { colorsFlat as themeColors } from '../../theme';
+import { View, Text, ActivityIndicator, Animated, type DimensionValue } from 'react-native';
+import { colors } from '../../theme';
 
 interface SkeletonBoxProps {
-  width?: number;
+  width?: DimensionValue;
   height?: number;
   borderRadius?: number;
 }
@@ -36,7 +36,7 @@ function SkeletonBox({ width = 200, height = 16, borderRadius = 8 }: SkeletonBox
         width,
         height,
         borderRadius,
-        backgroundColor: themeColors['ink-elevated'],
+        backgroundColor: colors.ink.elevated,
         opacity,
       }}
     />
@@ -53,31 +53,39 @@ export function LoadingSkeleton({ variant = 'card', count = 3 }: LoadingSkeleton
 
   if (variant === 'feed') {
     return (
-      <View className="px-page py-section">
+      <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
         {items.map((i) => (
-          <View key={i} className="mb-card-gap rounded-card bg-ink-soft p-4">
-            <View className="mb-3 flex-row items-center">
+          <View
+            key={i}
+            style={{
+              marginBottom: 12,
+              borderRadius: 16,
+              backgroundColor: colors.ink.soft,
+              padding: 16,
+            }}
+          >
+            <View style={{ marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}>
               <SkeletonBox width={40} height={40} borderRadius={20} />
-              <View className="ml-3 flex-1">
+              <View style={{ marginLeft: 12, flex: 1 }}>
                 <SkeletonBox width={100} height={14} />
-                <View className="mt-1">
+                <View style={{ marginTop: 4 }}>
                   <SkeletonBox width={60} height={10} borderRadius={6} />
                 </View>
               </View>
             </View>
             <SkeletonBox height={18} />
-            <View className="mt-2">
+            <View style={{ marginTop: 8 }}>
               <SkeletonBox width={250} height={18} />
             </View>
-            <View className="mt-3">
+            <View style={{ marginTop: 12 }}>
               <SkeletonBox width={350} height={160} borderRadius={12} />
             </View>
-            <View className="mt-3 flex-row">
+            <View style={{ marginTop: 12, flexDirection: 'row' }}>
               <SkeletonBox width={60} height={14} />
-              <View className="ml-4">
+              <View style={{ marginLeft: 16 }}>
                 <SkeletonBox width={60} height={14} />
               </View>
-              <View className="ml-4">
+              <View style={{ marginLeft: 16 }}>
                 <SkeletonBox width={60} height={14} />
               </View>
             </View>
@@ -89,20 +97,20 @@ export function LoadingSkeleton({ variant = 'card', count = 3 }: LoadingSkeleton
 
   if (variant === 'profile') {
     return (
-      <View className="px-page items-center pt-12">
+      <View style={{ paddingHorizontal: 20, alignItems: 'center', paddingTop: 48 }}>
         <SkeletonBox width={80} height={80} borderRadius={40} />
-        <View className="mt-4">
+        <View style={{ marginTop: 16 }}>
           <SkeletonBox width={120} height={20} />
         </View>
-        <View className="mt-2">
+        <View style={{ marginTop: 8 }}>
           <SkeletonBox width={80} height={14} />
         </View>
-        <View className="mt-6 flex-row">
+        <View style={{ marginTop: 24, flexDirection: 'row' }}>
           <SkeletonBox width={60} height={30} />
-          <View className="ml-8">
+          <View style={{ marginLeft: 32 }}>
             <SkeletonBox width={60} height={30} />
           </View>
-          <View className="ml-8">
+          <View style={{ marginLeft: 32 }}>
             <SkeletonBox width={60} height={30} />
           </View>
         </View>
@@ -112,16 +120,16 @@ export function LoadingSkeleton({ variant = 'card', count = 3 }: LoadingSkeleton
 
   if (variant === 'comment') {
     return (
-      <View className="px-page">
+      <View style={{ paddingHorizontal: 20 }}>
         {items.map((i) => (
-          <View key={i} className="py-item flex-row">
+          <View key={i} style={{ paddingVertical: 8, flexDirection: 'row' }}>
             <SkeletonBox width={32} height={32} borderRadius={16} />
-            <View className="ml-3 flex-1">
+            <View style={{ marginLeft: 12, flex: 1 }}>
               <SkeletonBox width={80} height={12} />
-              <View className="mt-2">
+              <View style={{ marginTop: 8 }}>
                 <SkeletonBox height={14} />
               </View>
-              <View className="mt-1">
+              <View style={{ marginTop: 4 }}>
                 <SkeletonBox width={200} height={14} />
               </View>
             </View>
@@ -132,11 +140,19 @@ export function LoadingSkeleton({ variant = 'card', count = 3 }: LoadingSkeleton
   }
 
   return (
-    <View className="px-page">
+    <View style={{ paddingHorizontal: 20 }}>
       {items.map((i) => (
-        <View key={i} className="mb-card-gap rounded-card bg-ink-soft p-4">
+        <View
+          key={i}
+          style={{
+            marginBottom: 12,
+            borderRadius: 16,
+            backgroundColor: colors.ink.soft,
+            padding: 16,
+          }}
+        >
           <SkeletonBox height={18} />
-          <View className="mt-2">
+          <View style={{ marginTop: 8 }}>
             <SkeletonBox width={250} height={18} />
           </View>
         </View>
@@ -151,9 +167,27 @@ interface FullPageLoadingProps {
 
 export function FullPageLoading({ message }: FullPageLoadingProps) {
   return (
-    <View className="bg-ink flex-1 items-center justify-center">
-      <ActivityIndicator size="large" color={themeColors.brand} />
-      {message && <Text className="text-text-secondary mt-4">{message}</Text>}
+    <View
+      style={{
+        backgroundColor: colors.ink.DEFAULT,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <ActivityIndicator size="large" color={colors.brand.DEFAULT} />
+      {message && (
+        <Text
+          style={{
+            color: colors.text.secondary,
+            marginTop: 16,
+            fontSize: 14,
+            fontFamily: 'Poppins_400Regular',
+          }}
+        >
+          {message}
+        </Text>
+      )}
     </View>
   );
 }

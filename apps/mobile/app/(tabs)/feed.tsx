@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, RefreshControl, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, colorsFlat as themeColors, radius, layout } from '../../src/theme';
+import { colors, radius, layout } from '../../src/theme';
 import { MemeCard, MemeCardData } from '../../src/components/MemeCard';
 import { LoadingSkeleton, EmptyState } from '../../src/components/ui';
 import { SearchIcon } from '../../src/components/icons';
@@ -112,7 +112,7 @@ export default function FeedScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="bg-ink flex-1" edges={['top']}>
+      <SafeAreaView style={{ backgroundColor: colors.ink.DEFAULT, flex: 1 }} edges={['top']}>
         <FeedHeader searchText={searchText} onChangeSearch={setSearchText} />
         <CategoryBar
           categories={CATEGORIES}
@@ -125,7 +125,7 @@ export default function FeedScreen() {
   }
 
   return (
-    <SafeAreaView className="bg-ink flex-1" edges={['top']}>
+    <SafeAreaView style={{ backgroundColor: colors.ink.DEFAULT, flex: 1 }} edges={['top']}>
       <FeedHeader searchText={searchText} onChangeSearch={setSearchText} />
       <CategoryBar
         categories={CATEGORIES}
@@ -152,8 +152,8 @@ export default function FeedScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={themeColors.brand!}
-            colors={[themeColors.brand!]}
+            tintColor={colors.brand.DEFAULT}
+            colors={[colors.brand.DEFAULT]}
           />
         }
         ListEmptyComponent={
@@ -164,7 +164,7 @@ export default function FeedScreen() {
             onAction={() => router.push('/create')}
           />
         }
-        ItemSeparatorComponent={() => <View className="h-card-gap" />}
+        ItemSeparatorComponent={() => <View style={{ height: layout.cardGap }} />}
       />
     </SafeAreaView>
   );
@@ -178,9 +178,16 @@ function FeedHeader({
   onChangeSearch: (text: string) => void;
 }) {
   return (
-    <View className="px-page pb-2 pt-4">
+    <View style={{ paddingHorizontal: layout.pagePadding, paddingBottom: 8, paddingTop: 16 }}>
       {/* 标题 */}
-      <View className="mb-3 flex-row items-center justify-between">
+      <View
+        style={{
+          marginBottom: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <View>
           <Text
             style={{

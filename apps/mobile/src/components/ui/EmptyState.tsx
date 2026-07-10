@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
+import { colors } from '../../theme';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -10,25 +11,60 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <View className="px-page flex-1 items-center justify-center py-12">
-      {icon && <View className="mb-4">{icon}</View>}
-      {!icon && (
-        <View className="mb-4">
-          <Text className="text-5xl">🎭</Text>
-        </View>
+    <View
+      style={{
+        paddingHorizontal: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 48,
+      }}
+    >
+      {icon ? (
+        <View style={{ marginBottom: 16 }}>{icon}</View>
+      ) : (
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>🎭</Text>
       )}
-      <Text className="text-text-primary text-title text-center font-semibold">{title}</Text>
+      <Text
+        style={{
+          fontSize: 22,
+          fontFamily: 'Poppins_600SemiBold',
+          color: colors.text.primary,
+          textAlign: 'center',
+        }}
+      >
+        {title}
+      </Text>
       {description && (
-        <Text className="text-text-secondary text-body mt-2 max-w-[280px] text-center">
+        <Text
+          style={{
+            fontSize: 16,
+            fontFamily: 'Poppins_400Regular',
+            color: colors.text.secondary,
+            marginTop: 8,
+            maxWidth: 280,
+            textAlign: 'center',
+          }}
+        >
           {description}
         </Text>
       )}
       {actionLabel && onAction && (
         <Pressable
           onPress={onAction}
-          className="bg-brand rounded-btn active:bg-brand-dark mt-6 px-6 py-3"
+          style={{
+            backgroundColor: colors.brand.DEFAULT,
+            borderRadius: 12,
+            marginTop: 24,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+          }}
         >
-          <Text className="text-btn font-semibold text-white">{actionLabel}</Text>
+          <Text
+            style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.text.primary }}
+          >
+            {actionLabel}
+          </Text>
         </Pressable>
       )}
     </View>
@@ -47,18 +83,54 @@ export function ErrorState({
   onRetry,
 }: ErrorStateProps) {
   return (
-    <View className="px-page flex-1 items-center justify-center py-12">
-      <Text className="mb-4 text-5xl">😵</Text>
-      <Text className="text-text-primary text-title text-center font-semibold">{title}</Text>
-      <Text className="text-text-secondary text-body mt-2 max-w-[280px] text-center">
+    <View
+      style={{
+        paddingHorizontal: 20,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 48,
+      }}
+    >
+      <Text style={{ fontSize: 48, marginBottom: 16 }}>😵</Text>
+      <Text
+        style={{
+          fontSize: 22,
+          fontFamily: 'Poppins_600SemiBold',
+          color: colors.text.primary,
+          textAlign: 'center',
+        }}
+      >
+        {title}
+      </Text>
+      <Text
+        style={{
+          fontSize: 16,
+          fontFamily: 'Poppins_400Regular',
+          color: colors.text.secondary,
+          marginTop: 8,
+          maxWidth: 280,
+          textAlign: 'center',
+        }}
+      >
         {description}
       </Text>
       {onRetry && (
         <Pressable
           onPress={onRetry}
-          className="bg-ink-elevated rounded-btn active:bg-ink-surface mt-6 px-6 py-3"
+          style={{
+            backgroundColor: colors.ink.elevated,
+            borderRadius: 12,
+            marginTop: 24,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+          }}
         >
-          <Text className="text-brand text-btn font-semibold">重试</Text>
+          <Text
+            style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.brand.DEFAULT }}
+          >
+            重试
+          </Text>
         </Pressable>
       )}
     </View>

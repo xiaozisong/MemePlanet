@@ -1,10 +1,19 @@
-import { View, Text, Pressable, type PressableProps } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  type PressableProps,
+  type ViewStyle,
+  type StyleProp,
+} from 'react-native';
+import { colors } from '../../theme';
 
-interface IconButtonProps extends Omit<PressableProps, 'children'> {
+interface IconButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   icon: React.ReactNode;
   size?: number;
   active?: boolean;
   badge?: number;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function IconButton({
@@ -12,23 +21,43 @@ export function IconButton({
   size = 36,
   active = false,
   badge,
+  style,
   ...pressableProps
 }: IconButtonProps) {
   return (
     <Pressable
-      className={`active:bg-ink-elevated items-center justify-center rounded-full ${active ? 'bg-ink-soft' : ''}`}
-      style={{ width: size, height: size }}
+      style={[
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: active ? colors.ink.soft : 'transparent',
+        },
+        style,
+      ]}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       {...pressableProps}
     >
       {icon}
       {badge !== undefined && badge > 0 && (
         <View
-          className="bg-error absolute -right-0.5 -top-0.5 items-center justify-center rounded-full"
-          style={{ minWidth: 16, height: 16, paddingHorizontal: 4 }}
+          style={{
+            position: 'absolute',
+            right: -2,
+            top: -2,
+            backgroundColor: colors.status.error,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 8,
+            minWidth: 16,
+            height: 16,
+            paddingHorizontal: 4,
+          }}
           pointerEvents="none"
         >
-          <Text className="text-[10px] font-bold text-white">
+          <Text style={{ fontSize: 10, fontFamily: 'Poppins_700Bold', color: colors.text.primary }}>
             {badge > 99 ? '99+' : String(badge)}
           </Text>
         </View>

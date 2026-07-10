@@ -1,12 +1,12 @@
 import { View, ScrollView, type ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors } from '../theme';
 
 interface AppScreenProps extends ScrollViewProps {
   children: React.ReactNode;
   scrollable?: boolean;
   safeTop?: boolean;
   safeBottom?: boolean;
-  className?: string;
 }
 
 export function AppScreen({
@@ -14,7 +14,6 @@ export function AppScreen({
   scrollable = true,
   safeTop = true,
   safeBottom = true,
-  className,
   ...scrollViewProps
 }: AppScreenProps) {
   const insets = useSafeAreaInsets();
@@ -22,8 +21,9 @@ export function AppScreen({
   if (!scrollable) {
     return (
       <View
-        className={`bg-ink flex-1 ${className || ''}`}
         style={{
+          backgroundColor: colors.ink.DEFAULT,
+          flex: 1,
           paddingTop: safeTop ? insets.top : 0,
           paddingBottom: safeBottom ? insets.bottom : 0,
         }}
@@ -35,7 +35,7 @@ export function AppScreen({
 
   return (
     <ScrollView
-      className={`bg-ink ${className || ''}`}
+      style={{ backgroundColor: colors.ink.DEFAULT }}
       contentContainerStyle={{
         paddingTop: safeTop ? insets.top : 0,
         paddingBottom: safeBottom ? insets.bottom + 20 : 20,

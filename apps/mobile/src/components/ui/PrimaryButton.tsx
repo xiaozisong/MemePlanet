@@ -1,5 +1,11 @@
-import { Pressable, Text, ActivityIndicator, type PressableProps } from 'react-native';
-import { colorsFlat as themeColors } from '../../theme';
+import {
+  Pressable,
+  Text,
+  ActivityIndicator,
+  type PressableProps,
+  type FlexAlignType,
+} from 'react-native';
+import { colors } from '../../theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'lg' | 'md' | 'sm';
@@ -14,17 +20,20 @@ interface PrimaryButtonProps extends Omit<PressableProps, 'children'> {
   icon?: React.ReactNode;
 }
 
-const variantStyles: Record<ButtonVariant, { bg: string; activeBg: string; text: string }> = {
-  primary: { bg: 'bg-brand', activeBg: 'bg-brand-dark', text: 'text-white' },
-  secondary: { bg: 'bg-ink-elevated', activeBg: 'bg-ink-surface', text: 'text-brand' },
-  ghost: { bg: 'bg-transparent', activeBg: 'bg-ink-soft', text: 'text-text-secondary' },
-  danger: { bg: 'bg-error', activeBg: 'bg-red-700', text: 'text-white' },
+const variantConfig: Record<ButtonVariant, { bg: string; activeBg: string; text: string }> = {
+  primary: { bg: colors.brand.DEFAULT, activeBg: colors.brand.dark, text: colors.text.primary },
+  secondary: { bg: colors.ink.elevated, activeBg: colors.ink.surface, text: colors.brand.DEFAULT },
+  ghost: { bg: 'transparent', activeBg: colors.ink.soft, text: colors.text.secondary },
+  danger: { bg: colors.status.error, activeBg: '#cc2222', text: colors.text.primary },
 };
 
-const sizeStyles: Record<ButtonSize, { container: string; text: string }> = {
-  lg: { container: 'px-8 py-4', text: 'text-btn' },
-  md: { container: 'px-6 py-3', text: 'text-caption-bold' },
-  sm: { container: 'px-4 py-2', text: 'text-caption' },
+const sizeConfig: Record<
+  ButtonSize,
+  { paddingHorizontal: number; paddingVertical: number; fontSize: number }
+> = {
+  lg: { paddingHorizontal: 32, paddingVertical: 16, fontSize: 16 },
+  md: { paddingHorizontal: 24, paddingVertical: 12, fontSize: 14 },
+  sm: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 14 },
 };
 
 export function PrimaryButton({
@@ -35,26 +44,40 @@ export function PrimaryButton({
   disabled = false,
   fullWidth = false,
   icon,
-  className,
+  style,
   ...pressableProps
 }: PrimaryButtonProps) {
-  const v = variantStyles[variant];
-  const s = sizeStyles[size];
+  const v = variantConfig[variant];
+  const s = sizeConfig[size];
 
   return (
     <Pressable
       disabled={disabled || loading}
-      className={`${v.bg} ${s.container} rounded-btn flex-row items-center justify-center gap-2 active:${v.activeBg} ${fullWidth ? 'w-full' : ''} ${disabled ? 'opacity-50' : ''} ${className || ''}`}
+      style={({ pressed }) => ({
+        backgroundColor: pressed ? v.activeBg : v.bg,
+        paddingHorizontal: s.paddingHorizontal,
+        paddingVertical: s.paddingVertical,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        opacity: disabled ? 0.5 : 1,
+        alignSelf: fullWidth ? ('stretch' as FlexAlignType) : 'auto',
+        ...(typeof style === 'object' ? style : {}),
+      })}
       {...pressableProps}
     >
       {loading && (
         <ActivityIndicator
           size="small"
-          color={variant === 'ghost' ? themeColors['text-secondary'] : '#fff'}
+          color={variant === 'ghost' ? colors.text.secondary : colors.text.primary}
         />
       )}
       {!loading && icon}
-      <Text className={`${v.text} ${s.text} font-semibold`}>{children}</Text>
+      <Text style={{ fontSize: s.fontSize, fontFamily: 'Poppins_600SemiBold', color: v.text }}>
+        {children}
+      </Text>
     </Pressable>
   );
 }

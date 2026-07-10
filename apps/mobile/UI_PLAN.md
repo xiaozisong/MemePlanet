@@ -72,21 +72,23 @@
 | 字体加载 | ✅ | `app/_layout.tsx` FontLoader + asset 方式 |
 | Metro / pnpm 兼容 | ✅ | 适配 monorepo 结构 |
 
-### P1 — 待推进 ⏳
+### P1 — 已落地 ✅
 
 | 页面 | 说明 |
 |------|------|
-| 建造梗入口页 (`create.tsx`) | 4 模式卡片，按 Figma Game Category 风格 |
-| 个人主页 (`profile.tsx`) | Banner + 头像 + LV 徽章 + 三段数据 + Tab |
+| 造梗入口页 (`create.tsx`) | 4 模式卡片，按 Figma Game Category 风格，inline style + Poppins |
+| 个人主页 (`profile.tsx`) | Banner + 头像 + LV 徽章 + 三段数据 + Tab，inline style + theme tokens + Poppins |
 
-### P2 — 待推进 ⏳
+### P2 — 已落地 ✅
 
 | 页面 / 组件 | 说明 |
 |-------------|------|
-| 军团页 (`legion.tsx`) | 色彩 / 风格对齐新色板 |
-| PK 页 (`pk.tsx`) | 色彩 / 风格对齐新色板 |
-| 通用组件通刷 | EmptyState / PrimaryButton / Tag 改用 theme token |
+| 军团页 (`legion.tsx`) | 色彩 / 风格对齐新色板，inline style |
+| PK 页 (`pk.tsx`) | 色彩 / 风格对齐新色板，inline style |
+| 通用组件通刷 | EmptyState / PrimaryButton / Tag / IconButton / AppScreen 改用 theme token |
 | MemeCard 硬编码色 | AI tag / God/Trash 改用 colorsFlat |
+| 占位页面通刷 | settings / teen-mode / create/{text,image,video,agent} / +not-found — inline style + Poppins |
+| 全局 className 清理 | apps/mobile 下零 className 残留 |
 
 ### P3 — 远期 / 可暂缓
 
@@ -99,7 +101,7 @@
 ## 执行顺序
 
 ```
-P0 (已完成) → P1 (造梗 + 个人主页) → P2 (军团/PK + 组件通刷) → P3 (动效)
+P0 (已完成) → P1 (造梗 + 个人主页) → P2 (军团/PK + 组件通刷 + 占位页面) → P3 (动效)
 ```
 
 - 每次迭代保持 `pnpm typecheck` + `pnpm lint` 零错误
@@ -114,4 +116,4 @@ P0 (已完成) → P1 (造梗 + 个人主页) → P2 (军团/PK + 组件通刷) 
 - `pnpm lint` — ✅ 零 errors / 零 warnings
 - `apps/web` 的 pre-existing TS2742 错误 — 与移动端改动无关
 
-*最后更新：2026-07-09*
+*最后更新：2026-07-10*

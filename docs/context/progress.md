@@ -2,7 +2,7 @@
 
 > 记录"什么做完了 / 什么没做 / 已知问题 / 文件在哪"。配合 `activeContext.md`（当前焦点）与 `decisions.md`（决策）使用。
 
-**最后更新**：2026-07-08
+**最后更新**：2026-07-10
 
 ---
 
@@ -18,7 +18,7 @@
 | 脚手架通电调试（S0） | ✅ 完成 | 100%（S0-1~S0-6 全 done） |
 | S1 T1.0 脚手架 TS 补丁 | ✅ 完成 | 100%（~60 个 TS 错误全修，typecheck+lint 通过） |
 | 双端 QA 测试套件 | ✅ 完成 | 100%（166 用例全通过，Web+App 双端可运行） |
-| Mobile UI 设计系统 | ✅ 完成 | 100%（design tokens + SVG 图标 + 通用组件 + 5 页优化 + typecheck/lint 全 0） |
+| Mobile UI 设计系统 | ✅ 完成 | 100%（P0+P1+P2 全部落地，design tokens + 通用组件 + 全页面 inline style + Poppins + typecheck/lint 全 0） |
 | M1 S1 用户系统+AI 编排 | ⏳ 待启动 | 0%（T1.1 起点） |
 | M1 S2 造梗+梗卡+审核 | ⏳ 待启动 | 0% |
 | M1 S3 feed+评分+RN | ⏳ 待启动 | 0% |
@@ -73,8 +73,19 @@
 - [x] `app/(tabs)/feed.tsx`：重建 — 顶部品牌标题 + 搜索栏 + 8 类分类胶囊（热梗/神梗/冷梗/二次元/表情包/日常/游戏/AI）+ `MemeCard` 引用
 - [x] `app/login.tsx`：重建 — 深黑氛围 + 金黄发光 Logo + 金黄 CTA + 暗色输入框（内置 +86 / 验证码胶囊）+ OAuth 占位
 - [x] `metro.config.js`：简化（去掉 hacky extraNodeModules/.pnpm 扫描），适配 pnpm monorepo
+
+### Mobile UI 设计系统第二期 — P1+P2 收尾（2026-07-10）
+- [x] `app/(tabs)/create.tsx` — 4 模式卡片按 Figma Game Category 风格，inline style + Poppins
+- [x] `app/(tabs)/profile.tsx` — Banner + 头像 + LV 徽章 + 三段数据 + Tab，inline style + theme tokens + Poppins
+- [x] `app/(tabs)/legion.tsx` + `app/(tabs)/pk.tsx` — 色彩对齐新色板，inline style
+- [x] `app/settings.tsx` + `app/teen-mode.tsx` + `app/+not-found.tsx` — inline style + Poppins
+- [x] `app/create/{text,image,video,agent}.tsx` — 4 个占位页面 inline style + Poppins
+- [x] `src/components/ui/EmptyState.tsx` + `PrimaryButton.tsx` + `Tag.tsx` + `IconButton.tsx` + `LoadingSkeleton.tsx` — 改用 theme token，修若干 TS 类型错误
+- [x] `src/components/AppScreen.tsx` + `src/components/ui/AppScreen.tsx` — inline style，修相对 import 路径
+- [x] `src/components/MemeCard.tsx` — AI/God/Trash tag 改用 `colorsFlat` 防 noUncheckedIndexedAccess
+- [x] **全局 `className` 清零** — apps/mobile 下零 className 残留，全部转为 inline StyleSheet
 - [x] `pnpm --filter @memestar/mobile typecheck` = 0 errors
-- [x] `pnpm --filter @memestar/mobile lint` = 0 errors
+- [x] `pnpm --filter @memestar/mobile lint` = 0 errors / 0 warnings
 
 ### 代码脚手架（215 文件）
 - [x] 根配置：`package.json` / `pnpm-workspace.yaml` / `tsconfig.base.json` / `.editorconfig` / `.gitignore` / `.npmrc` / `.nvmrc` / `.env.example` / `.prettierrc` / `.eslintrc.cjs` / `commitlint.config.cjs`

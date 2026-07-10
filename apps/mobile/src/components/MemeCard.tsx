@@ -1,5 +1,7 @@
 import { View, Text, Pressable, Image } from 'react-native';
 import { UserAvatar } from './ui/UserAvatar';
+import { AiIcon, CommentIcon, EyeIcon, HeartIcon, ShareIcon, StarIcon } from './icons';
+import { colors } from '../theme';
 
 export interface MemeCardData {
   meme_id: string;
@@ -25,52 +27,112 @@ interface MemeCardProps {
 }
 
 export function MemeCard({ meme, onPress }: MemeCardProps) {
-  const typeEmoji = meme.type === 'text' ? '📝' : meme.type === 'image' ? '🖼️' : '🎬';
+  const typeLabel = meme.type === 'text' ? 'TEXT' : meme.type === 'image' ? 'IMG' : 'VIDEO';
 
   return (
     <Pressable
       onPress={onPress}
-      className="mb-card-gap rounded-card bg-ink-soft active:bg-ink-elevated p-4"
+      style={({ pressed }) => ({
+        backgroundColor: pressed ? colors.ink.elevated : colors.ink.soft,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+      })}
     >
       {/* 作者信息 */}
-      <View className="mb-3 flex-row items-center">
+      <View style={{ marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}>
         <UserAvatar uri={meme.author_avatar_url} size="sm" />
-        <View className="ml-2 flex-1">
-          <Text className="text-text-primary text-subtitle font-semibold">
+        <View style={{ marginLeft: 8, flex: 1 }}>
+          <Text
+            style={{ fontSize: 18, fontFamily: 'Poppins_600SemiBold', color: colors.text.primary }}
+          >
             {meme.author_nickname}
           </Text>
-          <View className="mt-0.5 flex-row items-center">
+          <View style={{ marginTop: 2, flexDirection: 'row', alignItems: 'center' }}>
             {meme.is_ai_generated && (
               <View
-                className="rounded-tag mr-2 px-1.5 py-0.5"
-                style={{ backgroundColor: 'rgba(124,58,255,0.15)' }}
+                style={{
+                  borderRadius: 8,
+                  marginRight: 8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  backgroundColor: colors.ai.bg,
+                }}
               >
-                <Text className="text-[10px] font-semibold" style={{ color: '#9D5FFF' }}>
+                <AiIcon color={colors.ai.DEFAULT} size={11} />
+                <Text
+                  style={{
+                    marginLeft: 4,
+                    fontSize: 10,
+                    fontFamily: 'Poppins_600SemiBold',
+                    color: colors.ai.DEFAULT,
+                  }}
+                >
                   AI
                 </Text>
               </View>
             )}
             {meme.published_at && (
-              <Text className="text-text-muted text-caption">
+              <Text
+                style={{ fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text.muted }}
+              >
                 {formatRelativeTime(meme.published_at)}
               </Text>
             )}
           </View>
         </View>
-        <Text className="text-text-muted text-lg">{typeEmoji}</Text>
+        <View
+          style={{
+            backgroundColor: colors.ink.elevated,
+            borderRadius: 9999,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+          }}
+        >
+          <Text style={{ fontSize: 10, fontFamily: 'Poppins_700Bold', color: colors.text.muted }}>
+            {typeLabel}
+          </Text>
+        </View>
       </View>
 
       {/* 标题 */}
-      <Text className="text-text-primary text-title mb-2 font-semibold" numberOfLines={2}>
+      <Text
+        style={{
+          fontSize: 22,
+          fontFamily: 'Poppins_600SemiBold',
+          color: colors.text.primary,
+          marginBottom: 8,
+        }}
+        numberOfLines={2}
+      >
         {meme.title}
       </Text>
 
       {/* 标签 */}
       {meme.tags && meme.tags.length > 0 && (
-        <View className="mb-2 flex-row">
+        <View style={{ marginBottom: 8, flexDirection: 'row' }}>
           {meme.tags.slice(0, 3).map((tag, i) => (
-            <View key={i} className="bg-ink-elevated rounded-tag mr-1.5 px-2 py-0.5">
-              <Text className="text-text-secondary text-[11px]">#{tag.name}</Text>
+            <View
+              key={i}
+              style={{
+                backgroundColor: colors.ink.elevated,
+                borderRadius: 8,
+                marginRight: 6,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'Poppins_500Medium',
+                  color: colors.text.secondary,
+                }}
+              >
+                #{tag.name}
+              </Text>
             </View>
           ))}
         </View>
@@ -78,7 +140,7 @@ export function MemeCard({ meme, onPress }: MemeCardProps) {
 
       {/* 封面图 */}
       {meme.cover_url && (
-        <View className="mb-3 overflow-hidden rounded-lg">
+        <View style={{ marginBottom: 12, overflow: 'hidden', borderRadius: 12 }}>
           <Image
             source={{ uri: meme.cover_url }}
             style={{ width: '100%', height: 180, borderRadius: 12 }}
@@ -89,24 +151,50 @@ export function MemeCard({ meme, onPress }: MemeCardProps) {
 
       {/* 神梗/烂梗徽章 */}
       {meme.god_trash_status === 'god' && (
-        <View className="mb-2">
+        <View style={{ marginBottom: 8 }}>
           <View
-            className="rounded-tag px-2 py-0.5"
-            style={{ backgroundColor: 'rgba(255,215,0,0.15)' }}
+            style={{
+              borderRadius: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              alignSelf: 'flex-start',
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              backgroundColor: `${colors.god.DEFAULT}22`,
+            }}
           >
-            <Text className="text-[11px] font-semibold" style={{ color: '#FFD700' }}>
-              ✦ 神梗
+            <StarIcon color={colors.god.DEFAULT} size={12} />
+            <Text
+              style={{
+                marginLeft: 4,
+                fontSize: 11,
+                fontFamily: 'Poppins_600SemiBold',
+                color: colors.god.DEFAULT,
+              }}
+            >
+              神梗
             </Text>
           </View>
         </View>
       )}
       {meme.god_trash_status === 'trash' && (
-        <View className="mb-2">
+        <View style={{ marginBottom: 8 }}>
           <View
-            className="rounded-tag px-2 py-0.5"
-            style={{ backgroundColor: 'rgba(139,139,139,0.15)' }}
+            style={{
+              borderRadius: 8,
+              alignSelf: 'flex-start',
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              backgroundColor: `${colors.trash.DEFAULT}22`,
+            }}
           >
-            <Text className="text-[11px] font-semibold" style={{ color: '#8B8B8B' }}>
+            <Text
+              style={{
+                fontSize: 11,
+                fontFamily: 'Poppins_600SemiBold',
+                color: colors.trash.DEFAULT,
+              }}
+            >
               烂梗
             </Text>
           </View>
@@ -114,22 +202,79 @@ export function MemeCard({ meme, onPress }: MemeCardProps) {
       )}
 
       {/* 互动栏 */}
-      <View className="border-border flex-row items-center border-t pt-2">
-        <View className="mr-4 flex-row items-center">
-          <Text className="text-brand mr-1 text-sm">⭐</Text>
-          <Text className="text-text-secondary text-caption">{meme.score_avg.toFixed(1)}</Text>
+      <View
+        style={{
+          borderTopWidth: 1,
+          borderTopColor: colors.border.DEFAULT,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingTop: 8,
+        }}
+      >
+        <View style={{ marginRight: 16, flexDirection: 'row', alignItems: 'center' }}>
+          <StarIcon color={colors.brand.DEFAULT} size={15} />
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.secondary,
+              marginLeft: 4,
+            }}
+          >
+            {meme.score_avg.toFixed(1)}
+          </Text>
         </View>
-        <View className="mr-4 flex-row items-center">
-          <Text className="text-text-secondary mr-1 text-sm">💬</Text>
-          <Text className="text-text-secondary text-caption">{meme.comment_count}</Text>
+        <View style={{ marginRight: 16, flexDirection: 'row', alignItems: 'center' }}>
+          <CommentIcon color={colors.text.secondary} size={15} />
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.secondary,
+              marginLeft: 4,
+            }}
+          >
+            {meme.comment_count}
+          </Text>
         </View>
-        <View className="mr-4 flex-row items-center">
-          <Text className="text-text-secondary mr-1 text-sm">♥</Text>
-          <Text className="text-text-secondary text-caption">{meme.favorite_count}</Text>
+        <View style={{ marginRight: 16, flexDirection: 'row', alignItems: 'center' }}>
+          <HeartIcon color={colors.text.secondary} size={15} />
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.secondary,
+              marginLeft: 4,
+            }}
+          >
+            {meme.favorite_count}
+          </Text>
         </View>
-        <View className="flex-row items-center">
-          <Text className="text-text-secondary mr-1 text-sm">↗</Text>
-          <Text className="text-text-secondary text-caption">{meme.share_count}</Text>
+        <View style={{ marginRight: 16, flexDirection: 'row', alignItems: 'center' }}>
+          <ShareIcon color={colors.text.secondary} size={15} />
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.secondary,
+              marginLeft: 4,
+            }}
+          >
+            {meme.share_count}
+          </Text>
+        </View>
+        <View style={{ marginLeft: 'auto' as const, flexDirection: 'row', alignItems: 'center' }}>
+          <EyeIcon color={colors.text.muted} size={15} />
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.muted,
+              marginLeft: 4,
+            }}
+          >
+            {meme.score_count}
+          </Text>
         </View>
       </View>
     </Pressable>

@@ -2,9 +2,9 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-09
-**当前阶段**：S0 通电验证全部完成 + **Mobile UI 设计系统完成（P0 视觉重构，基于 Figma "Online Game Streaming" 参考稿）** → 待启动 S1 T1.1
-**当前会话焦点**：Mobile UI 设计系统第二期 — Figma 视觉风格重构（新色板金黄 #F7B84B + Poppins 字体 + 深黑氛围 + 搜索/分类胶囊/LIVE 角标/Feed 登录页重建）
+**最后更新**：2026-07-10
+**当前阶段**：S0 通电验证全部完成 + **Mobile UI 设计系统 P0+P1+P2 全部完成（基于 Figma "Online Game Streaming" 视觉风格参考稿）** → 待启动 S1 T1.1
+**当前会话焦点**：Mobile UI P1+P2 收尾 — 所有余下页面/组件完成 inline style + theme token + Poppins 改造，全局 `className=0` 残留
 
 ---
 
@@ -49,10 +49,19 @@
   - **Metro 配置**：简化 `metro.config.js`（去掉 hacky extraNodeModules/.pnpm 扫描），适配 pnpm monorepo
   - **UI Plan 文档**：新建 `apps/mobile/UI_PLAN.md`，记录已实现/剩余 P1-P3/基于 Figma 链接
   - **语义映射**：LIVE → PK 进行中；Viewers → 参与数；Game Categories → 梗分类；Streamer → 热门梗卡作者
+- **Mobile UI 设计系统第二期 — P1+P2 全面完成（2026-07-10）**：
+  - P1 造梗入口页 create.tsx — 4 模式卡片按 Figma Game Category 风格
+  - P1 个人主页 profile.tsx — Banner + 头像 + LV 徽章 + 三段数据 + Tab
+  - P2 军团页 legion.tsx + PK 页 pk.tsx — 色彩对齐新色板
+  - P2 全部占位页面通刷 — settings / teen-mode / create/{text,image,video,agent} / +not-found 改用 inline style + Poppins
+  - P2 通用组件通刷 — EmptyState / PrimaryButton / Tag / IconButton / AppScreen 改用 theme token
+  - P2 MemeCard 硬编码色清理 — AI tag / God/Trash 改用 colorsFlat
+  - **全局 className 清零** — apps/mobile 目录下零 className 残留，全部转为 inline StyleSheet
+  - TypeScript typecheck=0 errors / lint=0 errors / 0 warnings
 
 ### 进行中 🔄
 
-- 无（P0 Figma 视觉重构完成，等待启动 S1 T1.1）
+- 无（Mobile UI 设计系统 P0+P1+P2 全部完成，等待启动 S1 T1.1）
 
 ### 待启动 ⏳
 
@@ -122,3 +131,4 @@
 | 2026-07-08 01:10 | Harness 信噪比优化 P0+P1 | 审查 `.cursor`+`.agents` 后优化：**P0** skill 瘦身 340→107（236 无关归档到 `.cursor/ecc-reference/skills/`，只留项目栈+harness）；**P1** 新建 3 个项目专属 skill（`drizzle-orm`/`bullmq-queue`/`supabase-auth`，固化查询约定+异步AI契约+混合认证）；**P1** 重写 `ecc-common-agents.mdc`（`~/.claude/agents/`→Cursor `subagent_type`+`ecc-agent-*` 技能映射）；更新 `ecc-reference/README.md`。无源码/DDL/API 改动。 |
 | 2026-07-08 01:29 | Harness 路由分类层 | 按技术方向把 107 skill + 6 MCP + 127 rule + 3 hook 归类到 `.cursor/routes/`（7 方向 + 3 辅助，每文件含 skill/rule/MCP/任务路由表）；新增 alwaysApply `05-harness-routes.mdc` 指引 Agent 做任务前查路由；资产保持扁平（Cursor 加载契约），路由层做分类导航。无源码/DDL/API 改动。 |
 | 2026-07-08 15:11 | Mobile UI 设计系统第二期修复 | 修第一期遗留类型错误：colors.ts 加 `colorsFlat` 扁平映射（解决嵌套 `colors.brand.DEFAULT` vs 字符串 key `colors['text-muted']` 不匹配）；改 `LoadingSkeleton`/`PrimaryButton`/`UserAvatar`/`login.tsx`/`feed.tsx` 用 `colorsFlat as themeColors`；装 `@types/jest` + `@types/node`，`tsconfig.json` `types` 加 `"node"`；`tailwind.config.js` 颜色内联改为 `require('./src/theme/tailwind-colors.cjs')`（单源 truth）；`app/_layout.tsx` 删除 `headerStyle.elevation/shadowOpacity`（RN 不支持）；`(tabs)/feed.tsx` `RefreshControl tintColor` 改 `themeColors.brand!`；`create.tsx`/`profile.tsx` 删未用 import；`create.tsx` `tagBgStyleMap` 类型改 `Record<string, { backgroundColor: string }>`；`pnpm lint --fix` 清 47 个 prettier warning。**最终：typecheck=0 errors / lint=0 errors / 0 warnings**。 |
+| 2026-07-10 | Mobile UI P1+P2 收尾 | 完成 P1（create.tsx / profile.tsx）+ P2（legion/pk/EmptyState/PrimaryButton/Tag/IconButton/AppScreen/MemeCard）+ 7 个占位页面（settings/teen-mode/create {text,image,video,agent}/+not-found）的全面 className→inline style 改造，theme token + Poppins 字体统一。修 TS 错误：pk.tsx width 类型转 DimensionValue、Tag.tsx 加 helper c() 防 noUncheckedIndexedAccess、LoadingSkeleton.tsx SkeletonBoxProps width 改 DimensionValue、AppScreen.tsx 修相对路径、IconButton.tsx 显式分离 style prop。最终 `apps/mobile` 下零 className 残留，typecheck=0 / lint=0。同步更新 apps/mobile/UI_PLAN.md（P1+P2 状态全部翻转）。 |

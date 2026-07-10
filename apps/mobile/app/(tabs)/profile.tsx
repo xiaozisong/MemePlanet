@@ -1,103 +1,393 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '../../src/store/user.store';
+import {
+  CrownIcon,
+  EditIcon,
+  ShieldIcon,
+  SparklesIcon,
+  UserIcon,
+} from '../../src/components/icons';
+import { colors, layout } from '../../src/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const user = useUserStore((s) => s.user);
 
   return (
-    <ScrollView className="bg-ink flex-1" showsVerticalScrollIndicator={false}>
-      {/* 用户信息区 */}
-      <View className="px-page items-center pt-12">
-        {/* 头像 */}
-        <View className="bg-ink-elevated h-20 w-20 items-center justify-center rounded-full">
-          <Text className="text-4xl">🤡</Text>
-        </View>
-
-        {/* 昵称 */}
-        <Text className="text-text-primary text-title-lg mt-4 font-bold">
-          {user?.nickname ?? '未登录'}
-        </Text>
-
-        {/* 简介 */}
-        <Text className="text-text-secondary text-caption mt-1" numberOfLines={2}>
-          {user?.bio ?? '这个人很懒，什么都没留下'}
-        </Text>
-
-        {/* Pro 徽章 */}
-        {user?.isPro && (
-          <View
-            className="rounded-tag mt-2 px-2 py-0.5"
-            style={{ backgroundColor: 'rgba(124,58,255,0.15)' }}
-          >
-            <Text className="text-[11px] font-semibold" style={{ color: '#9D5FFF' }}>
-              ✦ Pro
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.ink.DEFAULT }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={{ paddingHorizontal: layout.pagePadding, paddingTop: 20 }}>
+        <View
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <View>
+            <Text
+              style={{ fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text.muted }}
+            >
+              我的
+            </Text>
+            <Text
+              style={{
+                fontSize: 28,
+                fontFamily: 'Poppins_800ExtraBold',
+                color: colors.text.primary,
+                marginTop: 4,
+              }}
+            >
+              个人主页
             </Text>
           </View>
-        )}
-      </View>
+          <Pressable
+            style={{
+              backgroundColor: colors.ink.soft,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: colors.border.DEFAULT,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onPress={() => router.push('/settings')}
+          >
+            <EditIcon color={colors.brand.DEFAULT} size={18} />
+          </Pressable>
+        </View>
 
-      {/* 数据行 */}
-      <View className="px-page flex-row justify-center py-6">
-        <DataStat label="等级" value={`Lv.${user?.level ?? 1}`} />
-        <View className="bg-border mx-6 h-10 w-px" />
-        <DataStat label="梗力值" value={`${user?.memePower ?? 0}`} highlight />
-        <View className="bg-border mx-6 h-10 w-px" />
-        <DataStat label="能量" value={`${user?.energyBalance ?? 100}`} />
-      </View>
+        {/* Profile Card */}
+        <View
+          style={{
+            backgroundColor: colors.ink.soft,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border.DEFAULT,
+            marginTop: 20,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Banner */}
+          <View style={{ height: 96, backgroundColor: colors.ink.elevated }}>
+            <View
+              style={{
+                position: 'absolute',
+                right: -32,
+                top: -40,
+                width: 144,
+                height: 144,
+                borderRadius: 72,
+                backgroundColor: `${colors.brand.DEFAULT}20`,
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                left: 20,
+                top: 20,
+                borderRadius: 9999,
+                backgroundColor: colors.brand.DEFAULT,
+                paddingHorizontal: 12,
+                paddingVertical: 4,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins_600SemiBold',
+                  color: colors.ink.DEFAULT,
+                }}
+              >
+                Meme Profile
+              </Text>
+            </View>
+          </View>
 
-      {/* 我的梗 Tab 占位 */}
-      <View className="px-page mb-4">
-        <View className="bg-ink-soft rounded-tag flex-row p-1">
-          <View className="bg-brand rounded-tag flex-1 items-center py-2">
-            <Text className="text-caption font-semibold text-white">我的梗</Text>
-          </View>
-          <View className="flex-1 items-center py-2">
-            <Text className="text-text-muted text-caption">收藏</Text>
-          </View>
-          <View className="flex-1 items-center py-2">
-            <Text className="text-text-muted text-caption">评分</Text>
+          <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+            {/* Avatar */}
+            <View
+              style={{
+                marginTop: -36,
+                flexDirection: 'row',
+                alignItems: 'flex-end',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  borderWidth: 4,
+                  borderColor: colors.ink.DEFAULT,
+                  backgroundColor: colors.ink.DEFAULT,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <UserIcon color={colors.brand.DEFAULT} size={34} />
+              </View>
+              <View
+                style={{
+                  marginBottom: 8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderRadius: 9999,
+                  backgroundColor: colors.ink.elevated,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                }}
+              >
+                <CrownIcon color={colors.brand.DEFAULT} size={16} />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontFamily: 'Poppins_600SemiBold',
+                    color: colors.brand.DEFAULT,
+                    marginLeft: 4,
+                  }}
+                >
+                  Lv.{user?.level ?? 1}
+                </Text>
+              </View>
+            </View>
+
+            <Text
+              style={{
+                fontSize: 22,
+                fontFamily: 'Poppins_700Bold',
+                color: colors.text.primary,
+                marginTop: 12,
+              }}
+            >
+              {user?.nickname ?? '未登录用户'}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                fontFamily: 'Poppins_400Regular',
+                color: colors.text.secondary,
+                marginTop: 4,
+              }}
+              numberOfLines={2}
+            >
+              {user?.bio ?? '先把大致 UI 搭起来，再接登录、作品和数据。'}
+            </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
+              <ProfileBadge label={user?.isPro ? 'Pro 已开通' : '普通玩家'} />
+              <ProfileBadge label="热梗观察员" variant="muted" />
+            </View>
           </View>
         </View>
       </View>
 
-      {/* 空内容占位 */}
-      <View className="px-page items-center py-8">
-        <Text className="mb-4 text-5xl">🎭</Text>
-        <Text className="text-text-secondary text-subtitle text-center font-semibold">
-          还没有发布梗
-        </Text>
-        <Text className="text-text-muted text-caption mt-1 text-center">
-          去造梗工坊创作你的第一个梗吧
-        </Text>
-        <Pressable
-          className="bg-brand rounded-btn active:bg-brand-dark mt-4 px-6 py-3"
-          onPress={() => router.push('/create')}
+      {/* Stats Row */}
+      <View style={{ paddingHorizontal: layout.pagePadding, paddingVertical: 16 }}>
+        <View
+          style={{
+            backgroundColor: colors.ink.soft,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border.DEFAULT,
+            flexDirection: 'row',
+            padding: 16,
+          }}
         >
-          <Text className="text-btn font-semibold text-white">去造梗</Text>
-        </Pressable>
+          <DataStat label="作品" value="0" />
+          <View
+            style={{
+              width: 1,
+              height: 40,
+              backgroundColor: colors.border.DEFAULT,
+              marginHorizontal: 16,
+            }}
+          />
+          <DataStat label="梗力值" value={`${user?.memePower ?? 0}`} highlight />
+          <View
+            style={{
+              width: 1,
+              height: 40,
+              backgroundColor: colors.border.DEFAULT,
+              marginHorizontal: 16,
+            }}
+          />
+          <DataStat label="能量" value={`${user?.energyBalance ?? 100}`} />
+        </View>
       </View>
 
-      {/* 菜单项 */}
-      <View className="px-page mt-4">
-        <MenuRow icon="⚙️" title="设置" onPress={() => router.push('/settings')} />
+      {/* Tab Switcher */}
+      <View style={{ paddingHorizontal: layout.pagePadding, marginBottom: 16 }}>
+        <View
+          style={{
+            backgroundColor: colors.ink.soft,
+            borderRadius: 8,
+            flexDirection: 'row',
+            padding: 4,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.brand.DEFAULT,
+              borderRadius: 8,
+              flex: 1,
+              alignItems: 'center',
+              paddingVertical: 8,
+            }}
+          >
+            <Text
+              style={{ fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.ink.DEFAULT }}
+            >
+              我的梗
+            </Text>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', paddingVertical: 8 }}>
+            <Text
+              style={{ fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text.muted }}
+            >
+              收藏
+            </Text>
+          </View>
+          <View style={{ flex: 1, alignItems: 'center', paddingVertical: 8 }}>
+            <Text
+              style={{ fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text.muted }}
+            >
+              评分
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Empty State */}
+      <View style={{ paddingHorizontal: layout.pagePadding }}>
+        <View
+          style={{
+            backgroundColor: colors.ink.soft,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border.DEFAULT,
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingVertical: 32,
+          }}
+        >
+          <View
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              backgroundColor: `${colors.brand.DEFAULT}15`,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+            }}
+          >
+            <SparklesIcon color={colors.brand.DEFAULT} size={30} />
+          </View>
+          <Text
+            style={{
+              fontSize: 18,
+              fontFamily: 'Poppins_600SemiBold',
+              color: colors.text.primary,
+              textAlign: 'center',
+            }}
+          >
+            还没有发布梗
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.muted,
+              marginTop: 8,
+              textAlign: 'center',
+            }}
+          >
+            先去造梗工坊创作你的第一张梗卡
+          </Text>
+          <Pressable
+            style={{
+              backgroundColor: colors.brand.DEFAULT,
+              borderRadius: 12,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              marginTop: 20,
+            }}
+            onPress={() => router.push('/create')}
+          >
+            <Text
+              style={{ fontSize: 16, fontFamily: 'Poppins_600SemiBold', color: colors.ink.DEFAULT }}
+            >
+              去造梗
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Menu Section */}
+      <View style={{ paddingHorizontal: layout.pagePadding, marginTop: 20 }}>
+        <Text
+          style={{
+            fontSize: 18,
+            fontFamily: 'Poppins_700Bold',
+            color: colors.text.primary,
+            marginBottom: 12,
+          }}
+        >
+          常用入口
+        </Text>
         <MenuRow
-          icon="🛡️"
+          icon={<EditIcon color={colors.brand.DEFAULT} size={20} />}
+          title="设置"
+          onPress={() => router.push('/settings')}
+        />
+        <MenuRow
+          icon={<ShieldIcon color={colors.accent.info} size={20} />}
           title="青少年模式"
           subtitle="每日≤40分钟 · 22:00-06:00禁用"
           onPress={() => router.push('/teen-mode')}
         />
         <MenuRow
-          icon="🔑"
+          icon={<UserIcon color={colors.text.secondary} size={20} />}
           title={user ? '切换账号' : '登录 / 注册'}
           onPress={() => router.push('/login')}
         />
       </View>
 
-      {/* 底部安全区 */}
-      <View className="h-20" />
+      <View style={{ height: 80 }} />
     </ScrollView>
+  );
+}
+
+function ProfileBadge({
+  label,
+  variant = 'brand',
+}: {
+  label: string;
+  variant?: 'brand' | 'muted';
+}) {
+  const isBrand = variant === 'brand';
+  return (
+    <View
+      style={{
+        borderRadius: 8,
+        marginRight: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        backgroundColor: isBrand ? `${colors.brand.DEFAULT}22` : colors.ink.elevated,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 11,
+          fontFamily: 'Poppins_600SemiBold',
+          color: isBrand ? colors.brand.DEFAULT : colors.text.secondary,
+        }}
+      >
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -111,11 +401,26 @@ function DataStat({
   highlight?: boolean;
 }) {
   return (
-    <View className="items-center">
-      <Text className={`text-title font-bold ${highlight ? 'text-brand' : 'text-text-primary'}`}>
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <Text
+        style={{
+          fontSize: 22,
+          fontFamily: 'Poppins_700Bold',
+          color: highlight ? colors.brand.DEFAULT : colors.text.primary,
+        }}
+      >
         {value}
       </Text>
-      <Text className="text-text-muted text-caption mt-0.5">{label}</Text>
+      <Text
+        style={{
+          fontSize: 14,
+          fontFamily: 'Poppins_400Regular',
+          color: colors.text.muted,
+          marginTop: 2,
+        }}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -126,22 +431,58 @@ function MenuRow({
   subtitle,
   onPress,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   subtitle?: string;
   onPress: () => void;
 }) {
   return (
     <Pressable
-      className="bg-ink-soft rounded-card active:bg-ink-elevated mb-2 flex-row items-center p-4"
+      style={{
+        backgroundColor: colors.ink.soft,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.border.DEFAULT,
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        marginBottom: 8,
+      }}
       onPress={onPress}
     >
-      <Text className="mr-3 text-xl">{icon}</Text>
-      <View className="flex-1">
-        <Text className="text-text-primary text-body">{title}</Text>
-        {subtitle && <Text className="text-text-muted text-caption mt-0.5">{subtitle}</Text>}
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.ink.elevated,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 12,
+        }}
+      >
+        {icon}
       </View>
-      <Text className="text-text-muted text-lg">›</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 16, fontFamily: 'Poppins_500Medium', color: colors.text.primary }}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_400Regular',
+              color: colors.text.muted,
+              marginTop: 2,
+            }}
+          >
+            {subtitle}
+          </Text>
+        )}
+      </View>
+      <Text style={{ fontSize: 18, fontFamily: 'Poppins_400Regular', color: colors.text.muted }}>
+        {'>'}
+      </Text>
     </Pressable>
   );
 }
