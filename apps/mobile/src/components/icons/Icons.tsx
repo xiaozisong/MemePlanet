@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, G, Line } from 'react-native-svg';
 
 type IconProps = { size?: number; color?: string };
 
@@ -216,11 +216,12 @@ export function SendIcon({ size = 22, color = '#fff' }: IconProps) {
   );
 }
 
-export function SearchIcon({ size = 24, color = '#A0A0B0' }: IconProps) {
+export function MoreIcon({ size = 20, color = '#A0A0B0' }: IconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="11" cy="11" r="7" stroke={color} strokeWidth={1.8} />
-      <Path d="M16.5 16.5L21 21" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+    <Svg width={size} height={size} viewBox="0 0 20 20" fill={color}>
+      <Circle cx="10" cy="4" r="1.5" />
+      <Circle cx="10" cy="10" r="1.5" />
+      <Circle cx="10" cy="16" r="1.5" />
     </Svg>
   );
 }
@@ -244,6 +245,65 @@ export function CrownIcon({ size = 20, color = '#FFD700' }: IconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </Svg>
+  );
+}
+
+export function ChevronDownIcon({ size = 20, color = '#5E6468' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+      <Path
+        d="M5 7.5l5 5 5-5"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function EyeIcon({ size = 16, color = '#5E6468' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth={1.8} />
+    </Svg>
+  );
+}
+
+export function EditIcon({ size = 22, color = '#A0A0B0' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 20h9"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M16.5 3.5a2.12 2.12 0 113 3L7 19l-4 1 1-4 12.5-12.5z"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function SearchIcon({ size = 20, color = '#5E6468' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="11" cy="11" r="7" stroke={color} strokeWidth={1.8} />
+      <Path d="M16.5 16.5L21 21" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -290,15 +350,16 @@ export function RefreshIcon({ size = 22, color = '#fff' }: IconProps) {
   );
 }
 
-export function MoreIcon({ size = 20, color = '#A0A0B0' }: IconProps) {
+export function LiveDotIcon({ size = 8, color = '#FF4444' }: IconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 20 20" fill={color}>
-      <Circle cx="10" cy="4" r="1.5" />
-      <Circle cx="10" cy="10" r="1.5" />
-      <Circle cx="10" cy="16" r="1.5" />
+    <Svg width={size} height={size} viewBox="0 0 8 8" fill={color}>
+      <Circle cx="4" cy="4" r="4" />
     </Svg>
   );
 }
+
+const BRAND_ACTIVE = '#F7B84B';
+const BRAND_INACTIVE = '#5E6468';
 
 export function TabFeedIcon({
   focused,
@@ -308,7 +369,7 @@ export function TabFeedIcon({
   color?: string;
   size?: number;
 }) {
-  return <HomeIcon color={focused ? '#FF5A1F' : '#6B6B78'} size={size} />;
+  return <HomeIcon color={focused ? BRAND_ACTIVE : BRAND_INACTIVE} size={size} />;
 }
 export function TabCreateIcon({
   focused,
@@ -318,7 +379,7 @@ export function TabCreateIcon({
   color?: string;
   size?: number;
 }) {
-  return <SparklesIcon color={focused ? '#FF5A1F' : '#6B6B78'} size={size} />;
+  return <SparklesIcon color={focused ? BRAND_ACTIVE : BRAND_INACTIVE} size={size} />;
 }
 export function TabLegionIcon({
   focused,
@@ -328,7 +389,7 @@ export function TabLegionIcon({
   color?: string;
   size?: number;
 }) {
-  return <ShieldIcon color={focused ? '#FF5A1F' : '#6B6B78'} size={size} />;
+  return <ShieldIcon color={focused ? BRAND_ACTIVE : BRAND_INACTIVE} size={size} />;
 }
 export function TabPkIcon({
   focused,
@@ -338,7 +399,7 @@ export function TabPkIcon({
   color?: string;
   size?: number;
 }) {
-  return <SwordsIcon color={focused ? '#FF5A1F' : '#6B6B78'} size={size} />;
+  return <SwordsIcon color={focused ? BRAND_ACTIVE : BRAND_INACTIVE} size={size} />;
 }
 export function TabProfileIcon({
   focused,
@@ -348,5 +409,10 @@ export function TabProfileIcon({
   color?: string;
   size?: number;
 }) {
-  return <UserIcon color={focused ? '#FF5A1F' : '#6B6B78'} size={size} />;
+  return <UserIcon color={focused ? BRAND_ACTIVE : BRAND_INACTIVE} size={size} />;
 }
+
+/* NOTE: Rect/G/Line imported but intentionally not used in current icon set. */
+void Rect;
+void G;
+void Line;

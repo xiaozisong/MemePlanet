@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colorsFlat as themeColors } from '../src/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, colorsFlat as themeColors, radius, layout } from '../src/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -56,122 +57,284 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="bg-ink flex-1"
-    >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        {/* 品牌区 */}
-        <View className="px-page items-center pb-12 pt-20">
-          <View className="bg-brand mb-6 h-20 w-20 items-center justify-center rounded-full">
-            <Text className="text-4xl">🔥</Text>
-          </View>
-          <Text className="text-text-primary text-display text-center font-bold">梗星球</Text>
-          <Text className="text-text-secondary text-subtitle mt-2 text-center">
-            AI 造梗 · 神梗评分 · 军团 PK
-          </Text>
-        </View>
-
-        {/* 登录表单 */}
-        <View className="px-page">
-          {/* 手机号输入 */}
-          <View className="mb-4">
-            <Text className="text-text-secondary text-caption-bold mb-2">手机号</Text>
-            <View className="bg-ink-soft rounded-input border-border-light flex-row items-center border px-4 py-3">
-              <Text className="text-text-muted text-body mr-2">+86</Text>
-              <TextInput
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="请输入手机号"
-                placeholderTextColor={themeColors['text-muted']}
-                keyboardType="phone-pad"
-                maxLength={11}
-                className="text-text-primary text-body flex-1"
-              />
-            </View>
-          </View>
-
-          {/* 验证码输入 */}
-          <View className="mb-6">
-            <Text className="text-text-secondary text-caption-bold mb-2">验证码</Text>
-            <View className="bg-ink-soft rounded-input border-border-light flex-row items-center border px-4 py-3">
-              <TextInput
-                value={code}
-                onChangeText={setCode}
-                placeholder="请输入验证码"
-                placeholderTextColor={themeColors['text-muted']}
-                keyboardType="number-pad"
-                maxLength={6}
-                editable={codeSent}
-                className="text-text-primary text-body flex-1"
-              />
-              <Pressable
-                onPress={handleSendCode}
-                disabled={!canSendCode}
-                className={`ml-2 ${canSendCode ? 'active:opacity-70' : 'opacity-50'}`}
-              >
-                <View
-                  className="rounded-tag px-3 py-1.5"
-                  style={{ backgroundColor: 'rgba(255,90,31,0.15)' }}
-                >
-                  <Text
-                    className={`text-btn text-[13px] font-semibold ${canSendCode ? 'text-brand' : 'text-text-muted'}`}
-                  >
-                    {sendingCode
-                      ? '发送中...'
-                      : countdown > 0
-                        ? `${countdown}s`
-                        : codeSent
-                          ? '重新发送'
-                          : '获取验证码'}
-                  </Text>
-                </View>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* 登录按钮 */}
-          <Pressable
-            onPress={handleLogin}
-            disabled={!canLogin}
-            className={`rounded-btn items-center justify-center py-4 ${canLogin ? 'bg-brand active:bg-brand-dark' : 'bg-ink-elevated'}`}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.ink.DEFAULT }} edges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+          {/* 品牌区 — 深黑氛围 */}
+          <View
+            style={{
+              alignItems: 'center',
+              paddingTop: 80,
+              paddingBottom: 48,
+              paddingHorizontal: layout.pagePadding,
+            }}
           >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
+            <View
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: 44,
+                backgroundColor: colors.brand.DEFAULT,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 24,
+                shadowColor: colors.brand.DEFAULT,
+                shadowOpacity: 0.35,
+                shadowRadius: 24,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 8,
+              }}
+            >
+              <Text style={{ fontSize: 40 }}>🔥</Text>
+            </View>
+            <Text
+              style={{
+                fontSize: 32,
+                fontFamily: 'Poppins_800ExtraBold',
+                color: colors.text.primary,
+                textAlign: 'center',
+              }}
+            >
+              梗星球
+            </Text>
+            <Text
+              style={{
+                fontSize: 15,
+                fontFamily: 'Poppins_400Regular',
+                color: colors.text.secondary,
+                textAlign: 'center',
+                marginTop: 8,
+              }}
+            >
+              AI 造梗 · 神梗评分 · 军团 PK
+            </Text>
+          </View>
+
+          {/* 登录表单 */}
+          <View style={{ paddingHorizontal: layout.pagePadding }}>
+            {/* 手机号 */}
+            <View style={{ marginBottom: 16 }}>
               <Text
-                className={`text-btn font-semibold ${canLogin ? 'text-white' : 'text-text-muted'}`}
+                style={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins_500Medium',
+                  color: colors.text.secondary,
+                  marginBottom: 8,
+                }}
               >
-                登录 / 注册
+                手机号
               </Text>
-            )}
-          </Pressable>
-
-          {/* 服务条款 */}
-          <Text className="text-text-muted text-caption mt-4 text-center">
-            登录即同意
-            <Text className="text-brand"> 《用户协议》</Text>和
-            <Text className="text-brand"> 《隐私政策》</Text>
-          </Text>
-
-          {/* M2 分隔线 */}
-          <View className="my-8 flex-row items-center">
-            <View className="bg-border h-px flex-1" />
-            <Text className="text-text-muted text-caption mx-4">其他方式</Text>
-            <View className="bg-border h-px flex-1" />
-          </View>
-
-          {/* M2 OAuth 占位 */}
-          <View className="flex-row justify-center gap-6">
-            <View className="bg-ink-soft h-12 w-12 items-center justify-center rounded-full opacity-40">
-              <Text className="text-lg">💬</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: colors.ink.soft,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.border.DEFAULT,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: 'Poppins_400Regular',
+                    fontSize: 16,
+                    color: colors.text.muted,
+                    marginRight: 8,
+                  }}
+                >
+                  +86
+                </Text>
+                <TextInput
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="请输入手机号"
+                  placeholderTextColor={themeColors['text-disabled']}
+                  keyboardType="phone-pad"
+                  maxLength={11}
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Poppins_400Regular',
+                    fontSize: 16,
+                    color: colors.text.primary,
+                  }}
+                />
+              </View>
             </View>
-            <View className="bg-ink-soft h-12 w-12 items-center justify-center rounded-full opacity-40">
-              <Text className="text-lg">🍎</Text>
+
+            {/* 验证码 */}
+            <View style={{ marginBottom: 24 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: 'Poppins_500Medium',
+                  color: colors.text.secondary,
+                  marginBottom: 8,
+                }}
+              >
+                验证码
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: colors.ink.soft,
+                  borderRadius: radius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.border.DEFAULT,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                }}
+              >
+                <TextInput
+                  value={code}
+                  onChangeText={setCode}
+                  placeholder="请输入验证码"
+                  placeholderTextColor={themeColors['text-disabled']}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  editable={codeSent}
+                  style={{
+                    flex: 1,
+                    fontFamily: 'Poppins_400Regular',
+                    fontSize: 16,
+                    color: colors.text.primary,
+                  }}
+                />
+                <Pressable
+                  onPress={handleSendCode}
+                  disabled={!canSendCode}
+                  style={{ opacity: canSendCode ? 1 : 0.4 }}
+                >
+                  <View
+                    style={{
+                      borderRadius: radius.sm,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      backgroundColor: colors.tag.bg,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins_600SemiBold',
+                        color: canSendCode ? colors.brand.DEFAULT : colors.text.muted,
+                      }}
+                    >
+                      {sendingCode
+                        ? '发送中...'
+                        : countdown > 0
+                          ? `${countdown}s`
+                          : codeSent
+                            ? '重新发送'
+                            : '获取验证码'}
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* 登录按钮 — 金黄 CTA */}
+            <Pressable
+              onPress={handleLogin}
+              disabled={!canLogin}
+              style={{
+                borderRadius: radius.pill,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 16,
+                backgroundColor: canLogin ? colors.brand.DEFAULT : colors.ink.elevated,
+                opacity: canLogin ? 1 : 0.6,
+              }}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={colors.ink.DEFAULT} />
+              ) : (
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontFamily: 'Poppins_700Bold',
+                    color: canLogin ? '#0A0A0A' : colors.text.muted,
+                  }}
+                >
+                  登录 / 注册
+                </Text>
+              )}
+            </Pressable>
+
+            {/* 服务条款 */}
+            <Text
+              style={{
+                textAlign: 'center',
+                marginTop: 16,
+                fontSize: 12,
+                fontFamily: 'Poppins_400Regular',
+                color: colors.text.muted,
+              }}
+            >
+              登录即同意
+              <Text style={{ color: colors.brand.DEFAULT }}> 《用户协议》</Text>和
+              <Text style={{ color: colors.brand.DEFAULT }}> 《隐私政策》</Text>
+            </Text>
+
+            {/* 分隔 */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginVertical: 32,
+              }}
+            >
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border.DEFAULT }} />
+              <Text
+                style={{
+                  marginHorizontal: 16,
+                  fontSize: 12,
+                  fontFamily: 'Poppins_400Regular',
+                  color: colors.text.muted,
+                }}
+              >
+                其他方式
+              </Text>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border.DEFAULT }} />
+            </View>
+
+            {/* M2 OAuth 占位 */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: colors.ink.soft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.4,
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>💬</Text>
+              </View>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: colors.ink.soft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.4,
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>🍎</Text>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

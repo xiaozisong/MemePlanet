@@ -2,9 +2,9 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-08
-**当前阶段**：S0 通电验证全部完成（后端 fully 启动）+ 双端 QA 测试通过（166/166）+ Expo 真机 404 修复 + Harness 信噪比优化（P0+P1）+ Harness 路由分类层 + **Mobile UI 设计系统第一期** → S1 T1.1 待启动
-**当前会话焦点**：Mobile UI 设计系统建立（design tokens + SVG 图标 + 定制组件 + 页面优化）
+**最后更新**：2026-07-09
+**当前阶段**：S0 通电验证全部完成 + **Mobile UI 设计系统完成（P0 视觉重构，基于 Figma "Online Game Streaming" 参考稿）** → 待启动 S1 T1.1
+**当前会话焦点**：Mobile UI 设计系统第二期 — Figma 视觉风格重构（新色板金黄 #F7B84B + Poppins 字体 + 深黑氛围 + 搜索/分类胶囊/LIVE 角标/Feed 登录页重建）
 
 ---
 
@@ -39,10 +39,20 @@
   - **页面优化**：Feed 卡片（骨架屏/空状态/下拉刷新/互动栏）+ 登录页（品牌区/输入框/CTA/服务条款/分隔线）+ 造梗工坊入口（4 模式卡片）+ 个人主页（头像区/数据行/内容 Tab/菜单）
   - **类型修复**：修 ~20 处颜色引用类型错误（嵌套 `colors.brand.DEFAULT` vs 扁平 `themeColors.brand`）+ 装 @types/jest + @types/node + tsconfig 加 `node` types
   - **Tailwind 对齐**：`tailwind.config.js` colors 内联改为引用 `theme/tailwind-colors.cjs`（单源 truth），间距/字号/圆角/阴影同步
+|- **Mobile UI 设计系统第二期 — Figma 视觉重构（P0）**：基于 Figma "Online Game Streaming Mobile App — Community" 设计稿（[Figma 链接](https://www.figma.com/design/3ktAZ9eJ1FmAPhNYjx8BYh/Online-Game-Streaming-Mobile-App--Community-?node-id=0-1&p=f&t=xgWpcwaQSiAMThm6-0)）进行全面视觉重构，TypeScript typecheck=0 + lint=0 通过：
+  - **色彩系统**：品牌色从 `#FF5A1F` 改为 `#F7B84B`（金黄），背景从 `#0F0F12` 改为 `#1E1D1A`（深棕黑），新增 4 色 accent（青 #28ACA6 / 绿 #5ED36A / 紫 #9E5CBD / 蓝 #70A3EE）+ 语义色（border/status/god/trash/overlay/tag/AI）。`colors.ts` + `tailwind-colors.cjs` 同步
+  - **Poppins 字体**：5 字重（400/500/600/700/800）通过 `expo-font` + `assets/fonts/` 本地 `.ttf` 文件加载，移除 `@expo-google-fonts/poppins` NPM 依赖（避免 pnpm hoisting 兼容问题）。`app/_layout.tsx` 新增 `FontLoader` 组件 + 骨架屏。`typography.ts` 所有 token 继承 Poppins
+  - **SVG 图标**：Tab 图标从 `#FF5A1F` 金黄化 + 新增 `EyeIcon`、`ChevronDownIcon`、`LiveDotIcon`、`EditIcon`。`Icons.tsx` + `index.ts` 同步
+  - **Tab 栏**：5 Tab 保留，active 色金黄 `#F7B84B` + Poppins 字体。`(tabs)/_layout.tsx`
+  - **Feed 首页**：全面重建 — 搜索栏 + 8 类分类胶囊（热梗/神梗/表情包等）+ 梗卡引用 `MemeCard` 组件。`(tabs)/feed.tsx`
+  - **登录页**：全面重建 — 深黑氛围 + 金黄发光 Logo + 金黄 CTA + 暗色输入框（内置 +86/验证码）。`login.tsx`
+  - **Metro 配置**：简化 `metro.config.js`（去掉 hacky extraNodeModules/.pnpm 扫描），适配 pnpm monorepo
+  - **UI Plan 文档**：新建 `apps/mobile/UI_PLAN.md`，记录已实现/剩余 P1-P3/基于 Figma 链接
+  - **语义映射**：LIVE → PK 进行中；Viewers → 参与数；Game Categories → 梗分类；Streamer → 热门梗卡作者
 
 ### 进行中 🔄
 
-- 无（S0 全部完成，等待启动 S1 T1.1）
+- 无（P0 Figma 视觉重构完成，等待启动 S1 T1.1）
 
 ### 待启动 ⏳
 

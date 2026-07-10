@@ -62,6 +62,20 @@
 - [x] `pnpm --filter @memestar/mobile typecheck` = 0 errors
 - [x] `pnpm --filter @memestar/mobile lint` = 0 errors / 0 warnings
 
+### Mobile UI 设计系统第二期 — P0 Figma 视觉重构（2026-07-09~10）
+- [x] `apps/mobile/UI_PLAN.md` 新建：记录 P0 已落地 / 剩余 P1-P3 / 基于 Figma 链接 / 设计 Token / 校验结果
+- [x] `src/theme/colors.ts` + `tailwind-colors.cjs`：品牌色 `#FF5A1F` → `#F7B84B`（金黄），背景 `#0F0F12` → `#1E1D1A`（深棕黑），新增 4 accent（青/绿/紫/蓝）+ 语义色（border/status/god/trash/overlay/tag/AI）
+- [x] `src/theme/typography.ts`：5 字重 Poppins token（400/500/600/700/800）
+- [x] `app/_layout.tsx`：新增 `FontLoader` 组件，用 `expo-font` `loadAsync` 从 `assets/fonts/` 加载本地 `.ttf`，带骨架屏 fallback；移除 `@expo-google-fonts/poppins` NPM 依赖（绕开 pnpm hoisting / Metro 解析问题）
+- [x] `assets/fonts/`：5 个本地 `.ttf`（Poppins_400/500/600/700/800）
+- [x] `src/components/icons/Icons.tsx` + `index.ts`：Tab 图标金黄化 + 新增 `EditIcon`/`EyeIcon`/`ChevronDownIcon`/`LiveDotIcon`
+- [x] `app/(tabs)/_layout.tsx`：Tab 栏 5 Tab 保留，active 色 `#F7B84B` + Poppins 字体
+- [x] `app/(tabs)/feed.tsx`：重建 — 顶部品牌标题 + 搜索栏 + 8 类分类胶囊（热梗/神梗/冷梗/二次元/表情包/日常/游戏/AI）+ `MemeCard` 引用
+- [x] `app/login.tsx`：重建 — 深黑氛围 + 金黄发光 Logo + 金黄 CTA + 暗色输入框（内置 +86 / 验证码胶囊）+ OAuth 占位
+- [x] `metro.config.js`：简化（去掉 hacky extraNodeModules/.pnpm 扫描），适配 pnpm monorepo
+- [x] `pnpm --filter @memestar/mobile typecheck` = 0 errors
+- [x] `pnpm --filter @memestar/mobile lint` = 0 errors
+
 ### 代码脚手架（215 文件）
 - [x] 根配置：`package.json` / `pnpm-workspace.yaml` / `tsconfig.base.json` / `.editorconfig` / `.gitignore` / `.npmrc` / `.nvmrc` / `.env.example` / `.prettierrc` / `.eslintrc.cjs` / `commitlint.config.cjs`
 - [x] `husky/`（pre-commit + commit-msg）

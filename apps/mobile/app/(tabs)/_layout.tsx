@@ -27,6 +27,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600' as const,
+          fontFamily: 'Poppins_600SemiBold',
           marginTop: 2,
         },
         tabBarIconStyle: {
@@ -34,7 +35,11 @@ export default function TabsLayout() {
         },
         headerStyle: { backgroundColor: colors.ink.DEFAULT },
         headerTintColor: colors.text.primary,
-        headerTitleStyle: { fontSize: 18, fontWeight: '700' as const },
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: '700' as const,
+          fontFamily: 'Poppins_700Bold',
+        },
         headerShadowVisible: false,
       }}
     >

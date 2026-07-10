@@ -1,59 +1,61 @@
-// 与 colors.ts 保持一致的扁平颜色映射（供 tailwind.config.js CJS require 使用）
-// 更新 colors.ts 时请同步更新此文件
-const twColors = {
+/* eslint-disable */
+/** Tailwind 配色（CommonJS 导出，供 tailwind.config.js 使用）
+ *
+ * 与 src/theme/colors.ts 的 colorsFlat 保持一致 — 改色板时同步两边。
+ */
+module.exports = {
   brand: {
-    DEFAULT: '#FF5A1F',
-    light: '#FF8A5C',
-    dark: '#E04A14',
+    DEFAULT: '#F7B84B',
+    light: '#F9CE6E',
+    dark: '#D49C2E',
   },
   accent: {
-    DEFAULT: '#7C3AFF',
-    light: '#A78BFA',
-    dark: '#5B21B6',
+    DEFAULT: '#28ACA6',
+    light: '#5ED36A',
+    dark: '#9E5CBD',
+    info: '#70A3EE',
   },
   ink: {
-    DEFAULT: '#0F0F12',
-    soft: '#1A1A20',
-    elevated: '#252530',
-    surface: '#2A2A35',
+    DEFAULT: '#1E1D1A',
+    soft: '#2A2A30',
+    elevated: '#353545',
+    surface: '#424250',
   },
   text: {
     primary: '#FFFFFF',
-    secondary: '#A0A0B0',
-    muted: '#6B6B78',
+    secondary: '#8B8F92',
+    muted: '#5E6468',
     disabled: '#4A4A55',
   },
   border: {
-    DEFAULT: '#2A2A35',
-    light: '#3A3A48',
-    strong: '#4A4A58',
+    DEFAULT: '#3A3A44',
+    light: '#4A4A58',
+    strong: '#5A5A68',
   },
   status: {
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6',
+    success: '#5ED36A',
+    warning: '#F7B84B',
+    error: '#FF4444',
+    info: '#70A3EE',
   },
   god: {
-    DEFAULT: '#FFD700',
-    light: '#FFE873',
+    DEFAULT: '#F7B84B',
+    light: '#F9CE6E',
   },
   trash: {
-    DEFAULT: '#6B7280',
-    light: '#9CA3AF',
+    DEFAULT: '#5E6468',
+    light: '#8B8F92',
   },
   overlay: {
     DEFAULT: 'rgba(0, 0, 0, 0.6)',
     light: 'rgba(0, 0, 0, 0.4)',
   },
   ai: {
-    DEFAULT: '#7C3AFF',
-    bg: 'rgba(124, 58, 255, 0.12)',
+    DEFAULT: '#9E5CBD',
+    bg: 'rgba(158, 92, 189, 0.12)',
   },
   tag: {
-    bg: 'rgba(255, 90, 31, 0.12)',
-    text: '#FF8A5C',
+    bg: 'rgba(247, 184, 75, 0.12)',
+    text: '#F7B84B',
   },
 };
-
-module.exports = twColors;
