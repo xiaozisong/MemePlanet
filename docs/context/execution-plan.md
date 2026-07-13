@@ -4,8 +4,8 @@
 >
 > **与 `docs/M1-Sprint-Plan.md` 的关系**：M1-Sprint-Plan 是设计期 75 任务总清单 + 砍项建议（静态参考），本文件是 **砍后核心闭环的精细执行视图**（活状态，随推进更新）。
 
-**最后更新**：2026-07-07
-**当前 Sprint**：S0 通电验证部分完成 + T1.0 脚手架补丁完成 → S1 T1.1 待启动
+**最后更新**：2026-07-13
+**当前 Sprint**：S1 用户系统 + AI 编排层（T1.1-T1.3 ✅ → T1.4 🔄 兴趣标签接口 + 冷启动）
 **总工时**：编码 ~25 人日 + 测试 ~5 人日 + 通电 1 人日 ≈ **31 人日**
 **节奏**：1 周 1 Sprint（S1~S4），外加 S0 通电验证 1 天
 
@@ -15,7 +15,7 @@
 
 | Sprint | 周次 | 日期 | 主题 | 编码 | 测试 | 合计 | 状态 |
 |---|---|---|---|---|---|---|---|
-| S0 | D0 | 2026-07-07 | 脚手架通电验证 | 0 | 1.0 | 1.0 | 🔄 85%（S0-6 后端 DI 推 S1 T1.2） |
+| S0 | D0 | 2026-07-07 | 脚手架通电验证 | 0 | 1.0 | 1.0 | ✅ 完成（S0-1~S0-7 全 done） |
 | S1 | W2 | 2026-07-08 ~ 07-14 | 用户系统 + AI 编排层 | 8.2 | 1.5 | 9.7 | ⏳ 待启动（T1.0 已完成） |
 | S2 | W3 | 2026-07-15 ~ 07-21 | 造梗工坊 + 梗卡发布 + 机审 | 7.0 | 1.5 | 8.5 | ⏳ 待启动 |
 | S3 | W4 | 2026-07-22 ~ 07-28 | feed + 评分评论 + RN 基础页 | 9.5 | 1.5 | 11.0 | ⏳ 待启动 |
@@ -48,7 +48,7 @@ S4.T4.8 M1 Demo
 | S0-3 | pnpm install | pnpm workspaces 装依赖 | 0.3 | 无 fatal 错误，node_modules 生成 | ✅ done 完成日期: 2026-07-07（1921 包，1m47s） |
 | S0-4 | pnpm db:init | 起 PG16+pgvector + Redis 容器 + 跑 schema.sql + seed.sql | 0.2 | 50 表 + 15 类种子数据建好 | ✅ done 完成日期: 2026-07-07（修了 4 个 schema/seed bug，详见 §1.4） |
 | S0-5 | pnpm gen:api | 从 openapi.yaml 生成 `packages/shared/src/api-client/generated.ts` | 0.1 | generated.ts 含 34 操作类型 | ✅ done 完成日期: 2026-07-07 |
-| S0-6 | pnpm dev:backend 验证 | 起后端 :3000 | 0.1 | TS 编译 0 errors + Nest 启动到 DI 阶段；`/health` + Swagger 待 S1 T1.2 装配 JwtModule 后可用 | 🔄 in_progress（DI 装配属 S1 T1.2） |
+| S0-6 | pnpm dev:backend 验证 | 起后端 :3000 | 0.1 | TS 编译 0 errors + Nest fully 启动；`/health` 200；Swagger `/docs` 可访问 | ✅ done 完成日期: 2026-07-07（`JwtModule.registerAsync` 加 `global: true`，14 个 controller 共享全局 `JwtService`） |
 | S0-7 | pnpm typecheck + lint | 全仓类型检查 + lint | 0.1 | typecheck 0 errors + lint 0 errors（T1.0 修复后） | ✅ done 完成日期: 2026-07-07 |
 
 ### 1.2 测试用例 + 测试时间（1.0 人日内含）
@@ -61,11 +61,11 @@ S4.T4.8 M1 Demo
 | S0-T4 | Swagger UI 可访问 | 手工 | 0.05d | 浏览器 `localhost:3000/docs` 看到 34 接口 |
 
 ### 1.3 Sprint 退出标准
-- [x] 7 项任务中 6 项 done（S0-1~S0-5、S0-7）
+- [x] 7 项任务全部 done（S0-1~S0-7）
 - [x] T1.0 脚手架 TS 补丁完成（~60 个编译错误全修，typecheck+lint 通过）
 - [x] DB 就绪：50 表 + 5 扩展 + 种子数据建好
-- [ ] S0-6 后端 fully 启动 + Swagger + `/health` —— 阻塞于 JwtModule 装配，推 S1 T1.2
-- [x] `activeContext.md` 已更新 S0 部分完成、当前切到 S1（T1.1 起点）
+- [x] S0-6 后端 fully 启动 + Swagger + `/health`
+- [x] `activeContext.md` 已更新 S0 完成、当前切到 S1（T1.1 起点）
 
 ### 1.4 S0 通电验证发现的脚手架缺陷（已修复 + 待修复）
 
@@ -81,8 +81,8 @@ S4.T4.8 M1 Demo
 3. **TS7006 @CurrentUser implicit any** ✅：12 个 controller 共 27 处 `@CurrentUser() user` 加 `: CurrentUser` 类型注解；装饰器 `interface CurrentUser` 改 `type CurrentUser = JwtPayload`（避免空 interface lint 报错）。
 4. **TS2339 policy-engine 接口不匹配** ✅：`runChain` 泛型加 `P extends { name: string }` 保留 provider 方法；新增 `AIConfig`/`AIProviderConfig` 类型替代 `Record<string, Record<string, string>>`，`config.get<AIConfig>('ai')` 类型安全。
 
-**T1.0 后剩余阻塞（属 S1 编码范畴，非 S0 通电问题）**：
-- Nest 启动 DI 失败：`JwtAuthGuard` 需要 `JwtService`，但 `UserModule` 未 import `JwtModule`。这属于 S1 T1.2（Supabase Auth + JWT 中间件）的 Module 装配任务，脚手架只建了骨架。S1 推进 T1.2 时装配 JwtModule + 其他 Module 的 provider/import 即可让后端 fully 启动 + `/health` + Swagger 可访问。
+**T1.0 后剩余阻塞**：
+- 无。原 Nest DI 失败已在 S0-6 修复：`AuthModule` 的 `JwtModule.registerAsync` 加 `global: true`，`JwtAuthGuard` 可在 14 个 controller 中解析 `JwtService`，后端已 fully 启动，`/health` 200，Swagger `/docs` 可访问。
 
 ### 1.5 待用户确认的 schema 设计变更
 
@@ -117,11 +117,11 @@ S4.T4.8 M1 Demo
 
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
-| T1.1 | Drizzle 用户表 schema 对齐 | `apps/backend/src/database/schema.ts` user/profile/level/badges 字段，与 `docs/db/schema.sql` 对齐 | 0.3 | S0 | Drizzle schema 与 SQL 一致；`pnpm db:generate` 生成迁移 | ⏳ pending |
-| T1.2 | Supabase Auth + JWT 中间件 | Supabase JWT 校验 + 自签 JWT 双轨、AuthGuard、`@Roles` RBAC 装饰器 | 1.0 | T1.1 | 受保护接口需带 JWT；RBAC 装饰器生效 | ⏳ pending |
-| T1.3 | 手机号验证码登录 | OTP 生成（6 位）/Redis 存储（5min TTL）/校验/限频（同号 60s/3 次·小时）、短信 SDK（阿里云/腾讯云）、Supabase Auth 联动 | 1.0 | T1.2 | 真机收到验证码；登录下发 JWT | ⏳ pending |
-| T1.4 | 兴趣标签接口 + 冷启动 | 标签库种子（30+）、GET/PATCH `/users/me/interests`、冷启动 feed 比例配置 | 0.3 | T1.1 | 接口可读可写 `user.interest_tags` | ⏳ pending |
-| T1.5 | 个人主页只读接口 | GET `/users/:id` 返回资料/等级/勋章/作品数；编辑延 M2 | 0.3 | T1.1 | 接口返回完整字段 | ⏳ pending |
+| T1.1 | Drizzle 用户表 schema 对齐 | `apps/backend/src/database/schema.ts` user/profile/level/badges 字段，与 `docs/db/schema.sql` 对齐 | 0.3 | S0 | Drizzle schema 与 SQL 一致；`pnpm db:generate` 生成迁移 | ✅ done 完成日期: 2026-07-10 |
+| T1.2 | Supabase Auth + JWT 中间件 | Supabase JWT 校验 + 自签 JWT 双轨、AuthGuard、`@Roles` RBAC 装饰器 | 1.0 | T1.1 | 受保护接口需带 JWT；RBAC 装饰器生效 | ✅ done 完成日期: 2026-07-13 |
+| T1.3 | 手机号验证码登录 | OTP 生成（6 位）/Redis 存储（5min TTL）/校验/限频（同号 60s/3 次·小时）、短信 SDK（阿里云/腾讯云）、Supabase Auth 联动 | 1.0 | T1.2 | 真机收到验证码；登录下发 JWT | ✅ done 完成日期: 2026-07-13 |
+| T1.4 | 兴趣标签接口 + 冷启动 | 标签库种子（30+）、GET/PATCH `/users/me/interests`、冷启动 feed 比例配置 | 0.3 | T1.1 | 接口可读可写 `user.interest_tags` | ✅ done 完成日期: 2026-07-13 |
+| T1.5 | 个人主页只读接口 | GET `/users/:id` 返回资料/等级/勋章/作品数；编辑延 M2 | 0.3 | T1.1 | 接口返回完整字段 | 🔄 in_progress |
 | T1.6 | 梗力值/能量基础 service | `level = f(meme_power)` 公式、能量每日恢复 cron、衰减规则延 M2、扣减乐观锁 | 0.5 | T1.1 | 单测覆盖等级/能量计算；恢复 cron 跑通 | ⏳ pending |
 | T1.7 | 勋章字段就位 | `user_badge` 表 + 字段占位，触发器框架延 M2 | 0.3 | T1.1 | 表与字段就位；可写入占位数据 | ⏳ pending |
 | T1.8 | Supabase Webhook 同步（简化为轮询） | 国内 PG 定时（1min）拉取 Supabase auth.users 变更同步 user 表，Webhook M2 接 | 0.7 | T1.2 | 国内 PG user 表与 Supabase 同步 | ⏳ pending |

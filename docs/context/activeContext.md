@@ -2,9 +2,9 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-10
-**当前阶段**：S0 通电验证全部完成 + **Mobile UI 设计系统 P0+P1+P2 全部完成（基于 Figma "Online Game Streaming" 视觉风格参考稿）** → 待启动 S1 T1.1
-**当前会话焦点**：Mobile UI P1+P2 收尾 — 所有余下页面/组件完成 inline style + theme token + Poppins 改造，全局 `className=0` 残留
+**最后更新**：2026-07-13
+**当前阶段**：S0 通电验证全部完成 + S1 T1.1-T1.4 已完成（Drizzle schema + JWT Guard/Decorator + 手机号 OTP 登录 + 兴趣标签接口 + 冷启动配置）→ 下一步 T1.5 个人主页只读接口
+**当前会话焦点**：S1 T1.4 兴趣标签接口 + 冷启动 — 兴趣标签字典常量（35 标签 8 大类）+ UserService Drizzle 真实读写 + UserController GET/PATCH `/users/me/interests` + 字典接口 + 冷启动 feed 比例配置
 
 ---
 
@@ -58,14 +58,19 @@
   - P2 MemeCard 硬编码色清理 — AI tag / God/Trash 改用 colorsFlat
   - **全局 className 清零** — apps/mobile 目录下零 className 残留，全部转为 inline StyleSheet
   - TypeScript typecheck=0 errors / lint=0 errors / 0 warnings
+  - **S1 T1.1: Drizzle 用户表 schema 对齐** — `apps/backend/src/database/schema.ts` 已编写 5 表（users/user_profiles/user_interest_tags/user_badges/user_follows），与 `docs/db/schema.sql` 对齐；`drizzle.module.ts` 已更新为类型化 `drizzle(pool, { schema })`；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors / `pnpm db:generate` 迁移成功（无 enum 无漂移）
+| - **S1 T1.2: JWT Guard + RBAC 完成** — `JwtAuthGuard`（双轨自签 JWT + Supabase JWT 校验）、`RolesGuard`、`@Public()`、`@Roles()`、`@CurrentUser()` 全部就位并全局注册（JwtModule `global: true`）；同步修复 `jwt-auth.guard.ts` 的 lint 问题（未使用变量 + require → ESM import）
+| - **S1 T1.3: 手机号验证码登录** — `RedisModule`（Global, ioredis）+ AuthService 重写：6 位 OTP 生成/Redis 5min TTL 存储/60s 同号限频/每小时 3 次上限/Drizzle users upsert/真实 JWT 签发；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors
 
 ### 进行中 🔄
 
-- 无（Mobile UI 设计系统 P0+P1+P2 全部完成，等待启动 S1 T1.1）
+- **T1.5: 个人主页只读接口** — GET `/users/:id` 返回资料/等级/勋章/作品数
+- **S1 后续**：T1.6 梗力值/能量基础 service → T1.7 勋章字段 → T1.8 Supabase 轮询同步
 
 ### 待启动 ⏳
 
-- **S1 用户系统 + AI 编排层**（9.7 人日，W2）：T1.0 已完成，从 T1.1 开始。T1.2 Supabase Auth + JWT 中间件 + RBAC 装饰器（JwtModule 全局装配已完成，无需再装）。
+- **AI 编排层（T1.9~T1.13）**：AIOrch 抽象接口 → LLM Adapter（DeepSeek V3 + GLM 兜底）→ Policy Engine → Prompt 模板 → Redis 缓存
+- **T1.14：Tracker SDK + PostHog**
 - **S2/S3/S4**：详见 `execution-plan.md §3~§5`
 
 ### 阻塞 ❌
@@ -76,11 +81,12 @@
 
 ## 下一步（按优先级）
 
-1. **确认 schema 设计变更**：S0 修复了 ratings 分区 UNIQUE 冲突（改为普通表），详见 `execution-plan.md §1.5`。如不认可请告知，我会回滚。当前用户已选"暂不决定，先继续后端启动"，此变更暂保留。
-2. **启动 S1 T1.1**：Drizzle 用户表 schema 对齐（`apps/backend/src/database/schema.ts` 与 `docs/db/schema.sql` 一致）。
-3. **启动 S1 T1.2**：Supabase Auth + JWT 中间件 + RBAC 装饰器。JwtModule 全局装配已完成，后端已可 fully 启动。
-4. **并行申请 AI/短信/内容安全 key**（S0 当天就提交，避免 S1/S2 阻塞）：DeepSeek + GLM-4-Flash + 阿里云短信签名 + 阿里云内容安全 + Supabase 项目。
-5. **开发时改 shared 源码后需 `pnpm build:shared`**：T1.0 把 backend paths 指向 shared/dist，改 shared 后要重新 build 才生效。可开 `pnpm --filter @memestar/shared dev` watch 自动重建。
+1. **T1.5: 个人主页只读接口**（当前 🔄）：GET `/users/:id` 返回资料/等级/勋章/作品数，meme_cards/legion_members 表暂用 raw SQL stub
+2. **T1.6: 梗力值/能量基础 service**：`level = f(meme_power)` 公式 + 能量每日恢复 cron + 扣减乐观锁
+3. **T1.9: AIOrch 抽象接口**：LLMProvider/ImageProvider/VideoProvider/TTSProvider + Mock adapter
+4. **T1.10: LLM Adapter**（DeepSeek V3 主 + GLM-4 Flash 兜底）：需要 DeepSeek key
+6. **并行申请 AI/短信/内容安全 key**（若尚未申请）：DeepSeek + GLM-4-Flash + 阿里云短信签名 + 阿里云内容安全 + Supabase
+7. **开发时改 shared 源码后需 `pnpm build:shared`**：T1.0 把 backend paths 指向 shared/dist
 
 ---
 

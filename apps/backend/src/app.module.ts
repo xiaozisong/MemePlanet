@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseModule } from './database/database.module';
+import { RedisModule } from './database/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 import { UserModule } from './modules/user/user.module';
 import { MemeModule } from './modules/meme/meme.module';
 import { CreationModule } from './modules/creation/creation.module';
@@ -27,6 +31,7 @@ import { AIOrchModule } from './modules/ai-orch/ai-orch.module';
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
+    RedisModule,
     AuthModule,
     UserModule,
     MemeModule,
@@ -42,6 +47,16 @@ import { AIOrchModule } from './modules/ai-orch/ai-orch.module';
     NotificationModule,
     AnalyticsModule,
     AIOrchModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
 })
 export class AppModule {}
