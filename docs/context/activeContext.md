@@ -3,8 +3,8 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-13
-**当前阶段**：S0 通电验证全部完成 + S1 T1.1-T1.4 已完成（Drizzle schema + JWT Guard/Decorator + 手机号 OTP 登录 + 兴趣标签接口 + 冷启动配置）→ 下一步 T1.5 个人主页只读接口
-**当前会话焦点**：S1 T1.4 兴趣标签接口 + 冷启动 — 兴趣标签字典常量（35 标签 8 大类）+ UserService Drizzle 真实读写 + UserController GET/PATCH `/users/me/interests` + 字典接口 + 冷启动 feed 比例配置
+**当前阶段**：S0 通电验证全部完成 + Mobile UI 设计系统 P0+P1+P2 全部落地 + S1 T1.1-T1.4 已完成（Drizzle schema + JWT Guard/Decorator + 手机号 OTP 登录 + 兴趣标签接口 + 冷启动配置）→ 当前 S1 T1.5 个人主页只读接口 🔄 进行中
+**当前会话焦点**：S1 T1.5 个人主页只读接口 — GET `/users/:id` 返回资料/等级/勋章/作品数；meme_cards/legion_members 表暂用 raw SQL stub。同时回填 `execution-plan.md` / `progress.md` S1 进度（T1.1-T1.4 ✅ 已完成）。
 
 ---
 
@@ -59,8 +59,9 @@
   - **全局 className 清零** — apps/mobile 目录下零 className 残留，全部转为 inline StyleSheet
   - TypeScript typecheck=0 errors / lint=0 errors / 0 warnings
   - **S1 T1.1: Drizzle 用户表 schema 对齐** — `apps/backend/src/database/schema.ts` 已编写 5 表（users/user_profiles/user_interest_tags/user_badges/user_follows），与 `docs/db/schema.sql` 对齐；`drizzle.module.ts` 已更新为类型化 `drizzle(pool, { schema })`；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors / `pnpm db:generate` 迁移成功（无 enum 无漂移）
-| - **S1 T1.2: JWT Guard + RBAC 完成** — `JwtAuthGuard`（双轨自签 JWT + Supabase JWT 校验）、`RolesGuard`、`@Public()`、`@Roles()`、`@CurrentUser()` 全部就位并全局注册（JwtModule `global: true`）；同步修复 `jwt-auth.guard.ts` 的 lint 问题（未使用变量 + require → ESM import）
-| - **S1 T1.3: 手机号验证码登录** — `RedisModule`（Global, ioredis）+ AuthService 重写：6 位 OTP 生成/Redis 5min TTL 存储/60s 同号限频/每小时 3 次上限/Drizzle users upsert/真实 JWT 签发；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors
+  - **S1 T1.2: JWT Guard + RBAC 完成** — `JwtAuthGuard`（双轨自签 JWT + Supabase JWT 校验）、`RolesGuard`、`@Public()`、`@Roles()`、`@CurrentUser()` 全部就位并全局注册（JwtModule `global: true`）；同步修复 `jwt-auth.guard.ts` 的 lint 问题（未使用变量 + require → ESM import）
+  - **S1 T1.3: 手机号验证码登录** — `RedisModule`（Global, ioredis）+ AuthService 重写：6 位 OTP 生成/Redis 5min TTL 存储/60s 同号限频/每小时 3 次上限/Drizzle users upsert/真实 JWT 签发；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors
+  - **S1 T1.4: 兴趣标签接口 + 冷启动** — 兴趣标签字典常量（35 标签 8 大类）+ UserService Drizzle 真实读写 + UserController GET/PATCH `/users/me/interests` + 字典接口 + 冷启动 feed 比例配置
 
 ### 进行中 🔄
 
@@ -138,3 +139,4 @@
 | 2026-07-08 01:29 | Harness 路由分类层 | 按技术方向把 107 skill + 6 MCP + 127 rule + 3 hook 归类到 `.cursor/routes/`（7 方向 + 3 辅助，每文件含 skill/rule/MCP/任务路由表）；新增 alwaysApply `05-harness-routes.mdc` 指引 Agent 做任务前查路由；资产保持扁平（Cursor 加载契约），路由层做分类导航。无源码/DDL/API 改动。 |
 | 2026-07-08 15:11 | Mobile UI 设计系统第二期修复 | 修第一期遗留类型错误：colors.ts 加 `colorsFlat` 扁平映射（解决嵌套 `colors.brand.DEFAULT` vs 字符串 key `colors['text-muted']` 不匹配）；改 `LoadingSkeleton`/`PrimaryButton`/`UserAvatar`/`login.tsx`/`feed.tsx` 用 `colorsFlat as themeColors`；装 `@types/jest` + `@types/node`，`tsconfig.json` `types` 加 `"node"`；`tailwind.config.js` 颜色内联改为 `require('./src/theme/tailwind-colors.cjs')`（单源 truth）；`app/_layout.tsx` 删除 `headerStyle.elevation/shadowOpacity`（RN 不支持）；`(tabs)/feed.tsx` `RefreshControl tintColor` 改 `themeColors.brand!`；`create.tsx`/`profile.tsx` 删未用 import；`create.tsx` `tagBgStyleMap` 类型改 `Record<string, { backgroundColor: string }>`；`pnpm lint --fix` 清 47 个 prettier warning。**最终：typecheck=0 errors / lint=0 errors / 0 warnings**。 |
 | 2026-07-10 | Mobile UI P1+P2 收尾 | 完成 P1（create.tsx / profile.tsx）+ P2（legion/pk/EmptyState/PrimaryButton/Tag/IconButton/AppScreen/MemeCard）+ 7 个占位页面（settings/teen-mode/create {text,image,video,agent}/+not-found）的全面 className→inline style 改造，theme token + Poppins 字体统一。修 TS 错误：pk.tsx width 类型转 DimensionValue、Tag.tsx 加 helper c() 防 noUncheckedIndexedAccess、LoadingSkeleton.tsx SkeletonBoxProps width 改 DimensionValue、AppScreen.tsx 修相对路径、IconButton.tsx 显式分离 style prop。最终 `apps/mobile` 下零 className 残留，typecheck=0 / lint=0。同步更新 apps/mobile/UI_PLAN.md（P1+P2 状态全部翻转）。 |
+|| 2026-07-13 | S1 用户系统后端（T1.1-T1.4 完成） | 完成 Drizzle 用户表 schema 对齐 5 表、JWT Guard + RBAC（双轨 JWT 校验，全局 JwtModule）、手机号验证码登录（Redis OTP 5min TTL + 限频 + Drizzle upsert + 真实 JWT 签发）、兴趣标签接口（35 标签 8 大类 + GET/PATCH `/users/me/interests` + 冷启动 feed 比例配置）。`pnpm typecheck` 0 errors / `pnpm lint` 0 errors / `pnpm db:generate` 迁移成功。当前 T1.5 个人主页只读接口 🔄 进行中。 |
