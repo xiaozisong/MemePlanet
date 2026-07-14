@@ -11,13 +11,17 @@ async function main() {
   // 动态 import，避免在 main.ts 启动时加载 worker
   const { AgentJobWorker } = await import('./agent-job.worker.js');
   const { VideoJobWorker } = await import('./video-job.worker.js');
+  const { CreationJobWorker } = await import('./creation-job.worker.js');
 
   const agentWorker = new AgentJobWorker();
   const videoWorker = new VideoJobWorker();
+  const creationWorker = new CreationJobWorker();
 
   const shutdown = (sig: string) => {
     logger.log(`收到 ${sig}，关闭 worker...`);
-    void Promise.all([agentWorker.close(), videoWorker.close()]).then(() => process.exit(0));
+    void Promise.all([agentWorker.close(), videoWorker.close(), creationWorker.close()]).then(() =>
+      process.exit(0),
+    );
   };
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));

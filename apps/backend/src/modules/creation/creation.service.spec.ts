@@ -1,6 +1,7 @@
 import { CreationService } from './creation.service.js';
 import type { DbType } from '../../database/drizzle.module.js';
 import { UserService } from '../user/user.service.js';
+import { CreationQueueService } from './creation-queue.service.js';
 import type { CreateCreationDto } from './dto.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
@@ -41,9 +42,20 @@ function createMockUserService(): jest.Mocked<UserService> {
   } as unknown as jest.Mocked<UserService>;
 }
 
+function createMockQueueService(): CreationQueueService {
+  return {
+    enqueueCreation: jest.fn().mockResolvedValue('mock-job-id'),
+    getQueueStats: jest
+      .fn()
+      .mockResolvedValue({ waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 }),
+    onModuleDestroy: jest.fn(),
+  } as unknown as CreationQueueService;
+}
+
 describe('CreationService — T2.1', () => {
   let db: DbType;
   let userService: jest.Mocked<UserService>;
+  let queueService: CreationQueueService;
   let service: CreationService;
 
   const validDto: CreateCreationDto = {
@@ -57,12 +69,13 @@ describe('CreationService — T2.1', () => {
   beforeEach(() => {
     db = createMockDb();
     userService = createMockUserService();
+    queueService = createMockQueueService();
     (db.select as jest.Mock).mockReturnValue({
       from: jest.fn().mockReturnValue({
         where: jest.fn().mockReturnValue({ limit: jest.fn().mockResolvedValue([]) }),
       }),
     });
-    service = new CreationService(db, userService);
+    service = new CreationService(db, userService, queueService);
   });
 
   describe('start — 能量扣减乐观锁', () => {

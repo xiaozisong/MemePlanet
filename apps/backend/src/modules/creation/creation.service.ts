@@ -3,6 +3,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import { DRIZZLE, type DbType } from '../../database/drizzle.module.js';
 import { creations, creationCandidates } from '../../database/schema.js';
 import { UserService } from '../user/user.service.js';
+import { CreationQueueService } from './creation-queue.service.js';
 import { CreateCreationDto } from './dto.js';
 import {
   ENERGY_COST_TEXT,
@@ -49,6 +50,7 @@ export class CreationService {
   constructor(
     @Inject(DRIZZLE) private readonly db: DbType,
     private readonly users: UserService,
+    private readonly queue: CreationQueueService,
   ) {}
 
   /**
@@ -127,6 +129,21 @@ export class CreationService {
     const created = rows[0]!;
     this.logger.log(
       `creation created user=${userId} id=${created.creationId} mode=${dto.mode} cost=${energyCost}`,
+    );
+
+    // 5. 入队 BullMQ creation_jobs（异步填充候选）
+    const priority = dto.agentMode ? 5 : 10; // Pro Agent 高优先级
+    await this.queue.enqueueCreation(
+      created.creationId,
+      userId,
+      {
+        mode: dto.mode,
+        prompt: dto.prompt,
+        style: dto.style,
+        templateId: dto.templateId,
+        agentMode: dto.agentMode,
+      },
+      priority,
     );
 
     return created;
