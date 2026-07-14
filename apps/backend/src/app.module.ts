@@ -21,6 +21,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AIOrchModule } from './modules/ai-orch/ai-orch.module';
+import { PromptTemplateModule } from './modules/prompt-template/prompt-template.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AIOrchModule } from './modules/ai-orch/ai-orch.module';
     NotificationModule,
     AnalyticsModule,
     AIOrchModule,
+    PromptTemplateModule,
   ],
   providers: [
     {

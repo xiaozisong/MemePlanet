@@ -299,6 +299,25 @@ VALUES (
 )
 ON CONFLICT (user_id) DO NOTHING;
 
+-- 普通用户勋章记录
+INSERT INTO user_badges (user_id, badge_code, badge_type, acquired_at, metadata)
+VALUES
+(
+    '00000000-0000-0000-0000-b00000000001'::uuid,
+    'first_god_meme',
+    'achievement',
+    now() - interval '7 days',
+    '{"label":"首个神梗","description":"发布首条神梗梗卡","icon":"trophy"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-b00000000001'::uuid,
+    '7day_streak',
+    'achievement',
+    now() - interval '3 days',
+    '{"label":"七日连击","description":"连续 7 天登录打卡","icon":"fire"}'::jsonb
+)
+ON CONFLICT (user_id, badge_code) DO NOTHING;
+
 -- =============================================================================
 -- 8. 物化视图刷新 / Refresh Materialized Views
 -- =============================================================================

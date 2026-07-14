@@ -337,6 +337,54 @@ paths:
                 not_found:
                   value: { code: 2001, data: null, message: "用户不存在", request_id: "..." }
 
+  /users/me/power:
+    get:
+      tags: [User]
+      summary: 我的梗力值/能量概览
+      description: |
+        返回当前登录用户的梗力值、等级、破防值、能量余额、能量上限及等级进度。
+        用于客户端首页/造梗页的能量条与等级展示。
+      operationId: getMyMemePower
+      x-memestar-version: M1
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MemePower'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/level:
+    get:
+      tags: [User]
+      summary: 我的等级详情（含下一等级进度）
+      description: |
+        返回当前用户的等级详情：当前等级、当前等级标签、梗力值、
+        到下一等级所需差值与百分比进度。满级时 next 为 null。
+      operationId: getMyLevelDetail
+      x-memestar-version: M1
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LevelDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   # ============================================================
   # Creation
   # ============================================================
@@ -532,6 +580,81 @@ paths:
                                 type: array
                                 items:
                                   $ref: '#/components/schemas/PromptTemplate'
+
+  /prompt-templates/{id}:
+    get:
+      tags: [PromptTemplates]
+      summary: 获取单个 Prompt 模板详情（含完整 prompt 内容）
+      operationId: getPromptTemplateById
+      x-memestar-version: M1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PromptTemplateDetail'
+
+  /prompt-templates/{id}/render:
+    post:
+      tags: [PromptTemplates]
+      summary: 渲染 Prompt 模板
+      description: |
+        传入变量键值对，将模板内的 {{varName}} 占位替换为实际值，
+        并自增 use_count。
+      operationId: renderPromptTemplate
+      x-memestar-version: M1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variables]
+              properties:
+                variables:
+                  type: object
+                  description: 变量名 → 变量值映射
+                  additionalProperties:
+                    type: string
+                  example:
+                    keyword: 上班
+                    style: 搞笑
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PromptTemplateRenderResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   # ============================================================
   # Video
@@ -1544,6 +1667,7 @@ paths:
                   uptime:
                     type: integer
 
+
 components:
   # ============================================================
   # Security
@@ -1918,6 +2042,76 @@ components:
           items:
             type: string
 
+    MemePower:
+      type: object
+      description: 梗力值 & 能量概览
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        meme_power:
+          type: integer
+        level:
+          type: integer
+        defense_value:
+          type: integer
+        energy_balance:
+          type: integer
+        max_energy:
+          type: integer
+        level_progress:
+          type: object
+          properties:
+            current_level:
+              type: integer
+            current_label:
+              type: string
+            current_meme_power:
+              type: integer
+            next_level:
+              type: integer
+              nullable: true
+            next_label:
+              type: string
+              nullable: true
+            meme_power_needed:
+              type: integer
+              description: 到下一级还需 x 梗力值
+            progress_percent:
+              type: number
+              format: float
+              description: 本等级进度百分比 0-100
+
+    LevelDetail:
+      type: object
+      description: 等级详情（含下一等级进度），满级时 next 字段为 null
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        current_level:
+          type: integer
+        current_label:
+          type: string
+        meme_power:
+          type: integer
+        next:
+          type: object
+          nullable: true
+          properties:
+            level:
+              type: integer
+            label:
+              type: string
+            meme_power_needed:
+              type: integer
+            progress_percent:
+              type: number
+              format: float
+        max_level:
+          type: boolean
+          description: 是否已满级
+
     # ---------- Creation ----------
     CreationSingleRequest:
       type: object
@@ -1983,6 +2177,79 @@ components:
         self_score:
           type: number
           format: float
+          nullable: true
+
+    # ---------- Prompt Templates ----------
+    PromptTemplateSummary:
+      type: object
+      description: 模板列表摘要（不含 prompt 正文）
+      properties:
+        template_id:
+          type: string
+          format: uuid
+        mode:
+          type: string
+          enum: [text, image, script]
+        name:
+          type: string
+        style:
+          type: string
+          nullable: true
+        variables:
+          type: array
+          items:
+            type: string
+          description: 模板声明的变量名列表
+        is_official:
+          type: boolean
+        use_count:
+          type: integer
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PromptTemplateDetail:
+      type: object
+      description: 模板完整详情（含 prompt 正文）
+      allOf:
+        - $ref: '#/components/schemas/PromptTemplateSummary'
+        - type: object
+          properties:
+            system_prompt:
+              type: string
+              description: 系统提示词（给 AI 的行为指令）
+            user_template:
+              type: string
+              description: 用户模板（含 {{varName}} 占位）
+            example_output:
+              type: object
+              nullable: true
+              description: 示例输出
+            creator_id:
+              type: string
+              format: uuid
+              nullable: true
+
+    PromptTemplateRenderResult:
+      type: object
+      description: 模板渲染结果
+      properties:
+        template_id:
+          type: string
+          format: uuid
+        mode:
+          type: string
+        name:
+          type: string
+        system_prompt:
+          type: string
+        rendered_user_template:
+          type: string
+          description: 变量插值后的用户提示词
+        style:
+          type: string
           nullable: true
           description: Agent 自评分（仅 agent 模式）
         self_reason:

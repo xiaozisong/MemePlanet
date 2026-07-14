@@ -52,9 +52,16 @@ export class UserController {
     return this.users.getMemePower(user.sub);
   }
 
-  // ── T1.5 占位：公开用户主页只读接口 ──
+  // ── T1.6: 等级详情（含下一等级进度） ──
+
+  @Get('me/level')
+  async myLevel(@CurrentUser() user: JwtPayload) {
+    return this.users.getLevelDetail(user.sub);
+  }
+
+  // ── T1.5: 公开用户主页只读接口 ──
   @Get(':id')
-  async getUserProfile(@Param('id') userId: string) {
-    return this.users.findById(userId);
+  async getUserProfile(@CurrentUser() viewer: JwtPayload, @Param('id') userId: string) {
+    return this.users.findHomeById(viewer.sub, userId);
   }
 }

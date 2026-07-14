@@ -1,0 +1,57 @@
+---
+description: "Harness 路由指引 —— 做任务前按技术方向查 .cursor/routes/ 找该用的 skill/mcp/rule/tool。每次会话自动加载。"
+alwaysApply: true
+---
+# Harness 路由指引
+
+> 本规则确保 Agent 接到任务后，先按技术方向查 `.cursor/routes/` 路由表，找到该用哪些 skill / rule / MCP / hook，再开工。
+
+## 路由总索引
+
+`.cursor/routes/README.md` 是总索引。7 个技术方向 + 3 个辅助：
+
+| 方向 | 路由文件 | 覆盖 |
+|---|---|---|
+| 前端开发 | `.cursor/routes/01-frontend.md` | RN/Expo + Next.js + React + UI |
+| 后端开发 | `.cursor/routes/02-backend.md` | NestJS + Drizzle + PG + Redis + BullMQ + Supabase + API |
+| AI 编排 | `.cursor/routes/03-ai-orchestration.md` | LLM/图像/视频/TTS + 成本熔断 + 推荐 + 合规 |
+| 基础设施/DevOps | `.cursor/routes/04-infra-devops.md` | Docker + CI/CD + 部署 + 监控 + Git |
+| 质量与测试 | `.cursor/routes/05-quality-testing.md` | Jest/Vitest/Playwright/Detox + 安全 + 评审 + TDD |
+| Agent 工程元层 | `.cursor/routes/06-agent-harness.md` | 7 个 ecc-agent + harness 元 + 编排 + 上下文预算 + 探索 |
+| 项目上下文协议 | `.cursor/routes/07-project-context.md` | 项目自有 rules + 活状态文档 + 决策协议 |
+| MCP 服务 | `.cursor/routes/08-mcp-servers.md` | 6 个已启用 MCP |
+| Hooks | `.cursor/routes/09-hooks.md` | 3 个安全钩子 |
+| 休眠资产 | `.cursor/routes/10-dormant.md` | 不用的语言规则 + 236 归档 skill |
+
+## 会话开头自检（强制）
+
+1. Read `docs/context/activeContext.md` → 知道上次做到哪（见 `07-project-context.md`）
+2. Read `.cursor/routes/README.md` → 知道任务对应哪个技术方向
+3. Read 对应方向的 `.cursor/routes/0X-*.md` → 找到该用的 skill/rule/MCP
+4. 按 `25-execution-plan.mdc` 找当前 Sprint 第一个 `⏳ pending` 任务
+
+## 任务 → 路由快速决策
+
+| 我要做… | 看哪个路由 |
+|---|---|
+| 写 RN 页面 / Next.js 页面 / UI | 01-frontend |
+| 写 NestJS Module / 改表 / 数据库查询 | 02-backend |
+| 写 AI 造梗/视频/TTS 接口 / 推荐 / 机审 | 03-ai-orchestration |
+| 写 Dockerfile / CI / 部署 / 提交代码 | 04-infra-devops |
+| 写测试 / E2E / 安全评审 | 05-quality-testing |
+| 规划功能 / 架构决策 / 代码评审 / 探索代码 | 06-agent-harness |
+| 查项目状态 / 改决策 / 更新上下文 | 07-project-context |
+| 查 MCP 工具 | 08-mcp-servers |
+| 某语言规则没生效 | 10-dormant |
+
+## 调用方式速查
+
+- **Skill**：`available_skills` 里看到名字 → Read `.agents/skills/<name>/SKILL.md` → 遵循指引。无需"激活"。
+- **Rule**：自动加载（alwaysApply 每次注入 / globs 匹配文件注入）。无需手动调用。
+- **MCP**：`CallMcpTool`（调用前先读 tool schema）+ `FetchMcpResource`。
+- **Hook**：`.cursor/hooks.json` 配置，对应事件自动触发。
+- **Cursor Task 子代理**：`Task` + `subagent_type`（generalPurpose/explore/shell/cursor-guide/ci-investigator/bugbot/security-review/best-of-n-runner）。
+
+## 维护
+
+新增/瘦身 skill、改 rule/MCP 后，**同步更新对应 `.cursor/routes/0X-*.md` + README.md 计数**（见 `30-context-maintenance.mdc`）。

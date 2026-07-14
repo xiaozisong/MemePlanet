@@ -1015,6 +1015,25 @@ CREATE INDEX IF NOT EXISTS idx_prompt_template_emb_hnsw
   WITH (m = 16, ef_construction = 64);
 
 -- =============================================================================
+-- 15. 埋点与审计（Tracking & Audit）— 15.4 analytics_events
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS analytics_events (
+    event_id    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_name  varchar(128) NOT NULL,
+    user_id     uuid REFERENCES users(user_id) ON DELETE SET NULL,
+    properties  jsonb NOT NULL DEFAULT '{}'::jsonb,
+    platform    varchar(16) NOT NULL DEFAULT 'app',
+    session_id  varchar(128),
+    device_id   varchar(128),
+    client_ip   inet,
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_events_name_created  ON analytics_events (event_name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user_created  ON analytics_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created       ON analytics_events (created_at DESC);
+
+-- =============================================================================
 -- 16. 视图与物化视图 / Views & Materialized Views
 -- =============================================================================
 

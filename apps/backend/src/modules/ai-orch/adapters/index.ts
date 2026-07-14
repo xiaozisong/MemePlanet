@@ -5,3 +5,7 @@ export * from './siliconflow.adapter.js';
 export * from './tongyi.adapter.js';
 export * from './doubao.adapter.js';
 export * from './volcano-tts.adapter.js';
+export * from './mock-llm.adapter.js';
+export * from './mock-image.adapter.js';
+export * from './mock-video.adapter.js';
+export * from './mock-tts.adapter.js';

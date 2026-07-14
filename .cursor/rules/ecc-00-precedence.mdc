@@ -1,0 +1,16 @@
+---
+description: "ECC 迁移规则优先级声明：MemeChatAI 项目自有规则优先于 ECC 迁移规则；冲突时以项目规则为准。"
+alwaysApply: true
+---
+
+# ECC 迁移规则优先级
+
+本目录下以 `ecc-` 前缀开头的规则迁移自 ECC（Everything Claude Code）仓库，作为通用工程最佳实践的补充。
+
+**优先级顺序（高 → 低）：**
+1. MemeChatAI 项目自有规则：`00-project-context.mdc`、`10-coding-conventions.mdc`、`20-m1-sprint.mdc`、`25-execution-plan.mdc`、`30-context-maintenance.mdc`、`update-context.mdc`
+2. ECC 迁移规则（`ecc-*.mdc`）
+
+**冲突处理**：当 ECC 规则与项目规则给出不一致的指示时（例如测试覆盖率要求、git 提交格式、命名约定、目录结构），一律以项目规则为准，ECC 规则仅在项目规则未覆盖的方面提供补充指引。
+
+**语言专属规则**：`ecc-<lang>-*.mdc` 通过 `globs` 仅在对应语言文件上激活；项目不使用的语言（如 Go/Rust/Java/Perl 等）规则处于休眠状态，不会注入上下文。

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "node .cursor/hooks/before-submit-prompt.js",
+        "event": "beforeSubmitPrompt",
+        "description": "Detect secrets in prompts (sk-, ghp_, AKIA, Slack tokens, private keys) before submission"
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "node .cursor/hooks/before-read-file.js",
+        "event": "beforeReadFile",
+        "description": "Warn when reading sensitive files (.env, .key, .pem, credentials, secret)"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node .cursor/hooks/before-shell-execution-block-no-verify.js",
+        "event": "beforeShellExecution",
+        "description": "Block git --no-verify / --no-gpg-sign hook-bypass flags to protect pre-commit, commit-msg, pre-push hooks"
+      }
+    ]
+  }
+}

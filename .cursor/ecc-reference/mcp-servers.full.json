@@ -1,0 +1,94 @@
+{
+  "_README": "ECC 完整 MCP 模板（迁移自 ECC mcp-configs/mcp-servers.json）。本文件仅作参考/按需启用，未被 Cursor 自动加载。要启用其中某个服务，把对应条目复制到 ../mcp.json 的 mcpServers 下，并把 YOUR_*_HERE 占位符替换为真实 API key。注意 README 警告：同时启用的 MCP 不宜超过 10 个，否则 200k 上下文窗口可能被压缩到 70k。",
+  "mcpServers": {
+    "nexus": {
+      "command": "nexus",
+      "args": ["mcp"],
+      "description": "Local cost/privacy proxy"
+    },
+    "jira": {
+      "command": "uvx",
+      "args": ["mcp-atlassian==0.21.0"],
+      "env": {
+        "JIRA_URL": "YOUR_JIRA_URL_HERE",
+        "JIRA_EMAIL": "YOUR_JIRA_EMAIL_HERE",
+        "JIRA_API_TOKEN": "YOUR_JIRA_API_TOKEN_HERE"
+      },
+      "description": "Jira issue tracking"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE" },
+      "description": "GitHub operations - PRs, issues, repos"
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": { "FIRECRAWL_API_KEY": "YOUR_FIRECRAWL_KEY_HERE" },
+      "description": "Web scraping and crawling"
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--project-ref=YOUR_PROJECT_REF"],
+      "description": "Supabase database operations"
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "description": "Persistent memory across sessions"
+    },
+    "omega-memory": {
+      "command": "uvx",
+      "args": ["omega-memory", "serve"],
+      "description": "Persistent agent memory with semantic search"
+    },
+    "longhand": {
+      "command": "longhand",
+      "args": ["mcp-server"],
+      "description": "Lossless session history"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "description": "Chain-of-thought reasoning"
+    },
+    "vercel": { "type": "http", "url": "https://mcp.vercel.com", "description": "Vercel deployments" },
+    "railway": { "command": "npx", "args": ["-y", "@railway/mcp-server"], "description": "Railway deployments" },
+    "cloudflare-docs": { "type": "http", "url": "https://docs.mcp.cloudflare.com/mcp", "description": "Cloudflare docs" },
+    "cloudflare-workers-builds": { "type": "http", "url": "https://builds.mcp.cloudflare.com/mcp" },
+    "cloudflare-workers-bindings": { "type": "http", "url": "https://bindings.mcp.cloudflare.com/mcp" },
+    "cloudflare-observability": { "type": "http", "url": "https://observability.mcp.cloudflare.com/mcp" },
+    "clickhouse": { "type": "http", "url": "https://mcp.clickhouse.cloud/mcp" },
+    "exa-web-search": {
+      "command": "npx",
+      "args": ["-y", "exa-mcp-server"],
+      "env": { "EXA_API_KEY": "YOUR_EXA_API_KEY_HERE" },
+      "description": "Web search via Exa"
+    },
+    "parallel-search": { "type": "http", "url": "https://search.parallel.ai/mcp" },
+    "context7": { "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"], "description": "Live docs lookup" },
+    "codescene": {
+      "command": "npx",
+      "args": ["-y", "@codescene/codehealth-mcp"],
+      "env": { "CS_ACCESS_TOKEN": "YOUR_CS_ACCESS_TOKEN_HERE" }
+    },
+    "magic": { "command": "npx", "args": ["-y", "@magicuidesign/mcp@latest"], "description": "Magic UI components" },
+    "memxus": { "type": "http", "url": "https://mcp.memxus.com/mcp", "headers": { "Authorization": "Bearer YOUR_MEMXUS_API_KEY_HERE" } },
+    "filesystem": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/your/projects"] },
+    "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp", "--browser", "chrome"] },
+    "fal-ai": { "command": "npx", "args": ["-y", "fal-ai-mcp-server"], "env": { "FAL_KEY": "YOUR_FAL_KEY_HERE" } },
+    "browserbase": { "command": "npx", "args": ["-y", "@browserbasehq/mcp-server-browserbase"], "env": { "BROWSERBASE_API_KEY": "YOUR_BROWSERBASE_KEY_HERE" } },
+    "browser-use": { "type": "http", "url": "https://api.browser-use.com/mcp", "headers": { "x-browser-use-api-key": "YOUR_BROWSER_USE_KEY_HERE" } },
+    "devfleet": { "type": "http", "url": "http://localhost:18801/mcp" },
+    "token-optimizer": { "command": "npx", "args": ["-y", "token-optimizer-mcp"] },
+    "laraplugins": { "type": "http", "url": "https://laraplugins.io/mcp/plugins" },
+    "confluence": {
+      "command": "npx",
+      "args": ["-y", "confluence-mcp-server"],
+      "env": { "CONFLUENCE_BASE_URL": "YOUR_CONFLUENCE_URL_HERE", "CONFLUENCE_EMAIL": "YOUR_EMAIL_HERE", "CONFLUENCE_API_TOKEN": "YOUR_CONFLUENCE_TOKEN_HERE" }
+    },
+    "evalview": { "command": "python3", "args": ["-m", "evalview", "mcp", "serve"], "env": { "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_HERE" } },
+    "squish": { "command": "npx", "args": ["-y", "squish-memory"] }
+  }
+}

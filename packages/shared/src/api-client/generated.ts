@@ -141,6 +141,48 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/users/me/power": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * 我的梗力值/能量概览
+         * @description 返回当前登录用户的梗力值、等级、破防值、能量余额、能量上限及等级进度。
+         *     用于客户端首页/造梗页的能量条与等级展示。
+         */
+        readonly get: operations["getMyMemePower"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/users/me/level": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * 我的等级详情（含下一等级进度）
+         * @description 返回当前用户的等级详情：当前等级、当前等级标签、梗力值、
+         *     到下一等级所需差值与百分比进度。满级时 next 为 null。
+         */
+        readonly get: operations["getMyLevelDetail"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/creations/single": {
         readonly parameters: {
             readonly query?: never;
@@ -224,6 +266,44 @@ export type paths = {
         readonly get: operations["listPromptTemplates"];
         readonly put?: never;
         readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/prompt-templates/{id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** 获取单个 Prompt 模板详情（含完整 prompt 内容） */
+        readonly get: operations["getPromptTemplateById"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/prompt-templates/{id}/render": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /**
+         * 渲染 Prompt 模板
+         * @description 传入变量键值对，将模板内的 {{varName}} 占位替换为实际值，
+         *     并自增 use_count。
+         */
+        readonly post: operations["renderPromptTemplate"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -778,6 +858,47 @@ export type components = {
             };
             readonly badges?: readonly string[];
         };
+        /** @description 梗力值 & 能量概览 */
+        readonly MemePower: {
+            /** Format: uuid */
+            readonly user_id?: string;
+            readonly meme_power?: number;
+            readonly level?: number;
+            readonly defense_value?: number;
+            readonly energy_balance?: number;
+            readonly max_energy?: number;
+            readonly level_progress?: {
+                readonly current_level?: number;
+                readonly current_label?: string;
+                readonly current_meme_power?: number;
+                readonly next_level?: number | null;
+                readonly next_label?: string | null;
+                /** @description 到下一级还需 x 梗力值 */
+                readonly meme_power_needed?: number;
+                /**
+                 * Format: float
+                 * @description 本等级进度百分比 0-100
+                 */
+                readonly progress_percent?: number;
+            };
+        };
+        /** @description 等级详情（含下一等级进度），满级时 next 字段为 null */
+        readonly LevelDetail: {
+            /** Format: uuid */
+            readonly user_id?: string;
+            readonly current_level?: number;
+            readonly current_label?: string;
+            readonly meme_power?: number;
+            readonly next?: {
+                readonly level?: number;
+                readonly label?: string;
+                readonly meme_power_needed?: number;
+                /** Format: float */
+                readonly progress_percent?: number;
+            } | null;
+            /** @description 是否已满级 */
+            readonly max_level?: boolean;
+        };
         readonly CreationSingleRequest: {
             /** @enum {string} */
             readonly mode: "text" | "image";
@@ -811,11 +932,47 @@ export type components = {
             readonly idx?: number;
             readonly content?: string | null;
             readonly image_url?: string | null;
-            /**
-             * Format: float
-             * @description Agent 自评分（仅 agent 模式）
-             */
+            /** Format: float */
             readonly self_score?: number | null;
+        };
+        /** @description 模板列表摘要（不含 prompt 正文） */
+        readonly PromptTemplateSummary: {
+            /** Format: uuid */
+            readonly template_id?: string;
+            /** @enum {string} */
+            readonly mode?: "text" | "image" | "script";
+            readonly name?: string;
+            readonly style?: string | null;
+            /** @description 模板声明的变量名列表 */
+            readonly variables?: readonly string[];
+            readonly is_official?: boolean;
+            readonly use_count?: number;
+            readonly status?: string;
+            /** Format: date-time */
+            readonly created_at?: string;
+        };
+        /** @description 模板完整详情（含 prompt 正文） */
+        readonly PromptTemplateDetail: components["schemas"]["PromptTemplateSummary"] & {
+            /** @description 系统提示词（给 AI 的行为指令） */
+            readonly system_prompt?: string;
+            /** @description 用户模板（含 {{varName}} 占位） */
+            readonly user_template?: string;
+            /** @description 示例输出 */
+            readonly example_output?: Record<string, never> | null;
+            /** Format: uuid */
+            readonly creator_id?: string | null;
+        };
+        /** @description 模板渲染结果 */
+        readonly PromptTemplateRenderResult: {
+            /** Format: uuid */
+            readonly template_id?: string;
+            readonly mode?: string;
+            readonly name?: string;
+            readonly system_prompt?: string;
+            /** @description 变量插值后的用户提示词 */
+            readonly rendered_user_template?: string;
+            /** @description Agent 自评分（仅 agent 模式） */
+            readonly style?: string | null;
             readonly self_reason?: string | null;
         };
         readonly AgentSubmitRequest: {
@@ -1596,6 +1753,52 @@ export interface operations {
             };
         };
     };
+    readonly getMyMemePower: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description 成功 */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiResponse"] & {
+                        readonly data?: components["schemas"]["MemePower"];
+                    };
+                };
+            };
+            readonly 401: components["responses"]["Unauthorized"];
+        };
+    };
+    readonly getMyLevelDetail: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description 成功 */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiResponse"] & {
+                        readonly data?: components["schemas"]["LevelDetail"];
+                    };
+                };
+            };
+            readonly 401: components["responses"]["Unauthorized"];
+        };
+    };
     readonly createSingle: {
         readonly parameters: {
             readonly query?: never;
@@ -1736,6 +1939,70 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    readonly getPromptTemplateById: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description 成功 */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiResponse"] & {
+                        readonly data?: components["schemas"]["PromptTemplateDetail"];
+                    };
+                };
+            };
+        };
+    };
+    readonly renderPromptTemplate: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /**
+                     * @description 变量名 → 变量值映射
+                     * @example {
+                     *       "keyword": "上班",
+                     *       "style": "搞笑"
+                     *     }
+                     */
+                    readonly variables: {
+                        readonly [key: string]: string;
+                    };
+                };
+            };
+        };
+        readonly responses: {
+            /** @description 成功 */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiResponse"] & {
+                        readonly data?: components["schemas"]["PromptTemplateRenderResult"];
+                    };
+                };
+            };
+            readonly 404: components["responses"]["NotFound"];
         };
     };
     readonly submitVideo: {
