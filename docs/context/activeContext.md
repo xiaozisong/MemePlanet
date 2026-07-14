@@ -65,6 +65,7 @@
   - **S1 T1.4: 兴趣标签接口 + 冷启动** — 兴趣标签字典常量（35 标签 8 大类）+ UserService Drizzle 真实读写 + UserController GET/PATCH `/users/me/interests` + 字典接口 + 冷启动 feed 比例配置
   - **S1 T1.5-T1.7 + T1.9 + T1.12 + T1.14** — 个人主页只读接口 / 梗力值等级能量 / 勋章字段就位 / AIOrch 抽象接口 + Mock adapter 单测 / Prompt 模板表 + 5 官方模板 / Tracker SDK + PostHog 双写 — 全部完成 ✅
   - **S2 T2.1: creation_session 表 + 能量扣减乐观锁** — `creations` + `creation_candidates` Drizzle schema 编写；`CreationService` 实现（24h prompt md5 去重、每日限频 10 次、乐观锁扣减能量、mode 区分能量消耗）；`CreationModule` 导入 `UserModule`；`creation.service.spec.ts` 9/9 单测通过；`pnpm db:generate` 迁移成功（0003）；typecheck=0 / lint=0 ✅
+  - **S2 T2.2: BullMQ 队列 + Worker 框架** — `queue-config.ts` 共享配置（重试3/指数退避/超时60s/并发5）；`CreationQueueService` 入队服务（幂等 jobId + 队列统计）；`creation-job.worker.ts` Worker 骨架（mock 3 候选 + 进度回调）；`CreationService` INSERT 后自动入队（Pro Agent 优先级5/普通10）；`Worker main.ts` 注册；typecheck=0 / lint=0 ✅
 
 ### 进行中 🔄
 

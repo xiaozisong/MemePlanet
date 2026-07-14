@@ -182,7 +182,7 @@ S4.T4.8 M1 Demo
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
 | T2.1 | creation_session 表 + 能量扣减乐观锁 | 表 + 索引、乐观锁扣能量、`agent_mode` 字段占位 | 0.5 | T1.6 | 并发扣能量不超扣；单测覆盖 | ✅ done 完成日期: 2026-07-14 |
-| T2.2 | BullMQ 队列 + Worker 框架 | `creation_jobs` 队列、Worker 进程、重试 3 次/超时 60s/优先级、进度推送骨架 | 0.8 | S0, T2.1 | Worker 消费任务；失败重试 3 次 | 🔄 in_progress |
+| T2.2 | BullMQ 队列 + Worker 框架 | `creation_jobs` 队列、Worker 进程、重试 3 次/超时 60s/优先级、进度推送骨架 | 0.8 | S0, T2.1 | Worker 消费任务；失败重试 3 次 | ✅ done 完成日期: 2026-07-14 |
 | T2.3 | 文本造梗任务（3 候选） | LLM 调用、prompt 组装（模板 + 用户输入隔离）、3 候选、24h prompt md5 去重、Redis 缓存命中 | 1.0 | T1.10, T1.12, T2.2 | 真实生成 3 候选；缓存命中跳过；去重生效 | ⏳ pending |
 | T2.4 | 造梗接口 POST /creations | 同步返回 `creation_id` + 202、客户端轮询 `GET /creations/:id/status` | 0.5 | T2.2 | 接口返回 202；状态轮询通 | ⏳ pending |
 | T2.5 | 造梗结果获取接口 | GET `/creations/:id` 返回候选列表、状态、能量扣减记录 | 0.5 | T2.3 | 接口返回完整候选 | ⏳ pending |
