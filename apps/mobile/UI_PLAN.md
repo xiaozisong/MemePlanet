@@ -89,6 +89,8 @@
 | MemeCard 硬编码色 | AI tag / God/Trash 改用 colorsFlat |
 | 占位页面通刷 | settings / teen-mode / create/{text,image,video,agent} / +not-found — inline style + Poppins |
 | 全局 className 清理 | apps/mobile 下零 className 残留 |
+| 视频造梗页 (`create/video.tsx`) | 完整 4 阶段 UI：输入→生成→预览→发布，风格选择、时长选择、能量提示，inline style + StyleSheet.create |
+| Pro Agent 造梗页 (`create/agent.tsx`) | 完整 5 阶段 UI：输入→Agent 检索→3 候选选择→发布中→发布成功，阶段动画提示、候选卡片选中态，inline style + StyleSheet.create |
 
 ### P3 — 远期 / 可暂缓
 
@@ -116,4 +118,4 @@ P0 (已完成) → P1 (造梗 + 个人主页) → P2 (军团/PK + 组件通刷 +
 - `pnpm lint` — ✅ 零 errors / 零 warnings
 - `apps/web` 的 pre-existing TS2742 错误 — 与移动端改动无关
 
-*最后更新：2026-07-10*
+*最后更新：2026-07-14*
