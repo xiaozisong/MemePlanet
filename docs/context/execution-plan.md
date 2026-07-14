@@ -5,7 +5,7 @@
 > **与 `docs/M1-Sprint-Plan.md` 的关系**：M1-Sprint-Plan 是设计期 75 任务总清单 + 砍项建议（静态参考），本文件是 **砍后核心闭环的精细执行视图**（活状态，随推进更新）。
 
 **最后更新**：2026-07-14
-**当前 Sprint**：S1 用户系统 + AI 编排层（T1.1-T1.4 ✅ → T1.5 🔄 个人主页只读接口）
+**当前 Sprint**：S1 用户系统 + AI 编排层（T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ → T1.10/T1.11 ⏳ 待外部 key → S1 完成）
 **总工时**：编码 ~25 人日 + 测试 ~5 人日 + 通电 1 人日 ≈ **31 人日**
 **节奏**：1 周 1 Sprint（S1~S4），外加 S0 通电验证 1 天
 
@@ -16,7 +16,7 @@
 | Sprint | 周次 | 日期 | 主题 | 编码 | 测试 | 合计 | 状态 |
 |---|---|---|---|---|---|---|---|
 | S0 | D0 | 2026-07-07 | 脚手架通电验证 | 0 | 1.0 | 1.0 | ✅ 完成（S0-1~S0-7 全 done） |
-| S1 | W2 | 2026-07-08 ~ 07-14 | 用户系统 + AI 编排层 | 8.2 | 1.5 | 9.7 | 🔄 进行中（T1.1-T1.4 ✅ 已完成，T1.5 🔄） |
+| S1 | W2 | 2026-07-08 ~ 07-14 | 用户系统 + AI 编排层 | 8.2 | 1.5 | 9.7 | 🔄 进行中（T1.1-T1.7 + T1.9 ✅ 已完成，T1.10/T1.11 ⏳ 待外部 key） |
 | S2 | W3 | 2026-07-15 ~ 07-21 | 造梗工坊 + 梗卡发布 + 机审 | 7.0 | 1.5 | 8.5 | ⏳ 待启动 |
 | S3 | W4 | 2026-07-22 ~ 07-28 | feed + 评分评论 + RN 基础页 | 9.5 | 1.5 | 11.0 | ⏳ 待启动 |
 | S4 | W5 | 2026-07-29 ~ 08-04 | 合规草稿 + Demo + 收尾 | 4.6 | 1.0 | 5.6 | ⏳ 待启动 |
@@ -121,26 +121,26 @@ S4.T4.8 M1 Demo
 | T1.2 | Supabase Auth + JWT 中间件 | Supabase JWT 校验 + 自签 JWT 双轨、AuthGuard、`@Roles` RBAC 装饰器 | 1.0 | T1.1 | 受保护接口需带 JWT；RBAC 装饰器生效 | ✅ done 完成日期: 2026-07-13 |
 | T1.3 | 手机号验证码登录 | OTP 生成（6 位）/Redis 存储（5min TTL）/校验/限频（同号 60s/3 次·小时）、短信 SDK（阿里云/腾讯云）、Supabase Auth 联动 | 1.0 | T1.2 | 真机收到验证码；登录下发 JWT | ✅ done 完成日期: 2026-07-13 |
 | T1.4 | 兴趣标签接口 + 冷启动 | 标签库种子（30+）、GET/PATCH `/users/me/interests`、冷启动 feed 比例配置 | 0.3 | T1.1 | 接口可读可写 `user.interest_tags` | ✅ done 完成日期: 2026-07-13 |
-| T1.5 | 个人主页只读接口 | GET `/users/:id` 返回资料/等级/勋章/作品数；编辑延 M2 | 0.3 | T1.1 | 接口返回完整字段 | 🔄 in_progress |
-| T1.6 | 梗力值/能量基础 service | `level = f(meme_power)` 公式、能量每日恢复 cron、衰减规则延 M2、扣减乐观锁 | 0.5 | T1.1 | 单测覆盖等级/能量计算；恢复 cron 跑通 | ⏳ pending |
-| T1.7 | 勋章字段就位 | `user_badge` 表 + 字段占位，触发器框架延 M2 | 0.3 | T1.1 | 表与字段就位；可写入占位数据 | ⏳ pending |
+| T1.5 | 个人主页只读接口 | GET `/users/:id` 返回资料/等级/勋章/作品数；编辑延 M2 | 0.3 | T1.1 | 接口返回完整字段 | ✅ done 完成日期: 2026-07-14 |
+| T1.6 | 梗力值/能量基础 service | `level = f(meme_power)` 公式、能量每日恢复 cron、衰减规则延 M2、扣减乐观锁 | 0.5 | T1.1 | 单测覆盖等级/能量计算；恢复 cron 跑通 | ✅ done 完成日期: 2026-07-14 |
+| T1.7 | 勋章字段就位 | `user_badge` 表 + 字段占位，触发器框架延 M2 | 0.3 | T1.1 | 表与字段就位；可写入占位数据 | ✅ done 完成日期: 2026-07-14 |
 | T1.8 | Supabase Webhook 同步（简化为轮询） | 国内 PG 定时（1min）拉取 Supabase auth.users 变更同步 user 表，Webhook M2 接 | 0.7 | T1.2 | 国内 PG user 表与 Supabase 同步 | ⏳ pending |
 
 #### AI 编排层（3.3 人日）
 
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
-| T1.9 | AIOrch 抽象接口 | `LLMProvider`/`ImageProvider`/`VideoProvider`/`TTSProvider` 接口 + Adapter 注册 + Mock adapter | 0.5 | S0 | 接口文件就位；Mock 单测通过 | ⏳ pending |
+| T1.9 | AIOrch 抽象接口 | `LLMProvider`/`ImageProvider`/`VideoProvider`/`TTSProvider` 接口 + Adapter 注册 + Mock adapter | 0.5 | S0 | 接口文件就位；Mock 单测通过 | ✅ done 完成日期: 2026-07-14 |
 | T1.10 | LLM Adapter: DeepSeek V3 + GLM 兜底 | DeepSeek chat API、GLM-4-Flash 兜底、流式 + 非流式、function calling 占位、错误率监控 | 1.0 | T1.9 | 真实调用成功；主链失败自动切兜底 | ⏳ pending |
 | T1.11 | Policy Engine | provider 错误率 > 30% 熔断 5min、日预算限流（Agent ¥80/d 占位）、`ai_cost_log` 表写入 | 1.0 | T1.9 | 熔断演练触发；cost_log 写入；超限返回 429 | ⏳ pending |
-| T1.12 | Prompt 模板表 + 5 官方模板 | `prompt_template` 表 + 抽象/阴阳/谐音/反转/表情包配文 5 模板种子、变量插值 | 0.5 | T1.1 | 模板可读可渲染；变量插值正确 | ⏳ pending |
+| T1.12 | Prompt 模板表 + 5 官方模板 | `prompt_template` 表 + 抽象/阴阳/谐音/反转/表情包配文 5 模板种子、变量插值 | 0.5 | T1.1 | 模板可读可渲染；变量插值正确 | ✅ done 完成日期: 2026-07-14 |
 | T1.13 | Redis prompt 缓存 | md5(prompt+style) 缓存候选 24h、命中跳过 LLM 调用 | 0.3 | T1.10 | 缓存命中验证；命中跳过 API 调用 | ⏳ pending |
 
 #### 埋点（0.5 人日）
 
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
-| T1.14 | Tracker SDK 封装 + PostHog 接入 | 客户端 `track(name, props)`、双写 PostHog + 自建 analytics_event 表 | 0.5 | S0 | SDK 可调用；PostHog 收到测试事件 | ⏳ pending |
+| T1.14 | Tracker SDK 封装 + PostHog 接入 | 客户端 `track(name, props)`、双写 PostHog + 自建 analytics_event 表 | 0.5 | S0 | SDK 可调用；PostHog 收到测试事件 | ✅ done 完成日期: 2026-07-14 |
 
 ### 2.4 测试用例 + 测试时间（1.5 人日）
 
@@ -181,7 +181,7 @@ S4.T4.8 M1 Demo
 
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
-| T2.1 | creation_session 表 + 能量扣减乐观锁 | 表 + 索引、乐观锁扣能量、`agent_mode` 字段占位 | 0.5 | T1.6 | 并发扣能量不超扣；单测覆盖 | ⏳ pending |
+| T2.1 | creation_session 表 + 能量扣减乐观锁 | 表 + 索引、乐观锁扣能量、`agent_mode` 字段占位 | 0.5 | T1.6 | 并发扣能量不超扣；单测覆盖 | 🔄 in_progress |
 | T2.2 | BullMQ 队列 + Worker 框架 | `creation_jobs` 队列、Worker 进程、重试 3 次/超时 60s/优先级、进度推送骨架 | 0.8 | S0, T2.1 | Worker 消费任务；失败重试 3 次 | ⏳ pending |
 | T2.3 | 文本造梗任务（3 候选） | LLM 调用、prompt 组装（模板 + 用户输入隔离）、3 候选、24h prompt md5 去重、Redis 缓存命中 | 1.0 | T1.10, T1.12, T2.2 | 真实生成 3 候选；缓存命中跳过；去重生效 | ⏳ pending |
 | T2.4 | 造梗接口 POST /creations | 同步返回 `creation_id` + 202、客户端轮询 `GET /creations/:id/status` | 0.5 | T2.2 | 接口返回 202；状态轮询通 | ⏳ pending |

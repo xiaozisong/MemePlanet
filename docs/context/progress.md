@@ -19,7 +19,7 @@
 | S1 T1.0 脚手架 TS 补丁 | ✅ 完成 | 100%（~60 个 TS 错误全修，typecheck+lint 通过） |
 | 双端 QA 测试套件 | ✅ 完成 | 100%（166 用例全通过，Web+App 双端可运行） |
 | Mobile UI 设计系统 | ✅ 完成 | 100%（P0+P1+P2 全部落地，design tokens + 通用组件 + 全页面 inline style + Poppins + typecheck/lint 全 0） |
-| M1 S1 用户系统+AI 编排 | 🔄 进行中 | ~50%（T1.1-T1.4 ✅，T1.5 🔄，T1.6-T1.14 ⏳） |
+| M1 S1 用户系统+AI 编排 | 🔄 进行中 | ~85%（T1.1-T1.7 + T1.9 + T1.12 ✅，T1.14 🔄 当前，T1.10/T1.11 ⏳ 待外部 key） |
 | M1 S2 造梗+梗卡+审核 | ⏳ 待启动 | 0% |
 | M1 S3 feed+评分+RN | ⏳ 待启动 | 0% |
 | M1 S4 合规+Demo+收尾 | ⏳ 待启动 | 0% |
@@ -135,7 +135,11 @@
 - [x] S1 T1.2: JWT Guard + RBAC — JwtAuthGuard（双轨自签 JWT + Supabase JWT）、RolesGuard、@Public()/@Roles()/@CurrentUser()，JwtModule global:true
 - [x] S1 T1.3: 手机号验证码登录 — RedisModule (ioredis) + AuthService（OTP 6 位/Redis 5min TTL/60s 限频/3 次·小时/Drizzle upsert/JWT 签发）
 - [x] S1 T1.4: 兴趣标签接口 + 冷启动 — 标签库字典（35 标签 8 大类）、GET/PATCH `/users/me/interests`、冷启动 feed 比例配置
-- [ ] S1 后续：T1.5 个人主页只读接口（🔄）→ T1.6 梗力值/能量 → T1.7 勋章 → T1.8 Supabase 轮询同步 → T1.9-T1.13 AI 编排层 → T1.14 Tracker SDK
+- [x] S1 T1.5: 个人主页只读接口 — GET `/users/:id` 返回资料/等级/勋章/作品数，meme_cards/legion_members 表暂用 raw SQL stub（已完成 2026-07-14）
+- [x] S1 T1.6: 梗力值/能量基础 service — `power.const.ts`（等级阈值表 + 能量常量）、`UserService`（计算等级/乐观锁扣能量/每日恢复 cron）、`GET /users/me/level`、`GET /users/me/power`、openapi.yaml 同步、pnpm gen:api 生成 TS 类型（已完成 2026-07-14）
+- [x] S1 T1.7: 勋章字段就位 — user_badges 表对齐 schema.sql + Drizzle schema，seed.sql 补充种子数据（2 条记录），badge.const.ts 创建勋章字典常量（已完成 2026-07-14）
+- [x] S1 T1.9: AIOrch 抽象接口 — 4 类 Provider 接口（LLM/Image/Video/TTS）+ 4 个 Mock adapter + 11/11 单元测试通过 + jest.config.js 创建（已完成 2026-07-14）
+- [x] S1 T1.12: Prompt 模板表 + 5 官方模板 — Drizzle promptTemplates schema + 0001 迁移 + PromptTemplateService（findAll/findById/render/renderAndCount）+ Controller（3 接口）+ Module + AppModule 注册 + openapi.yaml 增强 3 接口 3 schema + gen:api + 10/10 单测通过（render 变量插值）+ typecheck+lint 0 errors（已完成 2026-07-14）
 - [ ] S2 造梗+梗卡+机审（8.5 人日，W3）
 - [ ] S3 feed+评分+RN（11.0 人日，W4）
 - [ ] S4 合规+Demo+收尾（5.6 人日，W5）

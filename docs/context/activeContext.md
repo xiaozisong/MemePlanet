@@ -3,9 +3,9 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-14
-**当前阶段**：S0 通电验证全部完成 + Mobile UI 设计系统 P0+P1+P2 全部落地 + S1 T1.1-T1.4 已完成（Drizzle schema + JWT Guard/Decorator + 手机号 OTP 登录 + 兴趣标签接口 + 冷启动配置）→ 当前 S1 T1.5 个人主页只读接口 🔄 进行中
-**当前会话焦点**：S1 T1.5 个人主页只读接口 — GET `/users/:id` 返回资料/等级/勋章/作品数；meme_cards/legion_members 表暂用 raw SQL stub。同时回填 `execution-plan.md` / `progress.md` S1 进度（T1.1-T1.4 ✅ 已完成）。
-**上次会话产出**（2026-07-14）：Mobile UI P2 完整化 — 将最后两个占位页面 `create/video.tsx` 和 `create/agent.tsx` 从 30 行占位升级为完整 UI（433 行 + 590 行），覆盖 INPUT→LOADING→PREVIEW/PUBLISHING→PUBLISHED 全流程。修复 lint 错误（agent.tsx 删未用 import；meme/[id].tsx 修 `useLocalSearchParams` 解构变量未使用）。`pnpm typecheck` / `pnpm lint` 均 0 errors / 0 warnings。同步更新 `apps/mobile/UI_PLAN.md` 的 P2 区。**至此 apps/mobile UI_PLAN 中全部 18 个 .tsx 页面（5 个 tabs + 7 个 create/* + 5 个其他）已全部落地为完整 UI 实现，无任何占位页面残留**。属 UI 收尾而非 M1 后端任务推进。
+**当前阶段**：S0 通电验证全部完成 + Mobile UI P0+P1+P2 全部落地 + S1 T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ 已完成 → T1.10/T1.11/T1.13 待外部 key 延后，等待下一阶段决策
+**当前会话焦点**：S2 启动 · T2.1 creation_session 表 + 能量扣减乐观锁
+**上次会话产出**（2026-07-14）：T1.14 完成 — 重写 `AnalyticsService`（双写 PostHog + analytics_events 表：`track` + `trackBatch` 方法 + graceful degradation）；新建 `posthog.provider.ts`（PostHog 客户端工厂，key 未配置时返回 null）；更新 `AnalyticsModule`（posthogClientProvider 注入 + `OnModuleDestroy`）；更新 `dto.ts`（TrackEventSchema + TrackBatchSchema 支持 platform/sessionId/deviceId）；更新 `AnalyticsController`（`/analytics/event` 和 `/analytics/event/batch` 接收 context 并验证 payload，`@Ip()` 自动获取客户端 IP）；analytics.service.spec.ts 7/7 单测通过（track — 自建表写入/PostHog 双写/无 PostHog/异常隔离；trackBatch — 批量写入/空数组/批量双写）；typecheck=0 / lint=0。T1.14 ✅ 完成，S1 可完成的任务已全部落地。下一步切换到 **S2 造梗工坊**，启动 T2.1 `creation_session` 表 + 能量扣减乐观锁。
 
 ---
 
@@ -63,16 +63,17 @@
   - **S1 T1.2: JWT Guard + RBAC 完成** — `JwtAuthGuard`（双轨自签 JWT + Supabase JWT 校验）、`RolesGuard`、`@Public()`、`@Roles()`、`@CurrentUser()` 全部就位并全局注册（JwtModule `global: true`）；同步修复 `jwt-auth.guard.ts` 的 lint 问题（未使用变量 + require → ESM import）
   - **S1 T1.3: 手机号验证码登录** — `RedisModule`（Global, ioredis）+ AuthService 重写：6 位 OTP 生成/Redis 5min TTL 存储/60s 同号限频/每小时 3 次上限/Drizzle users upsert/真实 JWT 签发；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors
   - **S1 T1.4: 兴趣标签接口 + 冷启动** — 兴趣标签字典常量（35 标签 8 大类）+ UserService Drizzle 真实读写 + UserController GET/PATCH `/users/me/interests` + 字典接口 + 冷启动 feed 比例配置
+  - **S1 T1.5-T1.7 + T1.9 + T1.12 + T1.14** — 个人主页只读接口 / 梗力值等级能量 / 勋章字段就位 / AIOrch 抽象接口 + Mock adapter 单测 / Prompt 模板表 + 5 官方模板 / Tracker SDK + PostHog 双写 — 全部完成 ✅
 
 ### 进行中 🔄
 
-- **T1.5: 个人主页只读接口** — GET `/users/:id` 返回资料/等级/勋章/作品数
-- **S1 后续**：T1.6 梗力值/能量基础 service → T1.7 勋章字段 → T1.8 Supabase 轮询同步
+- **S2 造梗工坊 + 梗卡发布 + 机审** — 🔄 T2.1 进行中（T2.1: creation_session 表 + 能量扣减乐观锁）
 
 ### 待启动 ⏳
 
-- **AI 编排层（T1.9~T1.13）**：AIOrch 抽象接口 → LLM Adapter（DeepSeek V3 + GLM 兜底）→ Policy Engine → Prompt 模板 → Redis 缓存
-- **T1.14：Tracker SDK + PostHog**
+- **T1.10/T1.11**：LLM Adapter + Policy Engine — 待外部 API key 就绪
+- **T1.13：Redis prompt 缓存** — 依赖 T1.10 真实调用
+- **T1.8：Supabase 轮询同步** — 建议 M2
 - **S2/S3/S4**：详见 `execution-plan.md §3~§5`
 
 ### 阻塞 ❌
@@ -83,12 +84,14 @@
 
 ## 下一步（按优先级）
 
-1. **T1.5: 个人主页只读接口**（当前 🔄）：GET `/users/:id` 返回资料/等级/勋章/作品数，meme_cards/legion_members 表暂用 raw SQL stub
-2. **T1.6: 梗力值/能量基础 service**：`level = f(meme_power)` 公式 + 能量每日恢复 cron + 扣减乐观锁
-3. **T1.9: AIOrch 抽象接口**：LLMProvider/ImageProvider/VideoProvider/TTSProvider + Mock adapter
-4. **T1.10: LLM Adapter**（DeepSeek V3 主 + GLM-4 Flash 兜底）：需要 DeepSeek key
-6. **并行申请 AI/短信/内容安全 key**（若尚未申请）：DeepSeek + GLM-4-Flash + 阿里云短信签名 + 阿里云内容安全 + Supabase
-7. **开发时改 shared 源码后需 `pnpm build:shared`**：T1.0 把 backend paths 指向 shared/dist
+1. **🔄 S2 · T2.1 creation_session 表 + 能量扣减乐观锁**（当前进行中，详见 `execution-plan.md §3.3`）
+2. S2 · T2.2 BullMQ 队列 + Worker（异步任务 202+轮询模式）
+3. S2 · T2.3 文本造梗 3 候选（依赖 T1.10 真实 LLM — 若 key 未就绪先用 Mock LLM 走通流程）
+4. S2 · T2.7 meme_card 表 + 索引 + tsvector
+5. **T1.10: LLM Adapter**（DeepSeek V3 主 + GLM-4 Flash 兜底）：需要 DeepSeek key（外部依赖关键路径 — ⏳ 待 key 就绪）
+6. **T1.11: Policy Engine 熔断/限流/cost_log**：需要 configuration.ts 中配置 AI keys（依赖 T1.10）
+7. **T1.13: Redis prompt 缓存**：依赖 T1.10 真实调用验证
+8. **T1.8: Supabase 轮询同步**：需要 Supabase key（建议 M2 推后）
 
 ---
 
@@ -141,4 +144,5 @@
 | 2026-07-08 15:11 | Mobile UI 设计系统第二期修复 | 修第一期遗留类型错误：colors.ts 加 `colorsFlat` 扁平映射（解决嵌套 `colors.brand.DEFAULT` vs 字符串 key `colors['text-muted']` 不匹配）；改 `LoadingSkeleton`/`PrimaryButton`/`UserAvatar`/`login.tsx`/`feed.tsx` 用 `colorsFlat as themeColors`；装 `@types/jest` + `@types/node`，`tsconfig.json` `types` 加 `"node"`；`tailwind.config.js` 颜色内联改为 `require('./src/theme/tailwind-colors.cjs')`（单源 truth）；`app/_layout.tsx` 删除 `headerStyle.elevation/shadowOpacity`（RN 不支持）；`(tabs)/feed.tsx` `RefreshControl tintColor` 改 `themeColors.brand!`；`create.tsx`/`profile.tsx` 删未用 import；`create.tsx` `tagBgStyleMap` 类型改 `Record<string, { backgroundColor: string }>`；`pnpm lint --fix` 清 47 个 prettier warning。**最终：typecheck=0 errors / lint=0 errors / 0 warnings**。 |
 | 2026-07-10 | Mobile UI P1+P2 收尾 | 完成 P1（create.tsx / profile.tsx）+ P2（legion/pk/EmptyState/PrimaryButton/Tag/IconButton/AppScreen/MemeCard）+ 7 个占位页面（settings/teen-mode/create {text,image,video,agent}/+not-found）的全面 className→inline style 改造，theme token + Poppins 字体统一。修 TS 错误：pk.tsx width 类型转 DimensionValue、Tag.tsx 加 helper c() 防 noUncheckedIndexedAccess、LoadingSkeleton.tsx SkeletonBoxProps width 改 DimensionValue、AppScreen.tsx 修相对路径、IconButton.tsx 显式分离 style prop。最终 `apps/mobile` 下零 className 残留，typecheck=0 / lint=0。同步更新 apps/mobile/UI_PLAN.md（P1+P2 状态全部翻转）。 |
 || 2026-07-13 | S1 用户系统后端（T1.1-T1.4 完成） | 完成 Drizzle 用户表 schema 对齐 5 表、JWT Guard + RBAC（双轨 JWT 校验，全局 JwtModule）、手机号验证码登录（Redis OTP 5min TTL + 限频 + Drizzle upsert + 真实 JWT 签发）、兴趣标签接口（35 标签 8 大类 + GET/PATCH `/users/me/interests` + 冷启动 feed 比例配置）。`pnpm typecheck` 0 errors / `pnpm lint` 0 errors / `pnpm db:generate` 迁移成功。当前 T1.5 个人主页只读接口 🔄 进行中。 |
-|| 2026-07-14 | Mobile UI P2 完整化 — 视频造梗页 + Pro Agent 造梗页 | 将最后两个 30 行占位页面升级为完整 UI：`create/video.tsx`（433 行，4 阶段：INPUT→LOADING→PREVIEW→PUBLISHED，视频风格选择 + 时长选择 + 能量提示）、`create/agent.tsx`（590 行，5 阶段：INPUT→LOADING→CANDIDATES→PUBLISHING→PUBLISHED，Pro 配额提示 + 3 候选卡片选择 + Agent 阶段动画提示）。修复 lint：`agent.tsx` 删未用 `layout` import、`meme/[id].tsx` 用 `void _id` 解决 `useLocalSearchParams` 解构未用变量报错。`pnpm typecheck` 0 errors / `pnpm lint` 0 errors / 0 warnings。同步更新 `apps/mobile/UI_PLAN.md`（P2 区新增 2 页 + 时间戳改 2026-07-14）。**至此 apps/mobile UI_PLAN.md 中 18 个 .tsx 页面全部落地为完整 UI 实现**，无占位页面残留。 |
+|| 2026-07-14 | S1 T1.9 完成 — AIOrch 抽象接口 + Mock adapter 单测 | 4 类 Provider 接口 + 4 个 Mock adapter（LLM/Image/Video/TTS）创建；`jest.config.js` 创建；11/11 单元测试通过；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors。更新上下文文档同步 T1.5-T1.7+T1.9 完成。T1.10/T1.11 因外部 key 未就绪延后，推进 T1.12 Prompt 模板表渲染。 |
+|| 2026-07-14 | S1 T1.12 完成 — Prompt 模板表 + 5 官方模板 + 渲染 Service | 新增 Drizzle `promptTemplates` schema + 0001 迁移；PromptTemplateService（findAll/filter by mode/findById/render/renderAndCount，使用 `and()` 组合 where 条件）+ Controller（GET /prompt-templates、GET /:id、POST /:id/render）+ Module + AppModule 注册；openapi.yaml 增强 541 行原 `/prompt-templates` 块并新增 `/{id}` + `/{id}/render` 路径，删除文件尾部 1670 行重复块（修复 YAML duplicated mapping key 报错），3 个新 schema（Summary/Detail/RenderResult）；`pnpm gen:api` 通过；prompt-template.service.spec.ts 10/10 单测通过（render 变量插值 — 正常/缺失/多次出现/空模板/特殊字符/下划线变量名/空值替换）；typecheck=0 / lint=0。T1.12 ✅ 完成，下一步推进 T1.14 Tracker SDK。 |
