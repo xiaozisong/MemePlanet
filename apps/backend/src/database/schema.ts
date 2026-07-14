@@ -22,6 +22,7 @@
 import {
   boolean,
   check,
+  customType,
   date,
   decimal,
   index,
@@ -30,6 +31,7 @@ import {
   jsonb,
   pgTable,
   primaryKey,
+  serial,
   text,
   timestamp,
   uuid,
@@ -351,6 +353,113 @@ export const creationCandidates = pgTable(
 );
 
 // -----------------------------------------------------------------------------
+// 5. 内容域 / Content Domain
+// -----------------------------------------------------------------------------
+
+// 5.1 meme_tags —— 标签字典（规范化标签）
+// smallserial（自增 smallint）映射为 serial('tag_id')
+
+export const memeTags = pgTable('meme_tags', {
+  tagId: serial('tag_id').primaryKey(),
+  name: varchar('name', { length: 32 }).notNull().unique(),
+  category: varchar('category', { length: 32 }),
+  useCount: integer('use_count').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// 5.2 meme_cards —— 梗卡主表
+
+export type MemeCardType = 'text' | 'image' | 'video';
+export type GodTrashStatus = 'pending' | 'god' | 'trash';
+export type MemeStatus =
+  'draft' | 'pending_audit' | 'published' | 'manual_review' | 'rejected' | 'offline';
+
+// tsvector 自定义类型（Drizzle 无原生 tsvector 支持）
+const tsvector = customType<{ data: string }>({
+  dataType: () => 'tsvector',
+});
+
+export const memeCards = pgTable(
+  'meme_cards',
+  {
+    memeId: uuid('meme_id').primaryKey().defaultRandom(),
+    authorId: uuid('author_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    creationId: uuid('creation_id').references(() => creations.creationId, {
+      onDelete: 'set null',
+    }),
+    type: varchar('type', { length: 16 }).notNull(),
+    coverUrl: varchar('cover_url', { length: 512 }),
+    title: text('title').notNull(),
+    titleTsv: tsvector('title_tsv'),
+    tags: jsonb('tags')
+      .notNull()
+      .default(sql`'[]'::jsonb`)
+      .$type<string[]>(),
+    legionId: uuid('legion_id'),
+    scoreAvg: decimal('score_avg', { precision: 3, scale: 2 }).notNull().default('0'),
+    scoreCount: integer('score_count').notNull().default(0),
+    commentCount: integer('comment_count').notNull().default(0),
+    shareCount: integer('share_count').notNull().default(0),
+    favoriteCount: integer('favorite_count').notNull().default(0),
+    viewCount: integer('view_count').notNull().default(0),
+    completionRate: decimal('completion_rate', { precision: 4, scale: 3 }).notNull().default('0'),
+    hotScore: decimal('hot_score', { precision: 10, scale: 4 }).notNull().default('0'),
+    godTrashStatus: varchar('god_trash_status', { length: 16 }).notNull().default('pending'),
+    status: varchar('status', { length: 16 }).notNull().default('draft'),
+    isAiGenerated: boolean('is_ai_generated').notNull().default(true),
+    watermarked: boolean('watermarked').notNull().default(true),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    authorCreatedIdx: index('idx_meme_cards_author_created').on(t.authorId, t.createdAt),
+    legionStatusIdx: index('idx_meme_cards_legion_status')
+      .on(t.legionId, t.status)
+      .where(sql`${t.legionId} IS NOT NULL`),
+    hotScoreIdx: index('idx_meme_cards_hot_score')
+      .on(t.hotScore)
+      .where(sql`${t.status} = 'published' AND ${t.deletedAt} IS NULL`),
+    statusPublishedIdx: index('idx_meme_cards_status_published')
+      .on(t.status, t.publishedAt)
+      .where(sql`${t.status} = 'published'`),
+    godTrashIdx: index('idx_meme_cards_god_trash')
+      .on(t.godTrashStatus)
+      .where(sql`${t.godTrashStatus} <> 'pending'`),
+    tagsGinIdx: index('idx_meme_cards_tags_gin').using('gin', t.tags),
+    titleTsvIdx: index('idx_meme_cards_title_tsv').using('gin', t.titleTsv),
+    titleTrgmIdx: index('idx_meme_cards_title_trgm').using('gin', sql`${t.title} gin_trgm_ops`),
+    typeCheck: check('chk_meme_type', sql`${t.type} IN ('text', 'image', 'video')`),
+    gtCheck: check('chk_meme_gt_status', sql`${t.godTrashStatus} IN ('pending', 'god', 'trash')`),
+    statusCheck: check(
+      'chk_meme_status',
+      sql`${t.status} IN ('draft', 'pending_audit', 'published', 'manual_review', 'rejected', 'offline')`,
+    ),
+  }),
+);
+
+// 5.3 meme_card_tags —— 梗卡-标签关联（结构化聚合）
+
+export const memeCardTags = pgTable(
+  'meme_card_tags',
+  {
+    memeId: uuid('meme_id')
+      .notNull()
+      .references(() => memeCards.memeId, { onDelete: 'cascade' }),
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => memeTags.tagId, { onDelete: 'cascade' }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.memeId, t.tagId] }),
+    tagIdx: index('idx_meme_card_tags_tag').on(t.tagId),
+  }),
+);
+
+// -----------------------------------------------------------------------------
 // Schema bundle —— 传给 drizzle(pool, { schema }) 做类型化查询
 // -----------------------------------------------------------------------------
 
@@ -364,6 +473,9 @@ export const schema = {
   analyticsEvents,
   creations,
   creationCandidates,
+  memeTags,
+  memeCards,
+  memeCardTags,
 };
 
 export type Schema = typeof schema;

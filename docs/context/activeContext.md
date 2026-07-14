@@ -3,9 +3,9 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-14
-**当前阶段**：S0 通电验证全部完成 + Mobile UI P0+P1+P2 全部落地 + S1 T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ 已完成 + S2 T2.1 ✅ 完成 → T2.2 进行中
-**当前会话焦点**：S2 启动 · T2.2 BullMQ 队列 + Worker 框架
-**上次会话产出**（2026-07-14）：T2.1 完成 — `creations` + `creation_candidates` 两张表 Drizzle schema 编写；`CreationService` 重构实现（24h prompt md5 去重、每日限频 10 次、乐观锁扣减能量、按 mode 区分能量消耗系数）；`CreationModule` 导入 `UserModule`（依赖 `deductEnergy`）；`CreationController` 保持 4 端点（POST `/creations`、GET `/:id`、POST `/:id/choose`、POST `/:id/regenerate`）；`creation.service.spec.ts` 9/9 单测通过（能量充足/不足/Agent 模式/图片模式/20 并发能量=5 仅 5 个成功/24h 去重命中/idx 范围/不存在记录/regenerate 不存在）；`pnpm db:generate` 迁移成功（0003_charming_makkari）；typecheck=0 / lint=0。T2.1 ✅ 完成，下一步切换到 **S2 T2.2 BullMQ 队列 + Worker 框架**。
+**当前阶段**：S0 通电验证全部完成 + Mobile UI P0+P1+P2 全部落地 + S1 T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ 已完成 + S2 T2.1-T2.2 ✅ 完成 → T2.7 进行中
+**当前会话焦点**：S2 · T2.7 meme_card 表 + 索引 + tsvector
+**上次会话产出**（2026-07-14）：T2.1 ✅ 完成（CreationService + Drizzle schema + 9/9 单测），T2.2 ✅ 完成（BullMQ 队列 + Worker 框架 + Mock LLM 造梗 3 候选）。当前推进 S2 T2.7 内容域 Drizzle schema。
 
 ---
 
