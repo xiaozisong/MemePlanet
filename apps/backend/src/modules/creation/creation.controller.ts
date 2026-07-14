@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import type { JwtPayload } from '../../common/guards/jwt-auth.guard.js';
 import { CreationService } from './creation.service.js';
 import { CreateCreationDto, CreateCreationSchema } from './dto.js';
 
@@ -10,19 +11,19 @@ export class CreationController {
   constructor(private readonly creations: CreationService) {}
 
   @Post()
-  async create(@CurrentUser() user: CurrentUser, @Body() body: CreateCreationDto) {
+  async create(@CurrentUser() user: JwtPayload, @Body() body: CreateCreationDto) {
     const dto = CreateCreationSchema.parse(body);
     return this.creations.start(user.sub, dto);
   }
 
   @Get(':id')
-  async status(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+  async status(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.creations.getStatus(user.sub, id);
   }
 
   @Post(':id/choose')
   async choose(
-    @CurrentUser() user: CurrentUser,
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() body: { idx: number },
   ) {
@@ -30,7 +31,7 @@ export class CreationController {
   }
 
   @Post(':id/regenerate')
-  async regenerate(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+  async regenerate(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
     return this.creations.regenerate(user.sub, id);
   }
 }

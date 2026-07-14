@@ -25,6 +25,7 @@ import {
   date,
   decimal,
   index,
+  inet,
   integer,
   jsonb,
   pgTable,
@@ -207,6 +208,149 @@ export const userFollows = pgTable(
 );
 
 // -----------------------------------------------------------------------------
+// 4.1 prompt_templates —— 造梗 Prompt 模板库
+// -----------------------------------------------------------------------------
+
+/** prompt_templates.mode 列允许值 */
+export type PromptMode = 'text' | 'image' | 'script';
+
+export const promptTemplates = pgTable(
+  'prompt_templates',
+  {
+    templateId: uuid('template_id').primaryKey().defaultRandom(),
+    mode: varchar('mode', { length: 16 }).notNull(),
+    name: varchar('name', { length: 64 }).notNull(),
+    systemPrompt: text('system_prompt').notNull(),
+    userTemplate: text('user_template').notNull(),
+    style: varchar('style', { length: 32 }),
+    variables: jsonb('variables')
+      .notNull()
+      .default(sql`'[]'::jsonb`)
+      .$type<string[]>(),
+    exampleOutput: jsonb('example_output').$type<unknown>(),
+    isOfficial: boolean('is_official').notNull().default(false),
+    creatorId: uuid('creator_id').references(() => users.userId, {
+      onDelete: 'set null',
+    }),
+    useCount: integer('use_count').notNull().default(0),
+    status: varchar('status', { length: 16 }).notNull().default('active'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    modeIdx: index('idx_prompt_templates_mode').on(t.mode),
+    officialIdx: index('idx_prompt_templates_official').on(t.isOfficial, t.status),
+    useCountIdx: index('idx_prompt_templates_use_count').on(t.useCount),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// 4.2 analytics_events —— 埋点事件表
+// -----------------------------------------------------------------------------
+
+export type AnalyticsEventName = string;
+
+export const analyticsEvents = pgTable(
+  'analytics_events',
+  {
+    eventId: uuid('event_id').primaryKey().defaultRandom(),
+    eventName: varchar('event_name', { length: 128 }).notNull(),
+    userId: uuid('user_id').references(() => users.userId, { onDelete: 'set null' }),
+    properties: jsonb('properties')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<Record<string, unknown>>(),
+    platform: varchar('platform', { length: 16 }).notNull().default('app'),
+    sessionId: varchar('session_id', { length: 128 }),
+    deviceId: varchar('device_id', { length: 128 }),
+    clientIp: inet('client_ip'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    nameCreatedIdx: index('idx_analytics_events_name_created').on(t.eventName, t.createdAt),
+    userCreatedIdx: index('idx_analytics_events_user_created').on(t.userId, t.createdAt),
+    createdIdx: index('idx_analytics_events_created').on(t.createdAt),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// 4.2 creations —— 造梗会话（覆盖单次 prompt 与 Agent 模式）
+// -----------------------------------------------------------------------------
+
+/** creations.status 列允许值 */
+export type CreationStatus = 'pending' | 'ready' | 'published' | 'failed';
+
+/** creations.mode 列允许值（复用 PromptMode 语义） */
+export type CreationMode = 'text' | 'image' | 'script';
+
+export const creations = pgTable(
+  'creations',
+  {
+    creationId: uuid('creation_id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    mode: varchar('mode', { length: 16 }).notNull(),
+    agentMode: boolean('agent_mode').notNull().default(false),
+    agentJobId: uuid('agent_job_id'),
+    prompt: text('prompt').notNull(),
+    promptHash: varchar('prompt_hash', { length: 64 }),
+    style: varchar('style', { length: 32 }),
+    templateId: uuid('template_id').references(() => promptTemplates.templateId, {
+      onDelete: 'set null',
+    }),
+    chosenCandidate: integer('chosen_candidate'),
+    energyCost: integer('energy_cost').notNull().default(0),
+    modelVersion: varchar('model_version', { length: 64 }),
+    status: varchar('status', { length: 16 }).notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userCreatedIdx: index('idx_creations_user_created').on(t.userId, t.createdAt),
+    promptHashIdx: index('idx_creations_prompt_hash')
+      .on(t.promptHash)
+      .where(sql`${t.promptHash} IS NOT NULL`),
+    agentModeIdx: index('idx_creations_agent_mode')
+      .on(t.agentMode, t.status)
+      .where(sql`${t.agentMode} = true`),
+    statusCreatedIdx: index('idx_creations_status_created').on(t.status, t.createdAt),
+    statusCheck: check(
+      'chk_creations_status',
+      sql`${t.status} IN ('pending', 'ready', 'published', 'failed')`,
+    ),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// 4.3 creation_candidates —— 造梗候选（3 候选 + 自评打分）
+// -----------------------------------------------------------------------------
+
+export const creationCandidates = pgTable(
+  'creation_candidates',
+  {
+    candidateId: uuid('candidate_id').primaryKey().defaultRandom(),
+    creationId: uuid('creation_id')
+      .notNull()
+      .references(() => creations.creationId, { onDelete: 'cascade' }),
+    idx: integer('idx').notNull(),
+    content: text('content'),
+    imageUrl: varchar('image_url', { length: 512 }),
+    selfScore: decimal('self_score', { precision: 4, scale: 2 }),
+    selfReason: text('self_reason'),
+    metadata: jsonb('metadata')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.creationId, t.idx] }),
+    creationIdx: index('idx_creation_candidates_creation').on(t.creationId),
+  }),
+);
+
+// -----------------------------------------------------------------------------
 // Schema bundle —— 传给 drizzle(pool, { schema }) 做类型化查询
 // -----------------------------------------------------------------------------
 
@@ -216,6 +360,10 @@ export const schema = {
   userInterestTags,
   userBadges,
   userFollows,
+  promptTemplates,
+  analyticsEvents,
+  creations,
+  creationCandidates,
 };
 
 export type Schema = typeof schema;

@@ -3,9 +3,9 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-14
-**当前阶段**：S0 通电验证全部完成 + Mobile UI P0+P1+P2 全部落地 + S1 T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ 已完成 → T1.10/T1.11/T1.13 待外部 key 延后，等待下一阶段决策
-**当前会话焦点**：S2 启动 · T2.1 creation_session 表 + 能量扣减乐观锁
-**上次会话产出**（2026-07-14）：T1.14 完成 — 重写 `AnalyticsService`（双写 PostHog + analytics_events 表：`track` + `trackBatch` 方法 + graceful degradation）；新建 `posthog.provider.ts`（PostHog 客户端工厂，key 未配置时返回 null）；更新 `AnalyticsModule`（posthogClientProvider 注入 + `OnModuleDestroy`）；更新 `dto.ts`（TrackEventSchema + TrackBatchSchema 支持 platform/sessionId/deviceId）；更新 `AnalyticsController`（`/analytics/event` 和 `/analytics/event/batch` 接收 context 并验证 payload，`@Ip()` 自动获取客户端 IP）；analytics.service.spec.ts 7/7 单测通过（track — 自建表写入/PostHog 双写/无 PostHog/异常隔离；trackBatch — 批量写入/空数组/批量双写）；typecheck=0 / lint=0。T1.14 ✅ 完成，S1 可完成的任务已全部落地。下一步切换到 **S2 造梗工坊**，启动 T2.1 `creation_session` 表 + 能量扣减乐观锁。
+**当前阶段**：S0 通电验证全部完成 + Mobile UI P0+P1+P2 全部落地 + S1 T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ 已完成 + S2 T2.1 ✅ 完成 → T2.2 进行中
+**当前会话焦点**：S2 启动 · T2.2 BullMQ 队列 + Worker 框架
+**上次会话产出**（2026-07-14）：T2.1 完成 — `creations` + `creation_candidates` 两张表 Drizzle schema 编写；`CreationService` 重构实现（24h prompt md5 去重、每日限频 10 次、乐观锁扣减能量、按 mode 区分能量消耗系数）；`CreationModule` 导入 `UserModule`（依赖 `deductEnergy`）；`CreationController` 保持 4 端点（POST `/creations`、GET `/:id`、POST `/:id/choose`、POST `/:id/regenerate`）；`creation.service.spec.ts` 9/9 单测通过（能量充足/不足/Agent 模式/图片模式/20 并发能量=5 仅 5 个成功/24h 去重命中/idx 范围/不存在记录/regenerate 不存在）；`pnpm db:generate` 迁移成功（0003_charming_makkari）；typecheck=0 / lint=0。T2.1 ✅ 完成，下一步切换到 **S2 T2.2 BullMQ 队列 + Worker 框架**。
 
 ---
 
@@ -64,10 +64,11 @@
   - **S1 T1.3: 手机号验证码登录** — `RedisModule`（Global, ioredis）+ AuthService 重写：6 位 OTP 生成/Redis 5min TTL 存储/60s 同号限频/每小时 3 次上限/Drizzle users upsert/真实 JWT 签发；`pnpm typecheck` 0 errors / `pnpm lint` 0 errors
   - **S1 T1.4: 兴趣标签接口 + 冷启动** — 兴趣标签字典常量（35 标签 8 大类）+ UserService Drizzle 真实读写 + UserController GET/PATCH `/users/me/interests` + 字典接口 + 冷启动 feed 比例配置
   - **S1 T1.5-T1.7 + T1.9 + T1.12 + T1.14** — 个人主页只读接口 / 梗力值等级能量 / 勋章字段就位 / AIOrch 抽象接口 + Mock adapter 单测 / Prompt 模板表 + 5 官方模板 / Tracker SDK + PostHog 双写 — 全部完成 ✅
+  - **S2 T2.1: creation_session 表 + 能量扣减乐观锁** — `creations` + `creation_candidates` Drizzle schema 编写；`CreationService` 实现（24h prompt md5 去重、每日限频 10 次、乐观锁扣减能量、mode 区分能量消耗）；`CreationModule` 导入 `UserModule`；`creation.service.spec.ts` 9/9 单测通过；`pnpm db:generate` 迁移成功（0003）；typecheck=0 / lint=0 ✅
 
 ### 进行中 🔄
 
-- **S2 造梗工坊 + 梗卡发布 + 机审** — 🔄 T2.1 进行中（T2.1: creation_session 表 + 能量扣减乐观锁）
+- **S2 造梗工坊 + 梗卡发布 + 机审** — 🔄 T2.2 进行中（T2.2: BullMQ 队列 + Worker 框架）
 
 ### 待启动 ⏳
 
@@ -84,8 +85,8 @@
 
 ## 下一步（按优先级）
 
-1. **🔄 S2 · T2.1 creation_session 表 + 能量扣减乐观锁**（当前进行中，详见 `execution-plan.md §3.3`）
-2. S2 · T2.2 BullMQ 队列 + Worker（异步任务 202+轮询模式）
+1. **🔄 S2 · T2.2 BullMQ 队列 + Worker 框架**（当前进行中，详见 `execution-plan.md §3.3`）
+2. S2 · T2.4 造梗接口 POST /creations（202 + 轮询）
 3. S2 · T2.3 文本造梗 3 候选（依赖 T1.10 真实 LLM — 若 key 未就绪先用 Mock LLM 走通流程）
 4. S2 · T2.7 meme_card 表 + 索引 + tsvector
 5. **T1.10: LLM Adapter**（DeepSeek V3 主 + GLM-4 Flash 兜底）：需要 DeepSeek key（外部依赖关键路径 — ⏳ 待 key 就绪）
