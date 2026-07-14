@@ -2,7 +2,7 @@
 
 > 记录"什么做完了 / 什么没做 / 已知问题 / 文件在哪"。配合 `activeContext.md`（当前焦点）与 `decisions.md`（决策）使用。
 
-**最后更新**：2026-07-13
+**最后更新**：2026-07-14
 
 ---
 
@@ -164,6 +164,8 @@
 - **ecc 规则集为 untracked 外部资产**：`.cursor/rules/ecc-*.mdc`（~120 个语言规则）+ `.cursor/ecc-reference/` + `ecc_src/`（嵌入式 git 仓库）+ `.cursor/hooks/` 为外部安装的 ruleset，非 MemeChatAI 项目代码，未纳入版本控制。如需追踪应单独 commit（`ecc_src/` 不应直接 git add）
 - **mobile typecheck 报错（nativewind className 类型缺失）**：~~`apps/mobile/app/(tabs)/*.tsx` 用了 `className` 但 TS 不识别~~ → ✅ 已修（T1.0b 升 nativewind 到 v4.2.6，`nativewind/types` 子路径可用）
 - **nativewind v4 拉入 reanimated 4.5.1 peer 警告**：reanimated 4.5 要求 RN 0.83-0.86，当前 RN 0.74.5。安装有 peer 警告但不阻断 expo start 启动。若运行时动画报错，需降 reanimated 到 3.x（兼容 RN 0.74）或锁 nativewind 到不拉 reanimated 4 的版本。MVP 骨架页无动画，暂不影响预览
+- **Android AVD 预览修复（2026-07-13）**：在 Android Studio AVD 中通过 Expo Go 预览时报 `Uncaught Error: java.io.IOException: Failed to download remote update`。根因：① `app.json` / `package.json` 残留 `expo-updates` 插件配置，AVD 启动时尝试拉远端更新失败；② VPN 干扰 Expo CLI 选错宿主机 IP（绑定到 VPN 网卡），AVD 无法直连宿主 8081。修复：彻底移除 `expo-updates`（`app.json` 删除 plugins/updates/runtimeVersion/extra.eas 块 + `package.json` 删依赖 + `AndroidManifest.xml` 删 4 行 meta-data + `strings.xml` 删 `expo_runtime_version`），并新建 `apps/mobile/debug-android.sh` 自动化脚本（`adb reverse tcp:8081 tcp:8081` + 检查 AVD/Expo Go 已装 + `npx expo start --dev-client --localhost` + 自动 `adb shell am start` 触发 Expo Go）。顺带修 `pnpm-workspace.yaml` 的 `allowBuilds` 占位（`set this to true or false` → 实际 boolean），解决 `pnpm install` 挂起
+- **Drizzle schema.ts 表数 5 ≠ schema.sql 业务基表 46**：校验脚本 `scripts/check-context-sync.sh` 报"严重漂移"。**这是预期的**——按 `execution-plan.md` S1 推进增量对齐表（T1.1 只同步 user 域 5 表，T2.7/T3.4 等后续任务再同步 meme_card/rating/comment 表）。文档已记录此推进策略（见 `progress.md` L159），不应触发"漂移阻断 PR"。后续可考虑把校验脚本升级为"按 Sprint 范围校验"（动态比对当前应同步的表子集）
 
 ---
 

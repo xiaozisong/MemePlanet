@@ -2,9 +2,10 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-13
+**最后更新**：2026-07-14
 **当前阶段**：S0 通电验证全部完成 + Mobile UI 设计系统 P0+P1+P2 全部落地 + S1 T1.1-T1.4 已完成（Drizzle schema + JWT Guard/Decorator + 手机号 OTP 登录 + 兴趣标签接口 + 冷启动配置）→ 当前 S1 T1.5 个人主页只读接口 🔄 进行中
 **当前会话焦点**：S1 T1.5 个人主页只读接口 — GET `/users/:id` 返回资料/等级/勋章/作品数；meme_cards/legion_members 表暂用 raw SQL stub。同时回填 `execution-plan.md` / `progress.md` S1 进度（T1.1-T1.4 ✅ 已完成）。
+**上次会话产出**（2026-07-13）：修复 Android AVD 预览问题（删除 `expo-updates` 引发 `Failed to download remote update` 异常 + `pnpm-workspace.yaml` `allowBuilds` 占位修复 + 新增 `apps/mobile/debug-android.sh` 自动化 adb reverse + Expo Go 启动脚本），属工程修复而非 M1 任务推进。
 
 ---
 
