@@ -89,12 +89,13 @@ export class CreationJobWorker {
    *
    * 流程：
    * 1. 调用 LLM 生成 3 候选文字内容
-   * 2. 写入 creation_candidates 表
-   * 3. 更新 creations.status = 'ready'
-   * 4. 返回候选结果
+   * 2. 写入 ai_cost_logs 成本日志
+   * 3. 写入 creation_candidates 表
+   * 4. 更新 creations.status = 'ready'
+   * 5. 返回候选结果
    */
   async processCreation(job: Job<CreationJobData>): Promise<CreationJobResult> {
-    const { creationId, prompt, style } = job.data;
+    const { creationId, userId, prompt, style } = job.data;
 
     await job.updateProgress(10);
 
@@ -111,6 +112,7 @@ export class CreationJobWorker {
 
       const userPrompt = style ? `${prompt}（风格：${style}）` : prompt;
 
+      const startMs = Date.now();
       const response = await this.llm.chat({
         messages: [
           { role: 'system', content: systemPrompt },
@@ -119,8 +121,23 @@ export class CreationJobWorker {
         temperature: 0.8,
         maxTokens: 500,
       });
+      const latencyMs = Date.now() - startMs;
 
       await job.updateProgress(40);
+
+      // 2. 写入 ai_cost_logs（T2.14）
+      await this.logAiCost({
+        userId,
+        module: 'creation' as const,
+        provider: 'mock' as const,
+        model: this.llm.model,
+        tokensIn: response.tokensIn,
+        tokensOut: response.tokensOut,
+        costCents: 0,
+        latencyMs,
+        status: 'ok' as const,
+        requestId: job.id,
+      });
 
       // 2. 解析 LLM 输出为 3 候选
       const candidates = this.parseCandidates(response.content);
@@ -248,6 +265,40 @@ export class CreationJobWorker {
     }
 
     return candidates;
+  }
+
+  /**
+   * 写入 AI 调用成本日志（T2.14）
+   * Worker 进程不走 NestJS DI，直接 DB insert
+   */
+  private async logAiCost(entry: {
+    userId: string;
+    module: string;
+    provider: string;
+    model: string;
+    tokensIn: number;
+    tokensOut: number;
+    costCents: number;
+    latencyMs: number;
+    status: string;
+    requestId?: string;
+  }): Promise<void> {
+    try {
+      await this.db.insert(schema.aiCostLogs).values({
+        userId: entry.userId,
+        module: entry.module,
+        provider: entry.provider,
+        model: entry.model,
+        tokensIn: entry.tokensIn,
+        tokensOut: entry.tokensOut,
+        costCents: entry.costCents,
+        latencyMs: entry.latencyMs,
+        status: entry.status,
+        requestId: entry.requestId ?? null,
+      });
+    } catch (err) {
+      this.logger.warn(`ai_cost_log write failed: ${(err as Error).message}`);
+    }
   }
 
   async close(): Promise<void> {

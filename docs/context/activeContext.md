@@ -4,8 +4,8 @@
 
 **最后更新**：2026-07-15
 **当前阶段**：S0+S1 已完成 + S2 进行中（T2.1/T2.2/T2.4~T2.9/T2.11/T2.13 ✅ → T2.3/T2.10/T2.12/T2.14/T2.15 待推进）
-**当前会话焦点**：T2.3 造梗任务升级 + T2.14 AI 调用日志写入
-**上次会话产出**（2026-07-15）：S2 大量推进 — T2.11 DFA 敏感词库（50+ 内置词 + DFA Trie + 热更新 + 拼音干扰跳过）；T2.8 梗卡发布接口+状态机；T2.9 梗卡状态查询；T2.13 AI 生成内容标识；T2.4 造梗接口 202 返回；T2.5 结果获取；T2.6 24h 去重+限频。typecheck=0 / lint=0。
+**当前会话焦点**：T2.14 AI 调用日志完成 → S2 剩余 T2.10/T2.12/T2.15 待外部 key
+**上次会话产出**（2026-07-15）：S2 持续推进 — T2.11 DFA 敏感词库（50+ 内置词 + DFA Trie + 热更新 + 拼音干扰跳过）；T2.8 梗卡发布接口+状态机；T2.9 梗卡状态查询；T2.13 AI 生成内容标识；T2.4 造梗接口 202 返回；T2.5 结果获取；T2.6 24h 去重+限频；**T2.14 AI 调用日志留存** — `AiCostLogService`（单条/批量写入/各类聚合）+ Worker LLM 调用自动写入 + graceful degradation + 4/4 单测。typecheck=0 / lint=0。S2 仅剩 T2.10/T2.12/T2.15 阻塞于外部 key，等待决策。
 
 ---
 
@@ -74,6 +74,7 @@
   - **S2 T2.9: 梗卡状态查询接口** — GET `/memes/:id/status` 返回当前状态+审核结果 ✅
   - **S2 T2.11: 敏感词 DFA 库 + 热更新** — 50+ 内置敏感词、DFA Trie 匹配 + 干扰字符跳过、热更新接口 ✅
   - **S2 T2.13: AI 生成内容标识** — 梗卡详情 enrichAiLabel 字段 + findById/getStatus/feed 响应富化 ✅
+  - **S2 T2.14: AI 调用日志留存** — `AiCostLogService`（单条/批量写入 + 当日成本按 provider 聚合）+ Worker 每次 LLM 调用自动写入 `ai_cost_logs`（tokens/costCents/latencyMs/requestId）+ graceful degradation；4/4 单测通过；typecheck=0 / lint=0 ✅
   - **S2 T2.3: 文本造梗任务（Mock LLM）** — Worker 已集成 MockLLMAdapter 生成 3 候选 + prompt 组装（真实 LLM 接入阻塞于 T1.10 key）✅
 
 ### 进行中 🔄
@@ -85,7 +86,6 @@
 - **T2.3**：文本造梗真实 LLM — 待 T1.10 DeepSeek key（Mock 版已走通）
 - **T2.10**：阿里云内容安全接入 — 待外部 key
 - **T2.12**：机审队列 + 人审入口 — 依赖 T2.10
-- **T2.14**：AI 调用日志留存 — 依赖 T1.11（ai_cost_logs 表已就位）
 - **T2.15**：发布流程串通 — 依赖 T2.12
 - **T1.10/T1.11**：LLM Adapter + Policy Engine — 待外部 API key
 - **T1.8**：Supabase 轮询同步 — 建议 M2
@@ -98,14 +98,11 @@
 
 ## 下一步（按优先级）
 
-1. **🔄 S2 · T2.14 AI 调用日志写入** — 创建 AiCostLogService，为 Worker 和 AIOrch 提供成本日志写入（ai_cost_logs 表已就位，无需外部 key）
-2. S2 · T2.3 Worker 升级 — 造梗 Worker 引入 Prompt 模板渲染（T1.12 已完成，可先升级模板组装，真实 LLM 接入待 T1.10）
-3. S2 · T2.10 阿里云内容安全接入（⏳ 待外部 key）
-4. S2 · T2.12 机审队列 + 人审入口（⏳ 依赖 T2.10）
-5. S2 · T2.15 发布流程串通（⏳ 依赖 T2.12）
-6. **T1.10: LLM Adapter**（⏳ 待 DeepSeek key）
-7. **T1.11: Policy Engine**（⏳ 待 T1.10）
-8. **T1.8: Supabase 轮询同步**（建议 M2）
+1. **⏳ S2 · T2.10/T2.12/T2.15** — S2 编码剩余 3 项阻塞于阿里云内容安全 key 等外部依赖，等待决策
+2. S3 · T3.1 热度分 Redis ZSet + cron
+3. S3 · T3.4 rating + comment 表 + 唯一约束
+4. **T1.10: LLM Adapter**（⏳ 待 DeepSeek key）
+5. **T1.11: Policy Engine**（⏳ 待 T1.10）
 
 ---
 
