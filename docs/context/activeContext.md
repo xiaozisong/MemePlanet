@@ -3,9 +3,9 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-15
-**当前阶段**：S0 通电验证全部完成 + Mobile UI P0+P1+P2 全部落地 + S1 T1.1-T1.7 + T1.9 + T1.12 + T1.14 ✅ 已完成 + S2 T2.1/T2.2/T2.4/T2.5/T2.6/T2.7/T2.8/T2.9/T2.11/T2.13 ✅ 完成 → T2.14 推进中
-**当前会话焦点**：S2 · T2.14 AI 调用日志留存
-**上次会话产出**（2026-07-14 至今）：S2 持续推进 — T2.7 内容域 schema（meme_cards/meme_tags/meme_card_tags）、T2.8 梗卡发布接口+状态机、T2.9 状态查询、T2.11 DFA 敏感词库+热更新、T2.13 AI 生成标识 全部完成。修复 activeContext/execution-plan 中 T2.4/T2.5/T2.6 状态漂移（代码已实现但标记 pending）。下一步推进 T2.14 AI 调用日志留存。
+**当前阶段**：S0+S1 已完成 + S2 进行中（T2.1/T2.2/T2.4~T2.9/T2.11/T2.13 ✅ → T2.3/T2.10/T2.12/T2.14/T2.15 待推进）
+**当前会话焦点**：T2.3 造梗任务升级 + T2.14 AI 调用日志写入
+**上次会话产出**（2026-07-15）：S2 大量推进 — T2.11 DFA 敏感词库（50+ 内置词 + DFA Trie + 热更新 + 拼音干扰跳过）；T2.8 梗卡发布接口+状态机；T2.9 梗卡状态查询；T2.13 AI 生成内容标识；T2.4 造梗接口 202 返回；T2.5 结果获取；T2.6 24h 去重+限频。typecheck=0 / lint=0。
 
 ---
 
@@ -66,17 +66,29 @@
   - **S1 T1.5-T1.7 + T1.9 + T1.12 + T1.14** — 个人主页只读接口 / 梗力值等级能量 / 勋章字段就位 / AIOrch 抽象接口 + Mock adapter 单测 / Prompt 模板表 + 5 官方模板 / Tracker SDK + PostHog 双写 — 全部完成 ✅
   - **S2 T2.1: creation_session 表 + 能量扣减乐观锁** — `creations` + `creation_candidates` Drizzle schema 编写；`CreationService` 实现（24h prompt md5 去重、每日限频 10 次、乐观锁扣减能量、mode 区分能量消耗）；`CreationModule` 导入 `UserModule`；`creation.service.spec.ts` 9/9 单测通过；`pnpm db:generate` 迁移成功（0003）；typecheck=0 / lint=0 ✅
   - **S2 T2.2: BullMQ 队列 + Worker 框架** — `queue-config.ts` 共享配置（重试3/指数退避/超时60s/并发5）；`CreationQueueService` 入队服务（幂等 jobId + 队列统计）；`creation-job.worker.ts` Worker 骨架（mock 3 候选 + 进度回调）；`CreationService` INSERT 后自动入队（Pro Agent 优先级5/普通10）；`Worker main.ts` 注册；typecheck=0 / lint=0 ✅
+  - **S2 T2.4: 造梗接口 POST /creations** — 202 响应 + 返回 creationId/status；`pnpm typecheck` / `pnpm lint` 通过 ✅
+  - **S2 T2.5: 造梗结果获取接口** — GET `/creations/:id` 返回候选列表、状态、能量扣减记录 ✅
+  - **S2 T2.6: 24h prompt 去重 + 限频** — 同用户同 prompt 24h 去重（md5+style）、单用户每日限频 10 次 ✅
+  - **S2 T2.7: meme_card 表 + 索引** — 内容域 3 表 Drizzle schema（meme_cards/meme_tags/meme_card_tags）+ tsvector 索引 + 迁移 ✅
+  - **S2 T2.8: 梗卡发布接口 + 状态机** — POST `/memes` 发布、`status=pending_audit` 自动机审流转（published/manual_review/rejected）✅
+  - **S2 T2.9: 梗卡状态查询接口** — GET `/memes/:id/status` 返回当前状态+审核结果 ✅
+  - **S2 T2.11: 敏感词 DFA 库 + 热更新** — 50+ 内置敏感词、DFA Trie 匹配 + 干扰字符跳过、热更新接口 ✅
+  - **S2 T2.13: AI 生成内容标识** — 梗卡详情 enrichAiLabel 字段 + findById/getStatus/feed 响应富化 ✅
+  - **S2 T2.3: 文本造梗任务（Mock LLM）** — Worker 已集成 MockLLMAdapter 生成 3 候选 + prompt 组装（真实 LLM 接入阻塞于 T1.10 key）✅
 
 ### 进行中 🔄
 
-- **S2 造梗工坊 + 梗卡发布 + 机审** — 🔄 T2.2 进行中（T2.2: BullMQ 队列 + Worker 框架）
+- **S2 造梗工坊 + 梗卡发布 + 机审** — 🔄 T2.3/T2.10/T2.12/T2.14/T2.15 待推进（造梗 Worker 已用 Mock LLM 走通流程，真实 LLM 需 T1.10 key）
 
 ### 待启动 ⏳
 
-- **T1.10/T1.11**：LLM Adapter + Policy Engine — 待外部 API key 就绪
-- **T1.13：Redis prompt 缓存** — 依赖 T1.10 真实调用
-- **T1.8：Supabase 轮询同步** — 建议 M2
-- **S2/S3/S4**：详见 `execution-plan.md §3~§5`
+- **T2.3**：文本造梗真实 LLM — 待 T1.10 DeepSeek key（Mock 版已走通）
+- **T2.10**：阿里云内容安全接入 — 待外部 key
+- **T2.12**：机审队列 + 人审入口 — 依赖 T2.10
+- **T2.14**：AI 调用日志留存 — 依赖 T1.11（ai_cost_logs 表已就位）
+- **T2.15**：发布流程串通 — 依赖 T2.12
+- **T1.10/T1.11**：LLM Adapter + Policy Engine — 待外部 API key
+- **T1.8**：Supabase 轮询同步 — 建议 M2
 
 ### 阻塞 ❌
 
@@ -86,14 +98,14 @@
 
 ## 下一步（按优先级）
 
-1. **🔄 S2 · T2.2 BullMQ 队列 + Worker 框架**（当前进行中，详见 `execution-plan.md §3.3`）
-2. S2 · T2.4 造梗接口 POST /creations（202 + 轮询）
-3. S2 · T2.3 文本造梗 3 候选（依赖 T1.10 真实 LLM — 若 key 未就绪先用 Mock LLM 走通流程）
-4. S2 · T2.7 meme_card 表 + 索引 + tsvector
-5. **T1.10: LLM Adapter**（DeepSeek V3 主 + GLM-4 Flash 兜底）：需要 DeepSeek key（外部依赖关键路径 — ⏳ 待 key 就绪）
-6. **T1.11: Policy Engine 熔断/限流/cost_log**：需要 configuration.ts 中配置 AI keys（依赖 T1.10）
-7. **T1.13: Redis prompt 缓存**：依赖 T1.10 真实调用验证
-8. **T1.8: Supabase 轮询同步**：需要 Supabase key（建议 M2 推后）
+1. **🔄 S2 · T2.14 AI 调用日志写入** — 创建 AiCostLogService，为 Worker 和 AIOrch 提供成本日志写入（ai_cost_logs 表已就位，无需外部 key）
+2. S2 · T2.3 Worker 升级 — 造梗 Worker 引入 Prompt 模板渲染（T1.12 已完成，可先升级模板组装，真实 LLM 接入待 T1.10）
+3. S2 · T2.10 阿里云内容安全接入（⏳ 待外部 key）
+4. S2 · T2.12 机审队列 + 人审入口（⏳ 依赖 T2.10）
+5. S2 · T2.15 发布流程串通（⏳ 依赖 T2.12）
+6. **T1.10: LLM Adapter**（⏳ 待 DeepSeek key）
+7. **T1.11: Policy Engine**（⏳ 待 T1.10）
+8. **T1.8: Supabase 轮询同步**（建议 M2）
 
 ---
 
