@@ -102,6 +102,8 @@ export class MemeService {
 
   /**
    * 查询梗卡详情
+   *
+   * 返回完整梗卡信息，包含 AI 标识字段
    */
   async findById(id: string) {
     const row = await this.db
@@ -113,7 +115,7 @@ export class MemeService {
     if (!row[0]) {
       throw new NotFoundException('梗卡不存在');
     }
-    return row[0];
+    return this.enrichAiLabel(row[0]);
   }
 
   /**
@@ -137,7 +139,7 @@ export class MemeService {
     if (!row[0]) {
       throw new NotFoundException('梗卡不存在');
     }
-    return row[0];
+    return this.enrichAiLabel(row[0]);
   }
 
   /**
@@ -163,6 +165,23 @@ export class MemeService {
     const total = Number(countResult[0]?.total ?? 0);
     const hasMore = offset + pageSize < total;
 
-    return { items, page, pageSize, total, hasMore };
+    return { items: items.map((item) => this.enrichAiLabel(item)), page, pageSize, total, hasMore };
+  }
+
+  /**
+   * AI 标识字段富化
+   *
+   * 为 MI MVP 阶段的每个 AI 生成梗卡附加人类可读的"AI 辅助创作"标识，
+   * 满足合规要求。图片角标占位（图 M2）。
+   */
+  private enrichAiLabel<T extends { isAiGenerated?: boolean | null }>(
+    row: T,
+  ): T & {
+    aiLabel: string | null;
+  } {
+    return {
+      ...row,
+      aiLabel: row.isAiGenerated ? 'AI 辅助创作' : null,
+    };
   }
 }
