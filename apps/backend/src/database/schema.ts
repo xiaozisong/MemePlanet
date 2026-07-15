@@ -460,6 +460,46 @@ export const memeCardTags = pgTable(
 );
 
 // -----------------------------------------------------------------------------
+// 14.1 ai_cost_logs —— AI 调用成本日志（日预算熔断看板数据源）
+// -----------------------------------------------------------------------------
+
+/** ai_cost_logs.module 允许值 */
+export type AiCostModule = 'creation' | 'image' | 'video' | 'tts' | 'audit' | 'agent' | 'judge';
+
+/** ai_cost_logs.provider 允许值 */
+export type AiCostProvider = 'deepseek' | 'glm' | 'siliconflow' | 'volcano' | 'aliyun' | 'mock';
+
+/** ai_cost_logs.status 允许值 */
+export type AiCostStatus = 'ok' | 'failed' | 'timeout';
+
+export const aiCostLogs = pgTable(
+  'ai_cost_logs',
+  {
+    logId: uuid('log_id').notNull().defaultRandom(),
+    userId: uuid('user_id').references(() => users.userId, { onDelete: 'set null' }),
+    module: varchar('module', { length: 32 }).notNull(),
+    provider: varchar('provider', { length: 32 }).notNull(),
+    model: varchar('model', { length: 64 }).notNull(),
+    tokensIn: integer('tokens_in').notNull().default(0),
+    tokensOut: integer('tokens_out').notNull().default(0),
+    images: integer('images').notNull().default(0),
+    videoSecs: decimal('video_secs', { precision: 8, scale: 2 }).notNull().default('0'),
+    costCents: integer('cost_cents').notNull(),
+    latencyMs: integer('latency_ms').notNull().default(0),
+    status: varchar('status', { length: 16 }).notNull().default('ok'),
+    requestId: varchar('request_id', { length: 64 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.logId, t.createdAt] }),
+    userIdx: index('idx_ai_cost_user').on(t.userId, t.createdAt),
+    moduleIdx: index('idx_ai_cost_module').on(t.module, t.createdAt),
+    providerIdx: index('idx_ai_cost_provider').on(t.provider, t.createdAt),
+    dailyIdx: index('idx_ai_cost_daily').on(t.createdAt, t.module),
+  }),
+);
+
+// -----------------------------------------------------------------------------
 // Schema bundle —— 传给 drizzle(pool, { schema }) 做类型化查询
 // -----------------------------------------------------------------------------
 
@@ -476,6 +516,7 @@ export const schema = {
   memeTags,
   memeCards,
   memeCardTags,
+  aiCostLogs,
 };
 
 export type Schema = typeof schema;
