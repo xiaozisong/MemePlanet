@@ -1,23 +1,144 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
+import { eq, and, sql, desc } from 'drizzle-orm';
+import { DRIZZLE, type DbType } from '../../database/drizzle.module.js';
+import { memeCards, creations } from '../../database/schema.js';
+import { AuditService } from '../audit/audit.service.js';
+import { CreateMemeDto } from './dto.js';
+import type { MemeStatus } from '../../database/schema.js';
 
 @Injectable()
 export class MemeService {
   private readonly logger = new Logger(MemeService.name);
 
-  async feed(page: number, pageSize: number) {
-    // TODO: 热度召回 v1（hot_rank:daily ZSet + 新品 Top 混合 + 多样性重排）
-    return { items: [] as unknown[], page, pageSize, total: 0, hasMore: false };
+  constructor(
+    @Inject(DRIZZLE) private readonly db: DbType,
+    private readonly audit: AuditService,
+  ) {}
+
+  /**
+   * 发布梗卡
+   *
+   * 流程：
+   * 1. 如果提供了 creationId，校验该造梗记录属于当前用户且状态为 ready
+   * 2. INSERT meme_cards（status = 'pending_audit'）
+   * 3. 自动触发机审（AuditService.machineAudit）
+   * 4. 根据审核结果流转状态：
+   *    - pass → 'published'
+   *    - manual_review → 'manual_review'
+   *    - reject → 'rejected'
+   */
+  async publish(userId: string, dto: CreateMemeDto) {
+    // 1. 如果关联造梗记录，校验有效性
+    if (dto.creationId) {
+      const creation = await this.db
+        .select({ status: creations.status, userId: creations.userId })
+        .from(creations)
+        .where(eq(creations.creationId, dto.creationId))
+        .limit(1);
+
+      if (!creation[0]) {
+        throw new BadRequestException('关联的造梗记录不存在');
+      }
+      if (creation[0].userId !== userId) {
+        throw new BadRequestException('关联的造梗记录不属于当前用户');
+      }
+      if (creation[0].status !== 'ready') {
+        throw new BadRequestException('造梗尚未完成，请等待候选生成');
+      }
+    }
+
+    // 2. INSERT meme_cards（status = 'pending_audit'）
+    const rows = await this.db
+      .insert(memeCards)
+      .values({
+        authorId: userId,
+        creationId: dto.creationId ?? null,
+        type: dto.type,
+        title: dto.title,
+        coverUrl: dto.coverUrl ?? null,
+        tags: dto.tags,
+        legionId: dto.legionId ?? null,
+        status: 'pending_audit',
+        isAiGenerated: true,
+        watermarked: true,
+      })
+      .returning({ memeId: memeCards.memeId, status: memeCards.status });
+
+    const meme = rows[0]!;
+    this.logger.log(`meme created user=${userId} id=${meme.memeId} type=${dto.type}`);
+
+    // 3. 自动机审
+    const auditResult = await this.audit.machineAudit({
+      targetType: 'meme_card',
+      targetId: meme.memeId,
+      content: dto.title,
+    });
+
+    // 4. 根据审核结果流转状态
+    const statusMap: Record<string, MemeStatus> = {
+      pass: 'published',
+      manual_review: 'manual_review',
+      reject: 'rejected',
+    };
+    const nextStatus = statusMap[auditResult.result] ?? 'manual_review';
+
+    await this.db
+      .update(memeCards)
+      .set({
+        status: nextStatus,
+        publishedAt: nextStatus === 'published' ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(memeCards.memeId, meme.memeId));
+
+    this.logger.log(`meme ${meme.memeId} audit=${auditResult.result} → status=${nextStatus}`);
+
+    return {
+      memeId: meme.memeId,
+      status: nextStatus,
+      auditResult: auditResult.result,
+    };
   }
 
+  /**
+   * 查询梗卡详情
+   */
   async findById(id: string) {
-    // TODO: 查 meme_cards + Redis 缓存 10min + CF 边缘 1min
-    this.logger.log(`findById ${id}`);
-    return { memeId: id };
+    const row = await this.db
+      .select()
+      .from(memeCards)
+      .where(and(eq(memeCards.memeId, id), sql`${memeCards.deletedAt} IS NULL`))
+      .limit(1);
+
+    if (!row[0]) {
+      throw new NotFoundException('梗卡不存在');
+    }
+    return row[0];
   }
 
-  async publish(userId: string, dto: Record<string, unknown>) {
-    // TODO: INSERT meme_cards (status=pending_audit) + 入审核队列 + 写 hot_score
-    this.logger.log(`publish ${userId}: ${JSON.stringify(dto)}`);
-    return { memeId: 'placeholder', status: 'pending_audit' };
+  /**
+   * Feed 流（已发布梗卡，按创建时间倒序）
+   * T3.2 阶段会改为热度召回，当前仅作骨架
+   */
+  async feed(page: number, pageSize: number) {
+    const offset = (page - 1) * pageSize;
+
+    const items = await this.db
+      .select()
+      .from(memeCards)
+      .where(and(eq(memeCards.status, 'published'), sql`${memeCards.deletedAt} IS NULL`))
+      .orderBy(desc(memeCards.createdAt))
+      .limit(pageSize)
+      .offset(offset);
+
+    const countResult = await this.db
+      .select({ total: sql<number>`count(*)` })
+      .from(memeCards)
+      .where(and(eq(memeCards.status, 'published'), sql`${memeCards.deletedAt} IS NULL`));
+
+    const total = Number(countResult[0]?.total ?? 0);
+    const hasMore = offset + pageSize < total;
+
+    return { items, page, pageSize, total, hasMore };
   }
 }
