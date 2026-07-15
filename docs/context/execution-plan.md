@@ -194,14 +194,14 @@ S4.T4.8 M1 Demo
 |---|---|---|---|---|---|---|
 || T2.7 | meme_card 表 + 索引 | 表 + 索引（author/legion/hot_score/status/published_at/god_trash）、tsvector 全文索引、`meme_embedding` 表骨架（向量化 M2） | 0.5 | T1.1 | DDL 文档化；索引建好 | ✅ done 完成日期: 2026-07-14 |
 | T2.8 | 梗卡发布接口 + 状态机 | POST `/memes`、包装（标题/标签/军团可选）、`status=pending_audit`、自动机审流转（published/manual_review/rejected）、creationId 归属校验 | 0.8 | T2.4, T2.7, T2.10 | 接口可发布；状态机正确流转 | ✅ done 完成日期: 2026-07-15 |
-| T2.9 | 梗卡状态查询接口 | GET `/memes/:id/status`（pending_audit/under_review/published/rejected） | 0.5 | T2.8 | 状态返回正确 | ⏳ pending |
+| T2.9 | 梗卡状态查询接口 | GET `/memes/:id/status`（pending_audit/under_review/published/rejected）、返回当前梗卡状态与审核结果 | 0.5 | T2.8 | 状态返回正确 | ✅ done 完成日期: 2026-07-15 |
 
 #### 内容安全（3.4 人日）
 
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
 | T2.10 | 阿里云内容安全接入（文本） | 文本审核 SDK、阈值配置、结果回写 `audit_log`、图片审核 M2 接 | 0.8 | T1.9 | 真实调用成功；结果落 audit_log | ⏳ pending |
-| T2.11 | 敏感词 DFA 库 + 热更新 | 开源词库 + 自建补充、DFA 匹配 + 拼音变体、运营后台热更新接口 | 1.0 | S0 | 命中敏感词秒级拦截；热更新生效 | ⏳ pending |
+| T2.11 | 敏感词 DFA 库 + 热更新 | 开源词库 + 自建补充、DFA Trie 匹配 + 跳过干扰字符、运营后台热更新接口（count/check/reload）、~50 内置敏感词、AuditService 集成 | 1.0 | S0 | 命中敏感词秒级拦截；热更新生效 | ✅ done 完成日期: 2026-07-15 |
 | T2.12 | 机审队列 + 人审入口 | BullMQ `audit_jobs`、可疑入人审队列（M2 后台完善）、违规驳回 + 通知 | 0.5 | T2.10, T2.2 | 队列流转正确；驳回通知发出 | ⏳ pending |
 | T2.13 | AI 生成内容标识 | 梗卡详情页"AI 辅助创作"声明字段、图片角标占位（图 M2） | 0.3 | T2.8 | 100% AI 梗卡带标识字段 | ⏳ pending |
 | T2.14 | AI 调用日志留存 | prompt + 参数 + 输出落库 6 个月、与 `ai_cost_log` 关联 | 0.3 | T1.11 | 日志可查；保留策略生效 | ⏳ pending |
