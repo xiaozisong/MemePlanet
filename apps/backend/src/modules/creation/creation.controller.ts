@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { JwtPayload } from '../../common/guards/jwt-auth.guard.js';
@@ -11,6 +11,7 @@ export class CreationController {
   constructor(private readonly creations: CreationService) {}
 
   @Post()
+  @HttpCode(HttpStatus.ACCEPTED)
   async create(@CurrentUser() user: JwtPayload, @Body() body: CreateCreationDto) {
     const dto = CreateCreationSchema.parse(body);
     return this.creations.start(user.sub, dto);

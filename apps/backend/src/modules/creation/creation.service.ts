@@ -124,6 +124,9 @@ export class CreationService {
       .returning({
         creationId: creations.creationId,
         status: creations.status,
+        mode: creations.mode,
+        energyCost: creations.energyCost,
+        createdAt: creations.createdAt,
       });
 
     const created = rows[0]!;
@@ -146,7 +149,10 @@ export class CreationService {
       priority,
     );
 
-    return created;
+    return {
+      ...created,
+      candidates: [],
+    };
   }
 
   /**
