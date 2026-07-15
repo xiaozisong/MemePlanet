@@ -193,7 +193,7 @@ S4.T4.8 M1 Demo
 | 任务ID | 任务名 | 技术点 | 工时 | 依赖 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
 || T2.7 | meme_card 表 + 索引 | 表 + 索引（author/legion/hot_score/status/published_at/god_trash）、tsvector 全文索引、`meme_embedding` 表骨架（向量化 M2） | 0.5 | T1.1 | DDL 文档化；索引建好 | ✅ done 完成日期: 2026-07-14 |
-| T2.8 | 梗卡发布接口 + 状态机 | POST `/memes`、包装（标题/标签/军团可选）、`status=pending_audit`、入审核队列 | 0.8 | T2.4, T2.7, T2.10 | 接口可发布；状态机正确流转 | ⏳ pending |
+| T2.8 | 梗卡发布接口 + 状态机 | POST `/memes`、包装（标题/标签/军团可选）、`status=pending_audit`、自动机审流转（published/manual_review/rejected）、creationId 归属校验 | 0.8 | T2.4, T2.7, T2.10 | 接口可发布；状态机正确流转 | ✅ done 完成日期: 2026-07-15 |
 | T2.9 | 梗卡状态查询接口 | GET `/memes/:id/status`（pending_audit/under_review/published/rejected） | 0.5 | T2.8 | 状态返回正确 | ⏳ pending |
 
 #### 内容安全（3.4 人日）
