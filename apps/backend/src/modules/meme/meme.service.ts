@@ -117,6 +117,30 @@ export class MemeService {
   }
 
   /**
+   * 查询梗卡审核状态（T2.9）
+   *
+   * 返回 status + audit 信息，用于客户端轮询审核进度
+   */
+  async getStatus(id: string) {
+    const row = await this.db
+      .select({
+        memeId: memeCards.memeId,
+        status: memeCards.status,
+        isAiGenerated: memeCards.isAiGenerated,
+        publishedAt: memeCards.publishedAt,
+        createdAt: memeCards.createdAt,
+      })
+      .from(memeCards)
+      .where(eq(memeCards.memeId, id))
+      .limit(1);
+
+    if (!row[0]) {
+      throw new NotFoundException('梗卡不存在');
+    }
+    return row[0];
+  }
+
+  /**
    * Feed 流（已发布梗卡，按创建时间倒序）
    * T3.2 阶段会改为热度召回，当前仅作骨架
    */

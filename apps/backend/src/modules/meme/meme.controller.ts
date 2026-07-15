@@ -22,6 +22,12 @@ export class MemeController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get(':id/status')
+  async status(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+    return this.memes.getStatus(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@CurrentUser() user: CurrentUser, @Body() body: CreateMemeDto) {
     const dto = CreateMemeSchema.parse(body);
