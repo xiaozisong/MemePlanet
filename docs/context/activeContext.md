@@ -2,10 +2,11 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-15
-**当前阶段**：S0+S1 已完成 + S2 进行中（T2.1/T2.2/T2.4~T2.9/T2.11/T2.13 ✅ → T2.3/T2.10/T2.12/T2.14/T2.15 待推进）
-**当前会话焦点**：T2.14 AI 调用日志完成 → S2 剩余 T2.10/T2.12/T2.15 待外部 key
-**上次会话产出**（2026-07-15）：S2 持续推进 — T2.11 DFA 敏感词库（50+ 内置词 + DFA Trie + 热更新 + 拼音干扰跳过）；T2.8 梗卡发布接口+状态机；T2.9 梗卡状态查询；T2.13 AI 生成内容标识；T2.4 造梗接口 202 返回；T2.5 结果获取；T2.6 24h 去重+限频；**T2.14 AI 调用日志留存** — `AiCostLogService`（单条/批量写入/各类聚合）+ Worker LLM 调用自动写入 + graceful degradation + 4/4 单测。typecheck=0 / lint=0。S2 仅剩 T2.10/T2.12/T2.15 阻塞于外部 key，等待决策。
+**最后更新**：2026-07-16
+**当前阶段**：S0+S1+S2 已完成（S2 剩余阻塞外部 key）+ S3 后端完成（T3.1 ✅ → T3.2 ✅ → T3.3 ✅ → T3.4 ✅ → T3.5 ✅ → T3.6 ✅）
+**当前会话焦点**：S3 后端收尾 — T3.2 RecommendController 增强（Swagger + hot 端点 + 分页总数字段修正）+ typecheck/lint 零错误 + Commit & Push
+**上次会话产出**（2026-07-16）：完成 T3.4 互动域 Drizzle schema（ratings + comments，自引用 FK）+ 迁移 0005；实现 T3.5 评分接口 + 加权计算（评审官 1.5x / 普通 1.0x，ON CONFLICT 覆盖式更新，同步 recompute 加权平均 + 各维度均值 + 1 星占比， thần/trash 自动判定阈值 4.2/2.5）；实现 T3.6 评论接口骨架（DFA 敏感词过滤 + 评论列表分页 + 评论创建走 ratings.comment 字段，MVP）。RatingModule 引入 AuditModule。typecheck=0 / lint=0 / db:generate 迁移 0005 成功。
+**本会话产出**（2026-07-16）：完成 T3.2 RecommendController 增强（`/recommend/feed` 加 Swagger + page 参数校验 + `total` 改用 ZSet zcard + `hasMore` 修正 + 参数化防注入；新增 `GET /recommend/hot` 公开端点 + `limit` 校验 1-50；`getHotRankTopN` 重写为 pair-based loop 避免 null filter）；T3.1/T3.3 上次会话已完成的代码补齐上下文。`personalizedFeed` 用 `sql.join` + `sql.raw` 替代字符串拼接防 SQL 注入。typecheck=0 / lint=0 / S3 后端 6 项任务全部 ✅。
 
 ---
 
@@ -79,7 +80,8 @@
 
 ### 进行中 🔄
 
-- **S2 造梗工坊 + 梗卡发布 + 机审** — 🔄 T2.3/T2.10/T2.12/T2.14/T2.15 待推进（造梗 Worker 已用 Mock LLM 走通流程，真实 LLM 需 T1.10 key）
+- **S3 RN 前端推进** — T3.7–T3.14 RN App 任务待启动（设计系统期已就位，RN 框架/登录/造梗/feed/详情评分/个人主页/埋点共 8 项）
+- S1/S2 剩余 ⏳ 阻塞于外部 key（T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通）
 
 ### 待启动 ⏳
 
@@ -98,11 +100,9 @@
 
 ## 下一步（按优先级）
 
-1. **⏳ S2 · T2.10/T2.12/T2.15** — S2 编码剩余 3 项阻塞于阿里云内容安全 key 等外部依赖，等待决策
-2. S3 · T3.1 热度分 Redis ZSet + cron
-3. S3 · T3.4 rating + comment 表 + 唯一约束
-4. **T1.10: LLM Adapter**（⏳ 待 DeepSeek key）
-5. **T1.11: Policy Engine**（⏳ 待 T1.10）
+1. **⏳ S3 · RN App T3.7-T3.14** — RN 前端 8 项任务：框架 + 5 Tab → 登录页 → 兴趣选择 → 文本造梗交互 → feed 瀑布流 → 梗卡详情 + 评分弹层 → 个人主页只读 → Tracker SDK 接 RN
+2. **⏳ S1/S2 外部 key** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通
+3. **⏳ S4 合规 + Demo** — 待 S3 收尾后启动
 
 ---
 

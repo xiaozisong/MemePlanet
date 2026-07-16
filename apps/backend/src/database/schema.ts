@@ -25,6 +25,7 @@ import {
   customType,
   date,
   decimal,
+  foreignKey,
   index,
   inet,
   integer,
@@ -32,8 +33,10 @@ import {
   pgTable,
   primaryKey,
   serial,
+  smallint,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -500,6 +503,95 @@ export const aiCostLogs = pgTable(
 );
 
 // -----------------------------------------------------------------------------
+// 7. 互动域 / Interaction Domain
+// -----------------------------------------------------------------------------
+
+// 7.1 ratings —— 评分（一人一梗一评，普通表 MVP 不分区）
+
+export type RatingDimensions = { laugh?: number; creative?: number; spread?: number };
+
+export const ratings = pgTable(
+  'ratings',
+  {
+    scoreId: uuid('score_id').notNull().defaultRandom(),
+    memeId: uuid('meme_id')
+      .notNull()
+      .references(() => memeCards.memeId, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    star: smallint('star').notNull(),
+    dimensions: jsonb('dimensions')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<RatingDimensions>(),
+    isJudge: boolean('is_judge').notNull().default(false),
+    weight: decimal('weight', { precision: 4, scale: 2 }).notNull().default('1.00'),
+    isGodTrashVote: boolean('is_god_trash_vote').notNull().default(false),
+    comment: text('comment'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.scoreId] }),
+    memeUserUq: uniqueIndex('uq_ratings_meme_user').on(t.memeId, t.userId),
+    memeCreatedIdx: index('idx_ratings_meme_created').on(t.memeId, t.createdAt),
+    userCreatedIdx: index('idx_ratings_user_created').on(t.userId, t.createdAt),
+    dimensionsGinIdx: index('idx_ratings_dimensions_gin').using('gin', t.dimensions),
+    starCheck: check('chk_ratings_star', sql`${t.star} BETWEEN 1 AND 5`),
+  }),
+);
+
+// 7.2 comments —— 评论（楼中楼 + 神评 + 造梗接龙）
+
+export type CommentStatus = 'published' | 'hidden' | 'deleted';
+
+export const comments = pgTable(
+  'comments',
+  {
+    commentId: uuid('comment_id').primaryKey().defaultRandom(),
+    memeId: uuid('meme_id')
+      .notNull()
+      .references(() => memeCards.memeId, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    parentId: uuid('parent_id'),
+    content: text('content').notNull(),
+    likeCount: integer('like_count').notNull().default(0),
+    isGodComment: boolean('is_god_comment').notNull().default(false),
+    isMemeCard: boolean('is_meme_card').notNull().default(false),
+    refMemeId: uuid('ref_meme_id').references(() => memeCards.memeId, {
+      onDelete: 'set null',
+    }),
+    status: varchar('status', { length: 16 }).notNull().default('published'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => ({
+    memeCreatedIdx: index('idx_comments_meme_created')
+      .on(t.memeId, t.createdAt)
+      .where(sql`${t.deletedAt} IS NULL`),
+    parentIdx: index('idx_comments_parent')
+      .on(t.parentId)
+      .where(sql`${t.parentId} IS NOT NULL`),
+    userCreatedIdx: index('idx_comments_user_created').on(t.userId, t.createdAt),
+    godCommentIdx: index('idx_comments_god_comment')
+      .on(t.memeId)
+      .where(sql`${t.isGodComment} = true`),
+    selfRef: foreignKey({
+      columns: [t.parentId],
+      foreignColumns: [t.commentId],
+      name: 'fk_comments_parent',
+    }).onDelete('cascade'),
+    statusCheck: check(
+      'chk_comments_status',
+      sql`${t.status} IN ('published', 'hidden', 'deleted')`,
+    ),
+  }),
+);
+
+// -----------------------------------------------------------------------------
 // Schema bundle —— 传给 drizzle(pool, { schema }) 做类型化查询
 // -----------------------------------------------------------------------------
 
@@ -517,6 +609,8 @@ export const schema = {
   memeCards,
   memeCardTags,
   aiCostLogs,
+  ratings,
+  comments,
 };
 
 export type Schema = typeof schema;

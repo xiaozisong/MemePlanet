@@ -1,10 +1,15 @@
 import { Injectable, Logger, BadRequestException, NotFoundException, Inject } from '@nestjs/common';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import type Redis from 'ioredis';
 import { DRIZZLE, type DbType } from '../../database/drizzle.module.js';
+import { REDIS } from '../../database/redis.module.js';
 import { memeCards, creations } from '../../database/schema.js';
 import { AuditService } from '../audit/audit.service.js';
 import { CreateMemeDto } from './dto.js';
 import type { MemeStatus } from '../../database/schema.js';
+
+const MEME_CACHE_TTL = 600; // 10min
+const MEME_CACHE_PREFIX = 'meme:detail:';
 
 @Injectable()
 export class MemeService {
@@ -12,6 +17,7 @@ export class MemeService {
 
   constructor(
     @Inject(DRIZZLE) private readonly db: DbType,
+    @Inject(REDIS) private readonly redis: Redis,
     private readonly audit: AuditService,
   ) {}
 
@@ -106,6 +112,13 @@ export class MemeService {
    * 返回完整梗卡信息，包含 AI 标识字段
    */
   async findById(id: string) {
+    const cacheKey = `${MEME_CACHE_PREFIX}${id}`;
+
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      return this.enrichAiLabel(JSON.parse(cached));
+    }
+
     const row = await this.db
       .select()
       .from(memeCards)
@@ -115,6 +128,9 @@ export class MemeService {
     if (!row[0]) {
       throw new NotFoundException('梗卡不存在');
     }
+
+    await this.redis.setex(cacheKey, MEME_CACHE_TTL, JSON.stringify(row[0]));
+
     return this.enrichAiLabel(row[0]);
   }
 
