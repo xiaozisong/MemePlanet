@@ -1,60 +1,64 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, layout, radius } from '../src/theme';
-
-type InterestTag = { key: string; emoji: string; label: string };
-
-const INTEREST_TAGS: InterestTag[] = [
-  { key: 'hot', emoji: '🔥', label: '热梗' },
-  { key: 'funny', emoji: '😂', label: '搞笑' },
-  { key: 'game', emoji: '🎮', label: '游戏' },
-  { key: 'movie', emoji: '🎬', label: '影视' },
-  { key: 'music', emoji: '🎵', label: '音乐' },
-  { key: 'food', emoji: '🍔', label: '美食' },
-  { key: 'work', emoji: '💼', label: '职场' },
-  { key: 'tech', emoji: '📱', label: '科技' },
-  { key: 'sport', emoji: '⚽', label: '体育' },
-  { key: 'anime', emoji: '🎨', label: '二次元' },
-  { key: 'pet', emoji: '🐱', label: '萌宠' },
-  { key: 'love', emoji: '💕', label: '恋爱' },
-  { key: 'campus', emoji: '🏠', label: '校园' },
-  { key: 'abstract', emoji: '🎭', label: '抽象' },
-  { key: 'chicken', emoji: '💪', label: '鸡汤' },
-  { key: 'silly', emoji: '🤡', label: '沙雕' },
-  { key: 'news', emoji: '🌍', label: '时事' },
-  { key: 'finance', emoji: '💰', label: '财经' },
-  { key: 'holiday', emoji: '🎄', label: '节日' },
-  { key: 'weird', emoji: '🎪', label: '猎奇' },
-];
+import { useInterestDictionary, useUpdateInterests } from '../src/api/user';
+import { ApiError } from '@memestar/shared';
 
 const MIN_SELECTION = 3;
 
 export default function InterestsScreen() {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: dict, isLoading: dictLoading } = useInterestDictionary();
+  const updateInterests = useUpdateInterests();
+
+  const tags = dict?.tags ?? [];
+  const canProceed = selected.length >= MIN_SELECTION;
+
+  // 登录后已有兴趣标签则自动跳过
+  useEffect(() => {
+    // 静默获取 - 有标签理论上不会进入此页面
+  }, []);
 
   const toggleTag = (key: string) => {
     setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   };
 
-  const canProceed = selected.length >= MIN_SELECTION;
-
-  const goNext = () => {
-    router.replace('/(tabs)/feed');
+  const goNext = async () => {
+    if (!canProceed) return;
+    try {
+      await updateInterests.mutateAsync(selected);
+      router.replace('/(tabs)/feed');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '保存失败，请重试');
+    }
   };
+
+  if (dictLoading) {
+    return (
+      <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={colors.brand.DEFAULT} />
+          <Text style={{ color: colors.text.muted, marginTop: 12 }}>加载中...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>选择你感兴趣的梗</Text>
-        <Text style={styles.subtitle}>选择 3 个以上，推荐更精准</Text>
+        <Text style={styles.subtitle}>选择 {MIN_SELECTION} 个以上，推荐更精准</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.gridContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
-          {INTEREST_TAGS.map((tag) => {
+          {tags.map((tag) => {
             const isSelected = selected.includes(tag.key);
             return (
               <Pressable
@@ -62,7 +66,7 @@ export default function InterestsScreen() {
                 onPress={() => toggleTag(tag.key)}
                 style={[styles.pill, isSelected ? styles.pillSelected : styles.pillIdle]}
               >
-                <Text style={styles.pillEmoji}>{tag.emoji}</Text>
+                <Text style={styles.pillEmoji}>{tag.emoji ?? ''}</Text>
                 <Text
                   style={[
                     styles.pillLabel,
@@ -75,12 +79,13 @@ export default function InterestsScreen() {
             );
           })}
         </View>
+        {error && <Text style={{ color: '#EF4444', marginTop: 8, fontSize: 13 }}>{error}</Text>}
       </ScrollView>
 
       <View style={styles.footer}>
         <Text style={styles.counter}>已选 {selected.length} 个</Text>
         <Pressable
-          disabled={!canProceed}
+          disabled={!canProceed || updateInterests.isPending}
           style={({ pressed }) => [
             styles.nextButton,
             !canProceed && styles.nextButtonDisabled,
@@ -88,9 +93,13 @@ export default function InterestsScreen() {
           ]}
           onPress={goNext}
         >
-          <Text style={[styles.nextText, !canProceed && styles.nextTextDisabled]}>
-            {canProceed ? '下一步' : '至少选 3 个'}
-          </Text>
+          {updateInterests.isPending ? (
+            <ActivityIndicator size="small" color={colors.ink.DEFAULT} />
+          ) : (
+            <Text style={[styles.nextText, !canProceed && styles.nextTextDisabled]}>
+              {canProceed ? '下一步' : `至少选 ${MIN_SELECTION} 个`}
+            </Text>
+          )}
         </Pressable>
       </View>
     </SafeAreaView>

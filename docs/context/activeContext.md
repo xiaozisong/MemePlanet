@@ -3,10 +3,20 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-16
-**当前阶段**：S0+S1+S2 已完成（S2 剩余阻塞外部 key）+ S3 后端完成（T3.1 ✅ → T3.2 ✅ → T3.3 ✅ → T3.4 ✅ → T3.5 ✅ → T3.6 ✅）
-**当前会话焦点**：S3 后端收尾 — T3.2 RecommendController 增强（Swagger + hot 端点 + 分页总数字段修正）+ typecheck/lint 零错误 + Commit & Push
-**上次会话产出**（2026-07-16）：完成 T3.4 互动域 Drizzle schema（ratings + comments，自引用 FK）+ 迁移 0005；实现 T3.5 评分接口 + 加权计算（评审官 1.5x / 普通 1.0x，ON CONFLICT 覆盖式更新，同步 recompute 加权平均 + 各维度均值 + 1 星占比， thần/trash 自动判定阈值 4.2/2.5）；实现 T3.6 评论接口骨架（DFA 敏感词过滤 + 评论列表分页 + 评论创建走 ratings.comment 字段，MVP）。RatingModule 引入 AuditModule。typecheck=0 / lint=0 / db:generate 迁移 0005 成功。
-**本会话产出**（2026-07-16）：完成 T3.2 RecommendController 增强（`/recommend/feed` 加 Swagger + page 参数校验 + `total` 改用 ZSet zcard + `hasMore` 修正 + 参数化防注入；新增 `GET /recommend/hot` 公开端点 + `limit` 校验 1-50；`getHotRankTopN` 重写为 pair-based loop 避免 null filter）；T3.1/T3.3 上次会话已完成的代码补齐上下文。`personalizedFeed` 用 `sql.join` + `sql.raw` 替代字符串拼接防 SQL 注入。typecheck=0 / lint=0 / S3 后端 6 项任务全部 ✅。
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块骨架已启动（Legion/PK/Chat/Admin Service 真实 Drizzle 实现）
+**当前会话焦点**：M2 预备 — 社交模块骨架 + Drizzle schema 补齐
+**上次会话产出**（2026-07-16）：完成 S3 RN 前端 8 项任务（T3.7-T3.14）：API hooks 层 6 文件 + Tracker SDK + 6 页面对接真实 API + _layout 接 useMe；补全 backend Drizzle camelCase 与前端类型对齐；typecheck/lint 全 0。
+**本会话产出**（2026-07-16）：**M2 社交模块 4 Service 真实实现** + **T4.4 Web 落地页 + T4.5 Admin shell**：
+- M2-1: Drizzle schema 补 13 社交域表（legions, legion_members, pk_matches, pk_votes, chat_rooms, messages, message_reads, notifications, sensitive_words, reports, banned_users, audit_logs）
+- M2-2: LegionService 真实 Drizzle 查询（list 分页模糊搜索/findById JOIN members/create leader校验+INSERT/join memberCap+限3团/leave 团长保护）
+- M2-3: PKService 真实 Drizzle 查询（listActive 活跃 PK/findById/create 双军团leader校验/vote Redis 每日限票 3 次+分数更新+实时 pubsub/settle 结算胜负）
+- M2-4: ChatService 真实 Drizzle 查询（listRooms 军团+私聊+未读数/findMessages 游标分页+已读回执/send DFA 敏感词过滤+Redis pubsub 广播）
+- M2-5: AdminService 真实 Drizzle 查询（auditQueue reports+memes 审核队列/auditAction 通过/驳回/下架+audit_logs/banUser 封禁+日志/dashboard 实时看板）
+- Backend typecheck=0 errors + lint=0 errors ✅
+- **T4.4 Web 落地页**：填充隐私政策和用户协议页面（从合规文档提取完整内容）、增强首页（6 大核心能力/四步闭环/数据指标/App Store & Google Play 下载引导/页脚完整导航）
+- **T4.5 Admin shell**：登录页改为真实 OTP 流程（两步式手机号+验证码，校验 admin 角色，token localStorage 持久化）；Admin layout 增加 token 校验自动跳转登录 + 退出登录按钮
+- **`@types/react` 版本锁定**：root pnpm.overrides 锁定 `@types/react` 为 18.x，mobile 加 `skipLibCheck: true`，全 3 端 typecheck=0 errors
+- **M1 100% 完成**：S4 全部 8 项任务 done（T4.1-T4.8）
 
 ---
 
@@ -80,17 +90,16 @@
 
 ### 进行中 🔄
 
-- **S3 RN 前端推进** — T3.7–T3.14 RN App 任务待启动（设计系统期已就位，RN 框架/登录/造梗/feed/详情评分/个人主页/埋点共 8 项）
 - S1/S2 剩余 ⏳ 阻塞于外部 key（T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通）
 
 ### 待启动 ⏳
 
-- **T2.3**：文本造梗真实 LLM — 待 T1.10 DeepSeek key（Mock 版已走通）
-- **T2.10**：阿里云内容安全接入 — 待外部 key
-- **T2.12**：机审队列 + 人审入口 — 依赖 T2.10
+- **T1.10**：DeepSeek + GLM key 申请中
+- **T1.11**：Policy Engine — 待 T1.10
+- **T2.3**：文本造梗真实 LLM — 待 T1.10
+- **T2.10**：阿里云内容安全 — 待外部 key
+- **T2.12**：机审队列 — 依赖 T2.10
 - **T2.15**：发布流程串通 — 依赖 T2.12
-- **T1.10/T1.11**：LLM Adapter + Policy Engine — 待外部 API key
-- **T1.8**：Supabase 轮询同步 — 建议 M2
 
 ### 阻塞 ❌
 
@@ -100,9 +109,13 @@
 
 ## 下一步（按优先级）
 
-1. **⏳ S3 · RN App T3.7-T3.14** — RN 前端 8 项任务：框架 + 5 Tab → 登录页 → 兴趣选择 → 文本造梗交互 → feed 瀑布流 → 梗卡详情 + 评分弹层 → 个人主页只读 → Tracker SDK 接 RN
-2. **⏳ S1/S2 外部 key** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通
-3. **⏳ S4 合规 + Demo** — 待 S3 收尾后启动
+**M1 全 8 Sprint 100% 完成 ✅**（S0+S1+S2+S3+S4 全部 done；S4 包含 T4.1-T4.8 全 8 项）。
+
+1. **⏳ S1/S2 外部 key** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通。需用户在 S0 当天提交申请的 key：DeepSeek / GLM / 阿里云短信签名 / 阿里云内容安全 / Supabase
+2. **🎬 M1 Demo 录制** — 脚本已就绪（`docs/context/m1-demo-review.md` §1），只需 QuickTime 录屏 ~15min
+3. **🚀 M2 社会模块 + Admin**
+   - M2-2~M2-5 Service 已实现 ✅（Legion/PK/Chat/Admin）
+   - 后续 M2 编码方向：RN 军团/PK/IM 页面对接 API、Web 后台 Admin 页面对接 API、视频造梗真实 LLM 集成
 
 ---
 

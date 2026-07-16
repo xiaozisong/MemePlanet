@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,53 +8,94 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, colorsFlat as themeColors, radius, layout } from '../src/theme';
+import { useSendOtp, useVerifyOtp } from '../src/api/auth';
+import { ApiError } from '@memestar/shared';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ redirect?: string }>();
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
-  const [sendingCode, setSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const sendOtp = useSendOtp();
+  const verifyOtp = useVerifyOtp();
+
+  const sendingCode = sendOtp.isPending;
+  const loading = verifyOtp.isPending;
 
   const isValidPhone = /^1[3-9]\d{9}$/.test(phone);
   const canSendCode = isValidPhone && !sendingCode && countdown === 0;
   const canLogin = isValidPhone && code.length >= 4 && !loading;
 
-  const handleSendCode = () => {
-    if (!canSendCode) return;
-    setSendingCode(true);
-    // TODO: 接入短信 API
-    setTimeout(() => {
-      setSendingCode(false);
-      setCodeSent(true);
-      setCountdown(60);
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  // 清理倒计时定时器
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+    };
+  }, []);
+
+  const startCountdown = () => {
+    setCountdown(60);
+    countdownTimerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
   };
 
-  const handleLogin = () => {
-    if (!canLogin) return;
-    setLoading(true);
-    // TODO: 接入 Supabase Auth
-    setTimeout(() => {
-      setLoading(false);
-      router.back();
-    }, 1500);
+  const handleSendCode = async () => {
+    if (!canSendCode) return;
+    setError(null);
+    try {
+      const res = await sendOtp.mutateAsync(`+86${phone}`);
+      setCodeSent(true);
+      // 后端 TTL 用作 redis 内 otp 有效期；前端倒计时锁定为 60s（防发骚扰）
+      void res;
+      startCountdown();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : '验证码发送失败，请稍后重试';
+      setError(message);
+    }
   };
+
+  const handleLogin = async () => {
+    if (!canLogin) return;
+    setError(null);
+    try {
+      await verifyOtp.mutateAsync({ phone: `+86${phone}`, code });
+      const redirect = params.redirect;
+      if (redirect) {
+        router.replace(redirect);
+      } else {
+        router.back();
+      }
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : '登录失败，请重试';
+      setError(message);
+    }
+  };
+
+  // 错误 toast
+  useEffect(() => {
+    if (error) {
+      Alert.alert('提示', error);
+      setError(null);
+    }
+  }, [error]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.ink.DEFAULT }} edges={['top']}>

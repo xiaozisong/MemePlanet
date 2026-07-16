@@ -39,6 +39,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  bigserial,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -592,6 +593,357 @@ export const comments = pgTable(
 );
 
 // -----------------------------------------------------------------------------
+// 8. 军团队 / Legion Domain
+// -----------------------------------------------------------------------------
+
+export type JoinMode = 'public' | 'approval';
+export type LegionStatus = 'active' | 'frozen' | 'dissolved';
+export type LegionRole = 'leader' | 'vice_leader' | 'member';
+
+export const legions = pgTable(
+  'legions',
+  {
+    legionId: uuid('legion_id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 64 }).notNull().unique(), // citext in SQL
+    slogan: varchar('slogan', { length: 140 }),
+    avatarUrl: varchar('avatar_url', { length: 512 }),
+    themeTags: jsonb('theme_tags')
+      .notNull()
+      .default(sql`'[]'::jsonb`)
+      .$type<string[]>(),
+    leaderId: uuid('leader_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'restrict' }),
+    level: integer('level').notNull().default(1),
+    activityScore: integer('activity_score').notNull().default(0),
+    memberCount: integer('member_count').notNull().default(0),
+    memberCap: integer('member_cap').notNull().default(500),
+    joinMode: varchar('join_mode', { length: 16 }).notNull().default('approval').$type<JoinMode>(),
+    badges: jsonb('badges')
+      .notNull()
+      .default(sql`'[]'::jsonb`)
+      .$type<string[]>(),
+    pkWins: integer('pk_wins').notNull().default(0),
+    pkLosses: integer('pk_losses').notNull().default(0),
+    status: varchar('status', { length: 16 }).notNull().default('active').$type<LegionStatus>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => ({
+    levelActivityIdx: index('idx_legions_level_activity')
+      .on(t.level, t.activityScore)
+      .where(sql`${t.deletedAt} IS NULL`),
+    statusIdx: index('idx_legions_status')
+      .on(t.status)
+      .where(sql`${t.deletedAt} IS NULL`),
+    themeTagsGinIdx: index('idx_legions_theme_tags').using('gin', t.themeTags),
+  }),
+);
+
+export const legionMembers = pgTable(
+  'legion_members',
+  {
+    membershipId: uuid('membership_id').primaryKey().defaultRandom(),
+    legionId: uuid('legion_id')
+      .notNull()
+      .references(() => legions.legionId, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    role: varchar('role', { length: 16 }).notNull().default('member').$type<LegionRole>(),
+    contribution: integer('contribution').notNull().default(0),
+    joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
+    leftAt: timestamp('left_at', { withTimezone: true }),
+  },
+  (t) => ({
+    legionUserUq: uniqueIndex('uq_legion_members').on(t.legionId, t.userId),
+    userIdx: index('idx_legion_members_user')
+      .on(t.userId)
+      .where(sql`${t.leftAt} IS NULL`),
+    legionContributionIdx: index('idx_legion_members_legion')
+      .on(t.legionId, t.contribution)
+      .where(sql`${t.leftAt} IS NULL`),
+    roleIdx: index('idx_legion_members_role')
+      .on(t.role)
+      .where(sql`${t.role} IN ('leader','vice_leader')`),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// 9. PK 域 / PK Domain
+// -----------------------------------------------------------------------------
+
+export type PKType = 'creation' | 'vote' | 'hotness';
+export type PKStatus =
+  | 'idle'
+  | 'challenged'
+  | 'accepted'
+  | 'preparing'
+  | 'battling'
+  | 'judging'
+  | 'settled'
+  | 'archived';
+
+export const pkMatches = pgTable(
+  'pk_matches',
+  {
+    pkId: uuid('pk_id').primaryKey().defaultRandom(),
+    type: varchar('type', { length: 16 }).notNull().$type<PKType>(),
+    legionA: uuid('legion_a')
+      .notNull()
+      .references(() => legions.legionId, { onDelete: 'restrict' }),
+    legionB: uuid('legion_b')
+      .notNull()
+      .references(() => legions.legionId, { onDelete: 'restrict' }),
+    theme: varchar('theme', { length: 140 }).notNull(),
+    startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+    endAt: timestamp('end_at', { withTimezone: true }).notNull(),
+    status: varchar('status', { length: 16 }).notNull().default('idle').$type<PKStatus>(),
+    scoreA: decimal('score_a', { precision: 10, scale: 4 }).notNull().default('0'),
+    scoreB: decimal('score_b', { precision: 10, scale: 4 }).notNull().default('0'),
+    winnerId: uuid('winner_id').references(() => legions.legionId, { onDelete: 'set null' }),
+    mvpUserId: uuid('mvp_user_id').references(() => users.userId, { onDelete: 'set null' }),
+    rewardState: jsonb('reward_state')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<Record<string, unknown>>(),
+    isOfficial: boolean('is_official').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusEndIdx: index('idx_pk_status_end').on(t.status, t.endAt),
+    legionAIdx: index('idx_pk_legion_a').on(t.legionA, t.status),
+    legionBIdx: index('idx_pk_legion_b').on(t.legionB, t.status),
+    winnerIdx: index('idx_pk_winner')
+      .on(t.winnerId)
+      .where(sql`${t.winnerId} IS NOT NULL`),
+    officialIdx: index('idx_pk_official')
+      .on(t.isOfficial, t.startAt)
+      .where(sql`${t.isOfficial} = true`),
+  }),
+);
+
+export const pkVotes = pgTable(
+  'pk_votes',
+  {
+    voteId: uuid('vote_id').primaryKey().defaultRandom(),
+    pkId: uuid('pk_id')
+      .notNull()
+      .references(() => pkMatches.pkId, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    legionId: uuid('legion_id')
+      .notNull()
+      .references(() => legions.legionId, { onDelete: 'cascade' }),
+    votedAt: timestamp('voted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pkLegionIdx: index('idx_pk_votes_pk_legion').on(t.pkId, t.legionId),
+    userDateIdx: index('idx_pk_votes_user_date').on(t.userId, t.votedAt),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// 10. 聊天域 / Chat Domain
+// -----------------------------------------------------------------------------
+
+export type RoomType = 'private' | 'legion' | 'system';
+export type MsgType = 'text' | 'image' | 'meme' | 'voice' | 'system';
+
+export const chatRooms = pgTable(
+  'chat_rooms',
+  {
+    roomId: uuid('room_id').primaryKey().defaultRandom(),
+    type: varchar('type', { length: 16 }).notNull().$type<RoomType>(),
+    legionId: uuid('legion_id').references(() => legions.legionId, { onDelete: 'cascade' }),
+    userA: uuid('user_a').references(() => users.userId, { onDelete: 'cascade' }),
+    userB: uuid('user_b').references(() => users.userId, { onDelete: 'cascade' }),
+    lastMsgAt: timestamp('last_msg_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    legionIdx: index('idx_chat_rooms_legion')
+      .on(t.legionId)
+      .where(sql`${t.legionId} IS NOT NULL`),
+    privateIdx: index('idx_chat_rooms_private')
+      .on(t.userA, t.userB)
+      .where(sql`${t.type} = 'private'`),
+    lastMsgIdx: index('idx_chat_rooms_last_msg').on(t.lastMsgAt),
+  }),
+);
+
+// messages 是分区表，Drizzle 支持有限，只做类型定义不做迁移
+// 查询走 raw SQL 见 chat.service.ts
+export const messages = pgTable(
+  'messages',
+  {
+    messageId: uuid('message_id').notNull().defaultRandom(),
+    roomId: uuid('room_id')
+      .notNull()
+      .references(() => chatRooms.roomId, { onDelete: 'cascade' }),
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    msgType: varchar('msg_type', { length: 16 }).notNull().$type<MsgType>(),
+    content: text('content'),
+    extra: jsonb('extra')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.messageId, t.createdAt] }),
+    roomCreatedIdx: index('idx_messages_room_created').on(t.roomId, t.createdAt),
+    senderIdx: index('idx_messages_sender').on(t.senderId, t.createdAt),
+    extraGinIdx: index('idx_messages_extra_gin').using('gin', t.extra),
+  }),
+);
+
+export const messageReads = pgTable(
+  'message_reads',
+  {
+    roomId: uuid('room_id')
+      .notNull()
+      .references(() => chatRooms.roomId, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    lastReadAt: timestamp('last_read_at', { withTimezone: true }).notNull().defaultNow(),
+    lastReadMsgId: uuid('last_read_msg_id'),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.roomId, t.userId] }),
+  }),
+);
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    notifId: uuid('notif_id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    type: varchar('type', { length: 32 }).notNull(),
+    title: varchar('title', { length: 140 }),
+    body: text('body'),
+    payload: jsonb('payload')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<Record<string, unknown>>(),
+    isRead: boolean('is_read').notNull().default(false),
+    pushStatus: varchar('push_status', { length: 16 }).notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userCreatedIdx: index('idx_notifications_user_created').on(t.userId, t.createdAt),
+    unreadIdx: index('idx_notifications_unread')
+      .on(t.userId)
+      .where(sql`${t.isRead} = false`),
+    typeIdx: index('idx_notifications_type').on(t.type, t.createdAt),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// 13. 安全域 / Safety Domain
+// -----------------------------------------------------------------------------
+
+export const sensitiveWords = pgTable(
+  'sensitive_words',
+  {
+    wordId: bigserial('word_id', { mode: 'number' }).primaryKey(),
+    word: varchar('word', { length: 64 }).notNull(),
+    category: varchar('category', { length: 32 }).notNull(),
+    level: smallint('level').notNull().default(1),
+    variants: jsonb('variants')
+      .notNull()
+      .default(sql`'[]'::jsonb`)
+      .$type<string[]>(),
+    enabled: boolean('enabled').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    wordCategoryUq: uniqueIndex('uq_sensitive_words').on(t.word, t.category),
+    wordTrgmIdx: index('idx_sensitive_words_word_trgm').using('gin', sql`${t.word} gin_trgm_ops`),
+    levelIdx: index('idx_sensitive_words_level')
+      .on(t.level)
+      .where(sql`${t.enabled} = true`),
+  }),
+);
+
+export const reports = pgTable(
+  'reports',
+  {
+    reportId: uuid('report_id').primaryKey().defaultRandom(),
+    reporterId: uuid('reporter_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    targetType: varchar('target_type', { length: 16 }).notNull(),
+    targetId: uuid('target_id').notNull(),
+    reason: varchar('reason', { length: 64 }).notNull(),
+    detail: text('detail'),
+    status: varchar('status', { length: 16 }).notNull().default('pending'),
+    handlerId: uuid('handler_id').references(() => users.userId, { onDelete: 'set null' }),
+    handledAt: timestamp('handled_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    statusCreatedIdx: index('idx_reports_status').on(t.status, t.createdAt),
+    targetIdx: index('idx_reports_target').on(t.targetType, t.targetId),
+  }),
+);
+
+export const bannedUsers = pgTable(
+  'banned_users',
+  {
+    banId: uuid('ban_id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    reason: varchar('reason', { length: 64 }).notNull(),
+    banUntil: timestamp('ban_until', { withTimezone: true }),
+    bannedBy: uuid('banned_by').references(() => users.userId, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index('idx_banned_users_user').on(t.userId, t.banUntil),
+  }),
+);
+
+// audit_logs 是分区表，查询走 raw SQL（见 admin.service.ts）
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
+    auditId: uuid('audit_id').notNull().defaultRandom(),
+    targetId: uuid('target_id').notNull(),
+    targetType: varchar('target_type', { length: 32 }).notNull(),
+    action: varchar('action', { length: 32 }).notNull(),
+    reason: varchar('reason', { length: 128 }),
+    result: varchar('result', { length: 16 }).notNull(),
+    operatorId: uuid('operator_id').references(() => users.userId, { onDelete: 'set null' }),
+    metadata: jsonb('metadata')
+      .notNull()
+      .default(sql`'{}'::jsonb`)
+      .$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.auditId, t.createdAt] }),
+    targetIdx: index('idx_audit_logs_target').on(t.targetType, t.targetId, t.createdAt),
+    operatorIdx: index('idx_audit_logs_operator').on(t.operatorId, t.createdAt),
+    actionIdx: index('idx_audit_logs_action').on(t.action, t.createdAt),
+  }),
+);
+
+// 分区表默认分区（Drizzle 不直接支持 PARTITION，标记为 raw SQL 迁移）
+// 对应的 SQL: CREATE TABLE IF NOT EXISTS messages_default PARTITION OF messages DEFAULT;
+//            CREATE TABLE IF NOT EXISTS audit_logs_default PARTITION OF audit_logs DEFAULT;
+
+// -----------------------------------------------------------------------------
 // Schema bundle —— 传给 drizzle(pool, { schema }) 做类型化查询
 // -----------------------------------------------------------------------------
 
@@ -611,6 +963,18 @@ export const schema = {
   aiCostLogs,
   ratings,
   comments,
+  legions,
+  legionMembers,
+  pkMatches,
+  pkVotes,
+  chatRooms,
+  messages,
+  messageReads,
+  notifications,
+  sensitiveWords,
+  reports,
+  bannedUsers,
+  auditLogs,
 };
 
 export type Schema = typeof schema;

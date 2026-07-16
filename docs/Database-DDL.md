@@ -18,7 +18,7 @@
 
 ## 1. 设计总览
 
-`schema.sql` 为生产级 DDL 脚本，幂等可重复执行（全部使用 `IF NOT EXISTS` / `ON CONFLICT DO NOTHING`），覆盖 13 个业务域共 **49 张表**（含 3 张分区默认子表 `messages_default` / `audit_logs_default` / `ai_cost_logs_default`），**106 个索引**，3 个向量表，3 张分区表，2 个视图，2 个物化视图，1 个公共触发器函数（`set_updated_at`）以及 1 个全文检索维护函数（`meme_title_tsv_trigger`）。
+`schema.sql` 为生产级 DDL 脚本，幂等可重复执行（全部使用 `IF NOT EXISTS` / `ON CONFLICT DO NOTHING`），覆盖 14 个业务域共 **50 张表**（含 3 张分区默认子表 `messages_default` / `audit_logs_default` / `ai_cost_logs_default`），**109 个索引**，3 个向量表，3 张分区表，2 个视图，2 个物化视图，1 个公共触发器函数（`set_updated_at`）以及 1 个全文检索维护函数（`meme_title_tsv_trigger`）。
 
 > **设计变更记录（2026-07-07，S0 通电验证发现）**：`ratings` 原设计按月分区，但 `UNIQUE(meme_id, user_id)` 跨分区无法实现（PG16 要求分区表唯一约束包含分区键），且"一人一梗一评"语义优先级高于分区收益。MVP 阶段改为普通表，保留 `UNIQUE(meme_id, user_id)`；未来数据量超 ~1000 万再加分区（届时需数据迁移）。
 
@@ -245,6 +245,14 @@
 
 详见 §5 向量表设计。
 
+### 4.14 埋点域 / Tracking Domain（1 表）
+
+| 表名 | 用途 | 关键字段 | 关键索引 | 关联关系 |
+| --- | --- | --- | --- | --- |
+| `analytics_events` | 用户行为埋点事件（Tracker SDK 写入） | `event_id` PK uuid、`event_name` varchar(128)、`user_id` FK uuid → users、`properties` jsonb、`platform` varchar(16)、`session_id`、`device_id`、`client_ip` inet、`created_at` timestamptz | `idx_analytics_events_name_created`(event_name, created_at DESC)、`idx_analytics_events_user_created`(user_id, created_at DESC)、`idx_analytics_events_created`(created_at DESC) | N:1 ← users |
+
+> **S1 T1.14 新增**：Tracker SDK 双写 PostHog + 自建 analytics_events 表。8 核心事件：app_launch、login_success、meme_create_start、meme_create_success、meme_publish、meme_view、meme_score、meme_comment。事件去重通过 event_name + user_id + created_at 组合索引支持。
+
 ---
 
 ## 5. 向量表设计（pgvector）
@@ -460,7 +468,7 @@ docs/db/
 
 ### 10.1 索引覆盖说明
 
-`schema.sql` 的 106 个索引按场景分布：
+`schema.sql` 的 109 个索引按场景分布：
 
 - **热门 feed**：`idx_meme_cards_hot_score`(partial published & 未删) + `idx_meme_cards_status_published` 直接支撑"热门榜"与"按发布时间倒序"两种排序。
 - **个人主页**：`idx_meme_cards_author_created (author_id, created_at DESC)`、`idx_creations_user_created`、`idx_agent_jobs_user_created`、`idx_video_jobs_user`、`idx_comments_user_created`、`idx_notifications_user_created`、`idx_orders_user` 全部按 `(user_id, created_at DESC)` 模式覆盖。

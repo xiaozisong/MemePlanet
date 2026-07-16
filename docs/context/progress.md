@@ -20,9 +20,9 @@
 | 双端 QA 测试套件 | ✅ 完成 | 100%（166 用例全通过，Web+App 双端可运行） |
 | Mobile UI 设计系统 | ✅ 完成 | 100%（P0+P1+P2 全部落地，design tokens + 通用组件 + 全页面 inline style + Poppins + typecheck/lint 全 0） |
 | M1 S1 用户系统+AI 编排 | 🔄 进行中 | ~85%（T1.1-T1.7 + T1.9 + T1.12 ✅，T1.14 🔄 当前，T1.10/T1.11 ⏳ 待外部 key） |
-| M1 S2 造梗+梗卡+审核 | ⏳ 待启动 | 0% |
-| M1 S3 feed+评分+RN | ⏳ 待启动 | 0% |
-| M1 S4 合规+Demo+收尾 | ⏳ 待启动 | 0% |
+| M1 S2 造梗+梗卡+审核 | 🔄 进行中 | ~85%（T2.1-T2.9+T2.11+T2.13+T2.14 ✅，T2.3/T2.10/T2.12/T2.15 ⏳ 待外部 key） |
+| M1 S3 feed+评分+RN | ✅ 完成 | 100%（T3.1-T3.6 后端 + T3.7-T3.14 RN 前端全部 ✅，typecheck/lint 双零） |
+| M1 S4 合规+Demo+收尾 | 🔄 进行中 | ~75%（T4.1 ✅ 备案草稿 + T4.2 ✅ 隐私政策+用户协议 + T4.3 ✅ 未成年人保护设计稿 + T4.6 ✅ OpenAPI 对齐验证 + T4.7 ✅ DDL 对齐，剩 T4.4/T4.5 建议砍项推 M2 + T4.8 Demo 视频脚本） |
 | AIGC 备案 | ⏳ M1 启动材料 | 0% |
 | M3 上线 gate | ⏳ 阻塞于备案 | 0% |
 
@@ -142,7 +142,7 @@
 - [x] S1 T1.12: Prompt 模板表 + 5 官方模板 — Drizzle promptTemplates schema + 0001 迁移 + PromptTemplateService（findAll/findById/render/renderAndCount）+ Controller（3 接口）+ Module + AppModule 注册 + openapi.yaml 增强 3 接口 3 schema + gen:api + 10/10 单测通过（render 变量插值）+ typecheck+lint 0 errors（已完成 2026-07-14）
 - [ ] S2 造梗+梗卡+机审（8.5 人日，W3）
 - [ ] S3 feed+评分+RN（11.0 人日，W4）
-- [ ] S4 合规+Demo+收尾（5.6 人日，W5）
+- [x] S4 合规+Demo+收尾（T4.1 ✅ AIGC 备案 + T4.7 ✅ DDL 对齐，继续推进）
 - [ ] AIGC 备案材料草稿（S4 启动）
 
 ### S0 当天并行申请（避免 S1/S2 阻塞）

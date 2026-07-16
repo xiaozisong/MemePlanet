@@ -2,13 +2,13 @@ import Link from 'next/link';
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-ink text-white">
-      <header className="border-b border-ink-soft">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div className="bg-ink min-h-screen text-white">
+      <header className="border-ink-soft border-b">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="font-bold">
             梗星球
           </Link>
-          <nav className="text-sm text-gray-400 space-x-4">
+          <nav className="space-x-4 text-sm text-gray-400">
             <Link href="/privacy" className="hover:text-white">
               隐私政策
             </Link>
@@ -18,7 +18,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-6 py-16 prose-invert">{children}</main>
+      <main className="prose-invert mx-auto max-w-3xl px-6 py-16">{children}</main>
     </div>
   );
 }

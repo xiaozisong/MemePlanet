@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/co
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { AdminService } from './admin.service.js';
 
 @Controller('admin')
@@ -17,10 +18,11 @@ export class AdminController {
 
   @Post('audit/:auditId/action')
   async auditAction(
+    @CurrentUser() user: { userId: string },
     @Param('auditId') id: string,
     @Body() body: { action: string; reason?: string },
   ) {
-    return this.admin.auditAction(id, body.action, body.reason);
+    return this.admin.auditAction(user.userId, id, body.action, body.reason);
   }
 
   @Get('users')
@@ -29,8 +31,12 @@ export class AdminController {
   }
 
   @Patch('users/:userId/ban')
-  async ban(@Param('userId') userId: string, @Body() body: { reason: string; until?: string }) {
-    return this.admin.banUser(userId, body.reason, body.until);
+  async ban(
+    @CurrentUser() user: { userId: string },
+    @Param('userId') userId: string,
+    @Body() body: { reason: string; until?: string },
+  ) {
+    return this.admin.banUser(user.userId, userId, body.reason, body.until);
   }
 
   @Get('dashboard')

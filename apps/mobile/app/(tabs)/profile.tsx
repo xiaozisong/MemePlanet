@@ -1,6 +1,8 @@
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '../../src/store/user.store';
+import { useMyProfile, useMemePower } from '../../src/api/user';
 import {
   CrownIcon,
   EditIcon,
@@ -13,6 +15,30 @@ import { colors, layout } from '../../src/theme';
 export default function ProfileScreen() {
   const router = useRouter();
   const user = useUserStore((s) => s.user);
+
+  // 后台刷新用户资料（不阻塞渲染）
+  const { data: profile, isLoading: profileLoading } = useMyProfile();
+  const { data: power } = useMemePower();
+
+  const displayUser = profile ?? user;
+  const memePower = power?.memePower ?? user?.memePower ?? 0;
+  const energyBalance = power?.energyBalance ?? user?.energyBalance ?? 100;
+  const level = power?.level ?? user?.level ?? 1;
+
+  if (profileLoading && !displayUser) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.ink.DEFAULT,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.brand.DEFAULT} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -68,7 +94,6 @@ export default function ProfileScreen() {
             overflow: 'hidden',
           }}
         >
-          {/* Banner */}
           <View style={{ height: 96, backgroundColor: colors.ink.elevated }}>
             <View
               style={{
@@ -105,7 +130,6 @@ export default function ProfileScreen() {
           </View>
 
           <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-            {/* Avatar */}
             <View
               style={{
                 marginTop: -36,
@@ -148,7 +172,7 @@ export default function ProfileScreen() {
                     marginLeft: 4,
                   }}
                 >
-                  Lv.{user?.level ?? 1}
+                  Lv.{level}
                 </Text>
               </View>
             </View>
@@ -161,7 +185,7 @@ export default function ProfileScreen() {
                 marginTop: 12,
               }}
             >
-              {user?.nickname ?? '未登录用户'}
+              {displayUser?.nickname ?? '未登录用户'}
             </Text>
             <Text
               style={{
@@ -172,11 +196,11 @@ export default function ProfileScreen() {
               }}
               numberOfLines={2}
             >
-              {user?.bio ?? '先把大致 UI 搭起来，再接登录、作品和数据。'}
+              {displayUser?.bio ?? '没有填写个人简介'}
             </Text>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
-              <ProfileBadge label={user?.isPro ? 'Pro 已开通' : '普通玩家'} />
+              <ProfileBadge label={displayUser?.isPro ? 'Pro 已开通' : '普通玩家'} />
               <ProfileBadge label="热梗观察员" variant="muted" />
             </View>
           </View>
@@ -204,7 +228,7 @@ export default function ProfileScreen() {
               marginHorizontal: 16,
             }}
           />
-          <DataStat label="梗力值" value={`${user?.memePower ?? 0}`} highlight />
+          <DataStat label="梗力值" value={`${memePower}`} highlight />
           <View
             style={{
               width: 1,
@@ -213,7 +237,7 @@ export default function ProfileScreen() {
               marginHorizontal: 16,
             }}
           />
-          <DataStat label="能量" value={`${user?.energyBalance ?? 100}`} />
+          <DataStat label="能量" value={`${energyBalance}`} />
         </View>
       </View>
 

@@ -9,6 +9,8 @@ import * as Font from 'expo-font';
 import '../src/styles/global.css';
 import { ApiProvider } from '../src/api/provider';
 import { colors } from '@/theme';
+import { useMe } from '../src/api/auth';
+import { useTrackerBootstrap } from '../src/tracker';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +61,13 @@ function FontLoader({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** 应用启动时自动恢复登录态 + 初始化 Tracker */
+function AppBoot() {
+  useMe();
+  useTrackerBootstrap();
+  return null;
+}
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
@@ -66,6 +75,7 @@ export default function RootLayout() {
         <ApiProvider>
           <StatusBar style="light" />
           <FontLoader>
+            <AppBoot />
             <Stack
               screenOptions={{
                 headerStyle: { backgroundColor: colors.ink.DEFAULT },

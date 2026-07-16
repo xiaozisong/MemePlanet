@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, layout, spacing, radius } from '../../src/theme';
 import { PrimaryButton } from '../../src/components/ui/PrimaryButton';
+import { useStartCreation, useCreationStatus, useChooseCandidate } from '../../src/api/creation';
 
-type Stage = 'INPUT' | 'LOADING' | 'CANDIDATES' | 'PUBLISHING' | 'PUBLISHED';
+type Stage = 'INPUT' | 'LOADING' | 'CANDIDATES' | 'PUBLISHING' | 'PUBLISHED' | 'ERROR';
 
 const STYLES = [
   { label: '抽象', color: colors.ai.DEFAULT },
@@ -23,67 +24,72 @@ const STYLES = [
   { label: '表情包配文', color: colors.accent.dark },
 ] as const;
 
-const MOCK_CANDIDATES = [
-  {
-    id: '1',
-    title: '周一早上的闹钟：\n你："再睡5分钟"\n闹钟："我再信你一次"',
-    style: '抽象',
-  },
-  {
-    id: '2',
-    title: '产品经理说"这个需求很简单"的含金量，堪比渣男说"我就抱抱你"',
-    style: '阴阳',
-  },
-  {
-    id: '3',
-    title: '我的精神状态：\n身体在工位 💺\n灵魂在三亚 🏖️\n钱包在月球 🌙',
-    style: '反转',
-  },
-];
-
 export default function CreateTextScreen() {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>('INPUT');
   const [keyword, setKeyword] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [creationId, setCreationId] = useState<string | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (stage === 'LOADING') {
-      const timer = setTimeout(() => {
-        setStage('CANDIDATES');
-      }, 3000);
-      return () => clearTimeout(timer);
+  const startCreation = useStartCreation();
+  const { data: creationResult, isLoading: statusLoading } = useCreationStatus(creationId);
+  const chooseCandidate = useChooseCandidate();
+
+  // 监听造梗结果 → 自动切换到候选展示
+  React.useEffect(() => {
+    if (creationResult?.status === 'ready' || creationResult?.status === 'published') {
+      setStage('CANDIDATES');
+    } else if (creationResult?.status === 'failed') {
+      setStage('ERROR');
+      setErrorMsg('AI 造梗失败，请稍后重试');
     }
-  }, [stage]);
+  }, [creationResult?.status]);
 
-  useEffect(() => {
-    if (stage === 'PUBLISHING') {
-      const timer = setTimeout(() => {
-        setStage('PUBLISHED');
-      }, 1000);
-      return () => clearTimeout(timer);
+  // 监听发布结果
+  React.useEffect(() => {
+    if (chooseCandidate.isSuccess) {
+      setStage('PUBLISHED');
+    } else if (chooseCandidate.isError) {
+      setStage('ERROR');
+      setErrorMsg(chooseCandidate.error?.message ?? '发布失败');
     }
-  }, [stage]);
+  }, [chooseCandidate.isSuccess, chooseCandidate.isError]);
 
-  const handleStartGenerate = useCallback(() => {
+  const handleStartGenerate = useCallback(async () => {
+    if (keyword.trim().length === 0) return;
     setStage('LOADING');
-  }, []);
+    setErrorMsg(null);
+    try {
+      const res = await startCreation.mutateAsync({
+        mode: 'text',
+        prompt: keyword,
+        style: selectedStyle ?? undefined,
+      });
+      setCreationId(res.creation_id);
+    } catch (err: unknown) {
+      setStage('ERROR');
+      setErrorMsg(err instanceof Error ? err.message : '造梗失败');
+    }
+  }, [keyword, selectedStyle, startCreation]);
 
   const handleRegenerate = useCallback(() => {
     setKeyword('');
     setSelectedStyle(null);
-    setSelectedIds([]);
+    setSelectedIdx(null);
+    setCreationId(null);
+    setErrorMsg(null);
+    startCreation.reset();
+    chooseCandidate.reset();
     setStage('INPUT');
-  }, []);
+  }, [startCreation, chooseCandidate]);
 
-  const toggleCandidate = useCallback((id: string) => {
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-  }, []);
-
-  const handlePublish = useCallback(() => {
+  const handlePublish = useCallback(async () => {
+    if (selectedIdx === null || !creationId) return;
     setStage('PUBLISHING');
-  }, []);
+    await chooseCandidate.mutateAsync({ creationId, idx: selectedIdx });
+  }, [selectedIdx, creationId, chooseCandidate]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -144,18 +150,14 @@ export default function CreateTextScreen() {
         })}
       </ScrollView>
 
-      <View style={styles.energyBar}>
-        <Text style={styles.energyText}>消耗 10 能量 · 剩余 90</Text>
-      </View>
-
       <PrimaryButton
         variant="primary"
         size="lg"
         fullWidth
-        disabled={keyword.trim().length === 0}
+        disabled={keyword.trim().length === 0 || startCreation.isPending}
         onPress={handleStartGenerate}
       >
-        开始造梗
+        {startCreation.isPending ? '提交中...' : '开始造梗'}
       </PrimaryButton>
     </ScrollView>
   );
@@ -163,72 +165,79 @@ export default function CreateTextScreen() {
   const renderLoadingStage = () => (
     <View style={styles.centerContainer}>
       <ActivityIndicator size="large" color={colors.brand.DEFAULT} />
-      <Text style={styles.loadingTitle}>AI 正在造梗中...</Text>
+      <Text style={styles.loadingTitle}>{statusLoading ? 'AI 正在造梗中...' : '加载候选...'}</Text>
       <Text style={styles.loadingSubtitle}>预计 8 秒</Text>
     </View>
   );
 
-  const renderCandidatesStage = () => (
-    <View style={styles.candidatesContainer}>
-      <Text style={styles.candidatesTitle}>为你生成了 3 个候选</Text>
-      <ScrollView
-        style={styles.candidatesScroll}
-        contentContainerStyle={styles.candidatesScrollContent}
-      >
-        {MOCK_CANDIDATES.map((candidate, index) => {
-          const isSelected = selectedIds.includes(candidate.id);
-          return (
-            <Pressable
-              key={candidate.id}
-              onPress={() => toggleCandidate(candidate.id)}
-              style={[styles.candidateCard, isSelected && styles.candidateCardSelected]}
-            >
-              <View style={styles.candidateTop}>
-                <View style={styles.candidateIndexPill}>
-                  <Text style={styles.candidateIndexText}>
-                    {String(index + 1).padStart(2, '0')}
-                  </Text>
-                </View>
-              </View>
-
-              <Text style={styles.candidateContent}>{candidate.title}</Text>
-
-              <View style={styles.candidateBottom}>
-                <View style={styles.candidateTags}>
-                  <View style={styles.styleTag}>
-                    <Text style={styles.styleTagText}>{candidate.style}</Text>
+  const renderCandidatesStage = () => {
+    const candidates = creationResult?.candidates ?? [];
+    return (
+      <View style={styles.candidatesContainer}>
+        <Text style={styles.candidatesTitle}>为你生成了 {candidates.length} 个候选</Text>
+        <ScrollView
+          style={styles.candidatesScroll}
+          contentContainerStyle={styles.candidatesScrollContent}
+        >
+          {candidates.map((candidate, index) => {
+            const isSelected = selectedIdx === candidate.idx;
+            return (
+              <Pressable
+                key={candidate.candidate_id}
+                onPress={() => setSelectedIdx(candidate.idx)}
+                style={[styles.candidateCard, isSelected && styles.candidateCardSelected]}
+              >
+                <View style={styles.candidateTop}>
+                  <View style={styles.candidateIndexPill}>
+                    <Text style={styles.candidateIndexText}>
+                      {String(index + 1).padStart(2, '0')}
+                    </Text>
                   </View>
-                  <View style={styles.aiTag}>
-                    <Text style={styles.aiTagText}>AI 生成</Text>
+                  {candidate.self_score != null && (
+                    <Text style={styles.selfScore}>AI 评分 {candidate.self_score}</Text>
+                  )}
+                </View>
+
+                <Text style={styles.candidateContent}>
+                  {candidate.content ?? candidate.image_url ?? ''}
+                </Text>
+
+                <View style={styles.candidateBottom}>
+                  <View style={styles.candidateTags}>
+                    <View style={styles.aiTag}>
+                      <Text style={styles.aiTagText}>AI 生成</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                    {isSelected && <Text style={styles.checkmark}>✓</Text>}
                   </View>
                 </View>
-                <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                  {isSelected && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-              </View>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
-      <View style={styles.bottomBar}>
-        <PrimaryButton variant="ghost" size="md" onPress={handleRegenerate}>
-          再来一次
-        </PrimaryButton>
-        <View style={styles.bottomRight}>
-          <Text style={styles.selectedCount}>已选 {selectedIds.length} 张</Text>
-          <PrimaryButton
-            variant="primary"
-            size="md"
-            disabled={selectedIds.length === 0}
-            onPress={handlePublish}
-          >
-            发布选中
+        <View style={styles.bottomBar}>
+          <PrimaryButton variant="ghost" size="md" onPress={handleRegenerate}>
+            再来一次
           </PrimaryButton>
+          <View style={styles.bottomRight}>
+            <Text style={styles.selectedCount}>
+              {selectedIdx !== null ? '已选 1 个' : '未选择'}
+            </Text>
+            <PrimaryButton
+              variant="primary"
+              size="md"
+              disabled={selectedIdx === null}
+              onPress={handlePublish}
+            >
+              发布选中
+            </PrimaryButton>
+          </View>
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderPublishingStage = () => (
     <View style={styles.centerContainer}>
@@ -249,6 +258,15 @@ export default function CreateTextScreen() {
     </View>
   );
 
+  const renderErrorStage = () => (
+    <View style={styles.centerContainer}>
+      <Text style={{ color: '#EF4444', fontSize: 16, marginBottom: 16 }}>{errorMsg}</Text>
+      <PrimaryButton variant="primary" size="lg" onPress={handleRegenerate}>
+        重试
+      </PrimaryButton>
+    </View>
+  );
+
   const renderStage = () => {
     switch (stage) {
       case 'INPUT':
@@ -261,6 +279,8 @@ export default function CreateTextScreen() {
         return renderPublishingStage();
       case 'PUBLISHED':
         return renderPublishedStage();
+      case 'ERROR':
+        return renderErrorStage();
     }
   };
 
@@ -272,20 +292,10 @@ export default function CreateTextScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.ink.DEFAULT,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: colors.ink.DEFAULT,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: layout.pagePadding,
-  },
+  safeArea: { flex: 1, backgroundColor: colors.ink.DEFAULT },
+  container: { flex: 1, backgroundColor: colors.ink.DEFAULT },
+  scrollView: { flex: 1 },
+  scrollContent: { padding: layout.pagePadding },
   title: {
     fontSize: 24,
     fontFamily: 'Poppins_700Bold',
@@ -298,9 +308,7 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     marginBottom: spacing[5],
   },
-  inputSection: {
-    marginBottom: spacing[5],
-  },
+  inputSection: { marginBottom: spacing[5] },
   textInput: {
     backgroundColor: colors.ink.soft,
     borderRadius: radius.lg,
@@ -317,30 +325,14 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     marginBottom: spacing[2],
   },
-  stylePillContainer: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    paddingVertical: spacing[2],
-  },
+  stylePillContainer: { flexDirection: 'row', gap: spacing[2], paddingVertical: spacing[2] },
   stylePill: {
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  stylePillText: {
-    fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-  },
-  energyBar: {
-    marginTop: spacing[5],
-    marginBottom: spacing[4],
-  },
-  energyText: {
-    fontSize: 12,
-    fontFamily: 'Poppins_400Regular',
-    color: colors.text.muted,
-  },
+  stylePillText: { fontSize: 14, fontFamily: 'Poppins_500Medium' },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -359,9 +351,7 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     marginTop: spacing[2],
   },
-  candidatesContainer: {
-    flex: 1,
-  },
+  candidatesContainer: { flex: 1 },
   candidatesTitle: {
     fontSize: 22,
     fontFamily: 'Poppins_700Bold',
@@ -370,13 +360,8 @@ const styles = StyleSheet.create({
     paddingTop: spacing[4],
     paddingBottom: spacing[3],
   },
-  candidatesScroll: {
-    flex: 1,
-  },
-  candidatesScrollContent: {
-    padding: layout.pagePadding,
-    gap: layout.cardGap,
-  },
+  candidatesScroll: { flex: 1 },
+  candidatesScrollContent: { padding: layout.pagePadding, gap: layout.cardGap },
   candidateCard: {
     backgroundColor: colors.ink.soft,
     borderRadius: radius.lg,
@@ -384,9 +369,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border.DEFAULT,
   },
-  candidateCardSelected: {
-    borderColor: colors.brand.DEFAULT,
-  },
+  candidateCardSelected: { borderColor: colors.brand.DEFAULT },
   candidateTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -404,6 +387,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins_600SemiBold',
     color: colors.brand.DEFAULT,
   },
+  selfScore: { fontSize: 11, fontFamily: 'Poppins_400Regular', color: colors.text.muted },
   candidateContent: {
     fontSize: 15,
     fontFamily: 'Poppins_400Regular',
@@ -411,38 +395,15 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: spacing[3],
   },
-  candidateBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  candidateTags: {
-    flexDirection: 'row',
-    gap: spacing[2],
-    alignItems: 'center',
-  },
-  styleTag: {
-    backgroundColor: colors.tag.bg,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
-  },
-  styleTagText: {
-    fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    color: colors.tag.text,
-  },
+  candidateBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  candidateTags: { flexDirection: 'row', gap: spacing[2], alignItems: 'center' },
   aiTag: {
     backgroundColor: colors.ai.bg,
     borderRadius: radius.pill,
     paddingHorizontal: spacing[2],
     paddingVertical: 2,
   },
-  aiTagText: {
-    fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    color: colors.ai.DEFAULT,
-  },
+  aiTagText: { fontSize: 11, fontFamily: 'Poppins_500Medium', color: colors.ai.DEFAULT },
   checkbox: {
     width: 24,
     height: 24,
@@ -452,14 +413,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxSelected: {
-    borderColor: colors.brand.DEFAULT,
-  },
-  checkmark: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.brand.DEFAULT,
-  },
+  checkboxSelected: { borderColor: colors.brand.DEFAULT },
+  checkmark: { fontSize: 14, fontWeight: '700', color: colors.brand.DEFAULT },
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -468,16 +423,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border.DEFAULT,
   },
-  bottomRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[3],
-  },
-  selectedCount: {
-    fontSize: 13,
-    fontFamily: 'Poppins_400Regular',
-    color: colors.text.secondary,
-  },
+  bottomRight: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
+  selectedCount: { fontSize: 13, fontFamily: 'Poppins_400Regular', color: colors.text.secondary },
   successIcon: {
     width: 64,
     height: 64,
@@ -487,11 +434,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[5],
   },
-  successIconText: {
-    fontSize: 32,
-    color: colors.text.primary,
-    fontFamily: 'Poppins_700Bold',
-  },
+  successIconText: { fontSize: 32, color: colors.text.primary, fontFamily: 'Poppins_700Bold' },
   successTitle: {
     fontSize: 22,
     fontFamily: 'Poppins_700Bold',
