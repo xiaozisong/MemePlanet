@@ -1,16 +1,32 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { fetchDashboard, type DashboardData } from '@/lib/admin-api';
+
 export default function AdminDashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboard()
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="text-gray-400">加载中...</div>;
+  }
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">Dashboard</h1>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Card label="在线人数" value="0" />
-        <Card label="进行中 PK" value="0" />
-        <Card label="今日造梗数" value="0" />
-        <Card label="今日 AI 成本" value="¥0.00" />
+        <Card label="在线人数" value={String(data?.online ?? '—')} />
+        <Card label="进行中 PK" value={String(data?.activePKs ?? '—')} />
+        <Card label="今日造梗数" value={String(data?.memesCreatedToday ?? '—')} />
+        <Card label="今日 AI 成本" value={`¥${((data?.aiCostTodayCents ?? 0) / 100).toFixed(2)}`} />
       </div>
-      <p className="mt-8 text-gray-400">
-        TODO：M2 接入实时数据（在线人数 / PK 比分 / 造梗数 / AI 成本）。
-      </p>
     </div>
   );
 }

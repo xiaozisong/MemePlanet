@@ -1,29 +1,29 @@
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { LiveDotIcon, ShieldIcon, SwordsIcon, UserIcon } from '../../src/components/icons';
 import { colors, layout } from '../../src/theme';
-
-const MATCHES = [
-  {
-    title: '抽象圣殿 vs 表情包工会',
-    left: '抽象圣殿',
-    right: '表情包工会',
-    leftScore: 68,
-    rightScore: 52,
-    viewers: '2.4k',
-    time: '12:08',
-  },
-  {
-    title: '阴阳怪气局 vs 冷梗研究所',
-    left: '阴阳怪气局',
-    right: '冷梗研究所',
-    leftScore: 41,
-    rightScore: 47,
-    viewers: '986',
-    time: '04:31',
-  },
-];
+import { useActivePKs } from '../../src/api/pk';
 
 export default function PKScreen() {
+  const { data: matches, isLoading, isError } = useActivePKs();
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.ink.DEFAULT,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ActivityIndicator color={colors.brand.DEFAULT} size="large" />
+      </View>
+    );
+  }
+
+  const list = matches ?? [];
+  const activeCount = list.filter((m) => m.status === 'battling').length;
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.ink.DEFAULT }}
@@ -123,7 +123,7 @@ export default function PKScreen() {
                 marginTop: 4,
               }}
             >
-              实时比分、观战人数和投票入口先完成视觉占位
+              实时比分、投票入口和军团对抗
             </Text>
           </View>
           <View
@@ -133,8 +133,8 @@ export default function PKScreen() {
               borderTopColor: colors.border.DEFAULT,
             }}
           >
-            <ArenaMetric label="进行中" value="8" />
-            <ArenaMetric label="总投票" value="14.2k" />
+            <ArenaMetric label="进行中" value={String(activeCount)} />
+            <ArenaMetric label="总场次" value={String(list.length)} />
             <ArenaMetric label="战报" value="26" />
           </View>
         </View>
@@ -159,9 +159,17 @@ export default function PKScreen() {
             赛程
           </Text>
         </View>
-        {MATCHES.map((match) => (
-          <MatchCard key={match.title} match={match} />
-        ))}
+        {isError ? (
+          <Text style={{ color: colors.status.error, textAlign: 'center', padding: 20 }}>
+            加载失败，请下拉刷新重试
+          </Text>
+        ) : list.length === 0 ? (
+          <Text style={{ color: colors.text.muted, textAlign: 'center', padding: 20 }}>
+            暂无进行中的 PK，快来创建一场吧
+          </Text>
+        ) : (
+          list.map((match) => <MatchCard key={match.pk_id} match={match} />)
+        )}
       </View>
 
       {/* Create PK CTA */}
@@ -188,7 +196,7 @@ export default function PKScreen() {
               marginTop: 4,
             }}
           >
-            M2 接入军团选择、梗卡参战和实时投票逻辑
+            选择两个军团，设定主题与时间，开始对决
           </Text>
           <Pressable
             style={{
@@ -240,17 +248,29 @@ function MatchCard({
   match,
 }: {
   match: {
-    title: string;
-    left: string;
-    right: string;
-    leftScore: number;
-    rightScore: number;
-    viewers: string;
-    time: string;
+    pk_id: string;
+    theme: string;
+    legion_a: { legion_id: string; name: string; avatar_url?: string };
+    legion_b: { legion_id: string; name: string; avatar_url?: string };
+    score_a: number;
+    score_b: number;
+    status: string;
+    start_at: string;
+    participant_count?: number;
   };
 }) {
-  const total = match.leftScore + match.rightScore;
-  const leftWidth = `${Math.round((match.leftScore / total) * 100)}%`;
+  const total = match.score_a + match.score_b;
+  const leftPercent = total > 0 ? Math.round((match.score_a / total) * 100) : 50;
+  const isLive = match.status === 'battling';
+  const elapsed = Date.now() - new Date(match.start_at).getTime();
+  const elapsedMin = Math.max(0, Math.floor(elapsed / 60000));
+  const timeText = `${String(Math.floor(elapsedMin / 60)).padStart(2, '0')}:${String(elapsedMin % 60).padStart(2, '0')}`;
+  const viewerText =
+    match.participant_count != null
+      ? match.participant_count >= 1000
+        ? `${(match.participant_count / 1000).toFixed(1)}k`
+        : String(match.participant_count)
+      : '—';
 
   return (
     <Pressable
@@ -272,33 +292,35 @@ function MatchCard({
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderRadius: 9999,
-              backgroundColor: `${colors.status.error}15`,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-              marginRight: 8,
-            }}
-          >
-            <LiveDotIcon color={colors.status.error} size={6} />
-            <Text
+          {isLive && (
+            <View
               style={{
-                fontSize: 10,
-                fontFamily: 'Poppins_700Bold',
-                color: colors.status.error,
-                marginLeft: 4,
+                flexDirection: 'row',
+                alignItems: 'center',
+                borderRadius: 9999,
+                backgroundColor: `${colors.status.error}15`,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                marginRight: 8,
               }}
             >
-              LIVE
-            </Text>
-          </View>
+              <LiveDotIcon color={colors.status.error} size={6} />
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'Poppins_700Bold',
+                  color: colors.status.error,
+                  marginLeft: 4,
+                }}
+              >
+                LIVE
+              </Text>
+            </View>
+          )}
           <Text
             style={{ fontSize: 14, fontFamily: 'Poppins_400Regular', color: colors.text.muted }}
           >
-            {match.time}
+            {timeText}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -311,7 +333,7 @@ function MatchCard({
               marginLeft: 4,
             }}
           >
-            {match.viewers}
+            {viewerText}
           </Text>
         </View>
       </View>
@@ -324,11 +346,11 @@ function MatchCard({
           marginBottom: 16,
         }}
       >
-        {match.title}
+        {match.theme}
       </Text>
 
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <TeamBlock name={match.left} score={match.leftScore} align="left" />
+        <TeamBlock name={match.legion_a.name} score={match.score_a} align="left" />
         <View
           style={{
             width: 48,
@@ -342,7 +364,7 @@ function MatchCard({
         >
           <SwordsIcon color={colors.ink.DEFAULT} size={22} />
         </View>
-        <TeamBlock name={match.right} score={match.rightScore} align="right" />
+        <TeamBlock name={match.legion_b.name} score={match.score_b} align="right" />
       </View>
 
       <View
@@ -359,7 +381,7 @@ function MatchCard({
             backgroundColor: colors.brand.DEFAULT,
             height: 8,
             borderRadius: 4,
-            width: leftWidth as `${number}%`,
+            width: `${leftPercent}%` as `${number}%`,
           }}
         />
       </View>

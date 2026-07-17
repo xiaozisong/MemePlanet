@@ -6,3 +6,6 @@ export * from './meme';
 export * from './rating';
 export * from './creation';
 export * from './user';
+export * from './legion';
+export * from './pk';
+export * from './chat';

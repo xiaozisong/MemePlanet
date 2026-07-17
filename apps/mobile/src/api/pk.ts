@@ -30,10 +30,6 @@ interface CreatePKReq {
   endAt: string;
 }
 
-interface VoteReq {
-  legionId: string;
-}
-
 /** 活跃 PK 列表 */
 export function useActivePKs() {
   const api = useApi();

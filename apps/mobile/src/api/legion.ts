@@ -35,8 +35,7 @@ export function useLegions(page = 1, keyword?: string) {
   const api = useApi();
   return useQuery<{ list: LegionSummary[]; total: number }>({
     queryKey: ['legions', page, keyword],
-    queryFn: () =>
-      api.get('/legions', { page: String(page), ...(keyword ? { keyword } : {}) }),
+    queryFn: () => api.get('/legions', { page: String(page), ...(keyword ? { keyword } : {}) }),
   });
 }
 

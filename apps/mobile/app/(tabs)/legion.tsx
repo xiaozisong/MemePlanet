@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import {
   CrownIcon,
   ShieldIcon,
@@ -7,16 +7,29 @@ import {
   UserIcon,
 } from '../../src/components/icons';
 import { colors, layout } from '../../src/theme';
-
-const LEGIONS = [
-  { name: '抽象圣殿', members: '12.8k', power: '92.4w', rank: 1, color: colors.brand.DEFAULT },
-  { name: '阴阳怪气局', members: '8.6k', power: '71.9w', rank: 2, color: colors.accent.DEFAULT },
-  { name: '表情包工会', members: '6.1k', power: '58.2w', rank: 3, color: colors.accent.info },
-];
+import { useLegions } from '../../src/api/legion';
 
 const CATEGORIES = ['推荐', '热梗', '新军团', 'PK 强队'];
 
 export default function LegionScreen() {
+  const { data, isLoading, isError } = useLegions(1);
+  const legions = data?.list ?? [];
+
+  if (isLoading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.ink.DEFAULT,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ActivityIndicator color={colors.brand.DEFAULT} size="large" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.ink.DEFAULT }}
@@ -106,7 +119,7 @@ export default function LegionScreen() {
             </View>
           </View>
           <View style={{ flexDirection: 'row', marginTop: 16 }}>
-            <HeroMetric label="参战军团" value="128" />
+            <HeroMetric label="军团总数" value={String(data?.total ?? 0)} />
             <HeroMetric label="今日 PK" value="36" />
             <HeroMetric label="热梗产出" value="842" />
           </View>
@@ -165,9 +178,19 @@ export default function LegionScreen() {
             查看全部
           </Text>
         </View>
-        {LEGIONS.map((legion) => (
-          <LegionCard key={legion.name} legion={legion} />
-        ))}
+        {isError ? (
+          <Text style={{ color: colors.status.error, textAlign: 'center', padding: 20 }}>
+            加载失败，请下拉刷新重试
+          </Text>
+        ) : legions.length === 0 ? (
+          <Text style={{ color: colors.text.muted, textAlign: 'center', padding: 20 }}>
+            暂无军团数据
+          </Text>
+        ) : (
+          legions.map((legion, idx) => (
+            <LegionCard key={legion.legion_id} legion={legion} rank={idx + 1} />
+          ))
+        )}
       </View>
 
       {/* Create Legion CTA */}
@@ -213,7 +236,7 @@ export default function LegionScreen() {
                   marginTop: 2,
                 }}
               >
-                M2 接入创建、加入与群聊功能
+                输入军团名称和标签，邀请好友加入
               </Text>
             </View>
             <Text
@@ -259,9 +282,29 @@ function HeroMetric({ label, value }: { label: string; value: string }) {
 
 function LegionCard({
   legion,
+  rank,
 }: {
-  legion: { name: string; members: string; power: string; rank: number; color: string };
+  legion: {
+    legion_id: string;
+    name: string;
+    slogan?: string;
+    avatar_url?: string;
+    member_count: number;
+    activity_score: number;
+  };
+  rank: number;
 }) {
+  const color =
+    rank === 1 ? colors.brand.DEFAULT : rank === 2 ? colors.accent.DEFAULT : colors.accent.info!;
+  const memberText =
+    legion.member_count >= 1000
+      ? `${(legion.member_count / 1000).toFixed(1)}k`
+      : String(legion.member_count);
+  const powerText =
+    legion.activity_score >= 10000
+      ? `${(legion.activity_score / 10000).toFixed(1)}w`
+      : String(legion.activity_score);
+
   return (
     <Pressable
       style={{
@@ -279,13 +322,13 @@ function LegionCard({
             width: 56,
             height: 56,
             borderRadius: 16,
-            backgroundColor: `${legion.color}22`,
+            backgroundColor: `${color}22`,
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: 12,
           }}
         >
-          <ShieldIcon color={legion.color} size={26} />
+          <ShieldIcon color={color} size={26} />
         </View>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -295,6 +338,7 @@ function LegionCard({
                 fontFamily: 'Poppins_600SemiBold',
                 color: colors.text.primary,
               }}
+              numberOfLines={1}
             >
               {legion.name}
             </Text>
@@ -310,11 +354,24 @@ function LegionCard({
               <Text
                 style={{ fontSize: 11, fontFamily: 'Poppins_700Bold', color: colors.brand.DEFAULT }}
               >
-                #{legion.rank}
+                #{rank}
               </Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+          {legion.slogan ? (
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: 'Poppins_400Regular',
+                color: colors.text.muted,
+                marginTop: 2,
+              }}
+              numberOfLines={1}
+            >
+              {legion.slogan}
+            </Text>
+          ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
             <UserIcon color={colors.text.muted} size={14} />
             <Text
               style={{
@@ -325,7 +382,7 @@ function LegionCard({
                 marginRight: 12,
               }}
             >
-              {legion.members}
+              {memberText}
             </Text>
             <SwordsIcon color={colors.text.muted} size={14} />
             <Text
@@ -336,7 +393,7 @@ function LegionCard({
                 marginLeft: 4,
               }}
             >
-              {legion.power}
+              {powerText}
             </Text>
           </View>
         </View>
