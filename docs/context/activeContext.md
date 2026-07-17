@@ -3,8 +3,8 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-17
-**当前阶段**：M1 全部完成 ✅ + M2 社交模块骨架已启动（Legion/PK/Chat/Admin Service 真实 Drizzle 实现）+ RN 军团/PK/Chat 页面已对接真实 API + Admin Web 后台全部对接真实 API + RN 造梗 4 模式（text/image/video/agent）全部对接真实 API
-**当前会话焦点**：M2 推进 — RN 造梗 4 模式对接真实 API（S3 已完成 text.tsx，本会话补 image/video/agent） + 推进 bug 修复（admin controller @Param → @Query）+ Admin Web 后台 6 页面对接真实 API + RN Chat 模块新增
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接（Legion/PK/Chat/Admin Service 真实 Drizzle 实现 + RN 军团/PK/Chat 页面 + Admin Web 后台 6 页 + RN 造梗 4 模式全部对接真实 API）
+**当前会话焦点**：M2 推进 — 全栈社交模块对接 + 造梗页 mock→真实 API + bug 修复 + Admin 后台实装 + AI cost 真实实现
 **上次会话产出**（2026-07-16）：M2 社交模块 4 Service 真实实现 + T4.4 Web 落地页 + T4.5 Admin shell + @types/react 版本锁定 + 全 3 端 typecheck/lint 双零
 **本会话产出**（2026-07-17）：**M2 RN 军团 + PK + Chat 页面 + Admin Web 后台对接真实 API**：
 - RN Legion 页面：从硬编码 mock 切换到 `useLegions(1)` 真实 API；HeroMetric 显示真实军团总数；军团卡片按 rank 着色，展示真实 member_count/activity_score 与 slogan；空态/加载/错误态完整覆盖
@@ -118,11 +118,22 @@
 
 **M1 全 8 Sprint 100% 完成 ✅**（S0+S1+S2+S3+S4 全部 done；S4 包含 T4.1-T4.8 全 8 项）。
 
-1. **⏳ S1/S2 外部 key** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通。需用户在 S0 当天提交申请的 key：DeepSeek / GLM / 阿里云短信签名 / 阿里云内容安全 / Supabase
+**本会话（2026-07-17 续推进）已完成**：
+- ✅ Bug 修复：AdminController @Param→@Query，admin-api.ts 字段对齐后端
+- ✅ RN 造梗 4 模式（text/image/video/agent）全部对接真实 API（移除所有 mock setTimeout）
+- ✅ Admin Web 后台 PK/Cost 页统一 admin-api.ts 客户端
+- ✅ ai-orch.service.ts costToday() 真实聚合 + 新增 costLogList + cost/logs 端点
+- ✅ Drizzle 迁移 0006 生成（18 表全量同步）
+- ✅ 全 3 端 typecheck/lint 双零
+
+1. **⏳ S1/S2 外部 key** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通
 2. **🎬 M1 Demo 录制** — 脚本已就绪（`docs/context/m1-demo-review.md` §1），只需 QuickTime 录屏 ~15min
-3. **🚀 M2 社会模块 + Admin**
-   - M2-2~M2-5 Service 已实现 ✅（Legion/PK/Chat/Admin）
-   - 后续 M2 编码方向：RN 军团/PK/IM 页面对接 API、Web 后台 Admin 页面对接 API、视频造梗真实 LLM 集成
+3. **🚀 M2 后续编码方向**：
+   - **集成测试补全**：补 Legion/PK/Chat/Admin Service 的 e2e spec，覆盖 M2 后端路径
+   - **RN jest mock 修复**：本会话发现 mobile 测试因 `react-native-safe-area-context` native mock + `Platform.select` undefined 失败，与功能无关但需修
+   - **Web e2e 修复**：本会话发现 web Playwright 测试因 Babel 配置无法解析 TS path alias 失败
+   - **视频造梗真实 LLM**：T2.15 待外部 key 后串通
+   - **Legion Member 列表页 + Profile 编辑页**：M2 RN 社交还可以补的小页面
 
 ---
 
