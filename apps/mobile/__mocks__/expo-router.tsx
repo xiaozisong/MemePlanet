@@ -38,4 +38,21 @@ export function useSegments(): string[] {
   return [];
 }
 
-export default { Stack, Tabs, Link, useRouter, usePathname, useSegments };
+export function useLocalSearchParams<T extends object = Record<string, string>>(): T {
+  return {} as T;
+}
+
+export function useFocusEffect(_effect: () => void | (() => void)) {
+  // no-op for tests
+}
+
+export default {
+  Stack,
+  Tabs,
+  Link,
+  useRouter,
+  usePathname,
+  useSegments,
+  useLocalSearchParams,
+  useFocusEffect,
+};
