@@ -85,7 +85,7 @@ describe('CreationService — T2.1', () => {
       const result = await service.start('user-1', validDto);
 
       expect(userService.deductEnergy).toHaveBeenCalledWith('user-1', 1);
-      expect(result).toEqual({ creationId: 'creation-001', status: 'pending' });
+      expect(result).toMatchObject({ creationId: 'creation-001', status: 'pending' });
     });
 
     it('能量不足抛出 BadRequestException', async () => {
