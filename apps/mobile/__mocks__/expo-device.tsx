@@ -27,9 +27,7 @@ export const getDeviceTypeAsync = jest.fn().mockResolvedValue(1);
 export const getCompleteDeviceParamsAsync = jest
   .fn()
   .mockResolvedValue({ model: 'iPhone15', brand: 'Apple', totalMemory: 4096 });
-export const supportedCpuArchitecturesAsync = jest
-  .fn()
-  .mockResolvedValue(['arm64']);
+export const supportedCpuArchitecturesAsync = jest.fn().mockResolvedValue(['arm64']);
 export const getApplicationName = jest.fn().mockReturnValue('memestar-test');
 export const getDeviceName = jest.fn().mockResolvedValue('Jest Test Device');
 export const getUserInterfaceStyle = jest.fn().mockResolvedValue('light');

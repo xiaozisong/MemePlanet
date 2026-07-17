@@ -47,7 +47,11 @@ export const FlatList: React.FC<{
 export const Platform = {
   OS: 'ios',
   select: (options: Record<string, unknown> | unknown): unknown => {
-    if (options && typeof options === 'object' && 'default' in (options as Record<string, unknown>)) {
+    if (
+      options &&
+      typeof options === 'object' &&
+      'default' in (options as Record<string, unknown>)
+    ) {
       const opts = options as Record<string, unknown>;
       return opts.ios ?? opts.android ?? opts.default;
     }
