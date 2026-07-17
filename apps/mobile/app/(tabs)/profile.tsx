@@ -363,6 +363,11 @@ export default function ProfileScreen() {
         </Text>
         <MenuRow
           icon={<EditIcon color={colors.brand.DEFAULT} size={20} />}
+          title="编辑资料"
+          onPress={() => router.push('/profile/edit')}
+        />
+        <MenuRow
+          icon={<ShieldIcon color={colors.brand.DEFAULT} size={20} />}
           title="设置"
           onPress={() => router.push('/settings')}
         />
