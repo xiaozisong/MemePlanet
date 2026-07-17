@@ -2,23 +2,41 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApi } from './provider';
 
 export interface PKMatchSummary {
-  pk_id: string;
+  pkId: string;
   type: string;
   theme: string;
-  legion_a: { legion_id: string; name: string; avatar_url?: string };
-  legion_b: { legion_id: string; name: string; avatar_url?: string };
-  score_a: number;
-  score_b: number;
+  legionA: string;
+  legionB: string;
+  legionAName: string;
+  legionBName: string;
+  scoreA: number;
+  scoreB: number;
   status: string;
-  start_at: string;
-  end_at: string;
+  startAt: string;
+  endAt: string;
   participant_count?: number;
 }
 
-export interface PKMatchDetail extends PKMatchSummary {
-  created_by: string;
-  winner?: string | null;
-  settled_at?: string | null;
+export interface PKMatchDetail {
+  pkId: string;
+  type: string;
+  theme: string;
+  legionA: string;
+  legionB: string;
+  legionAName: string;
+  legionAAvatarUrl?: string | null;
+  legionBName: string;
+  legionBAvatarUrl?: string | null;
+  scoreA: number;
+  scoreB: number;
+  status: string;
+  startAt: string;
+  endAt: string;
+  winnerId?: string | null;
+  mvpUserId?: string | null;
+  isOfficial: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CreatePKReq {

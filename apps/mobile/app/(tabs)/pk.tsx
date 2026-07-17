@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useRouter } from 'expo-router';
 import { LiveDotIcon, ShieldIcon, SwordsIcon, UserIcon } from '../../src/components/icons';
 import { colors, layout } from '../../src/theme';
-import { useActivePKs } from '../../src/api/pk';
+import { useActivePKs, type PKMatchSummary } from '../../src/api/pk';
 
 export default function PKScreen() {
   const router = useRouter();
@@ -170,7 +170,7 @@ export default function PKScreen() {
             暂无进行中的 PK，快来创建一场吧
           </Text>
         ) : (
-          list.map((match) => <MatchCard key={match.pk_id} match={match} />)
+          list.map((match) => <MatchCard key={match.pkId} match={match} />)
         )}
       </View>
 
@@ -247,25 +247,12 @@ function ArenaMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MatchCard({
-  match,
-}: {
-  match: {
-    pk_id: string;
-    theme: string;
-    legion_a: { legion_id: string; name: string; avatar_url?: string };
-    legion_b: { legion_id: string; name: string; avatar_url?: string };
-    score_a: number;
-    score_b: number;
-    status: string;
-    start_at: string;
-    participant_count?: number;
-  };
-}) {
-  const total = match.score_a + match.score_b;
-  const leftPercent = total > 0 ? Math.round((match.score_a / total) * 100) : 50;
+function MatchCard({ match }: { match: PKMatchSummary }) {
+  const router = useRouter();
+  const total = match.scoreA + match.scoreB;
+  const leftPercent = total > 0 ? Math.round((match.scoreA / total) * 100) : 50;
   const isLive = match.status === 'battling';
-  const elapsed = Date.now() - new Date(match.start_at).getTime();
+  const elapsed = Date.now() - new Date(match.startAt).getTime();
   const elapsedMin = Math.max(0, Math.floor(elapsed / 60000));
   const timeText = `${String(Math.floor(elapsedMin / 60)).padStart(2, '0')}:${String(elapsedMin % 60).padStart(2, '0')}`;
   const viewerText =
@@ -277,6 +264,7 @@ function MatchCard({
 
   return (
     <Pressable
+      onPress={() => router.push(`/pk/${match.pkId}`)}
       style={{
         backgroundColor: colors.ink.soft,
         borderRadius: 16,
@@ -353,7 +341,7 @@ function MatchCard({
       </Text>
 
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <TeamBlock name={match.legion_a.name} score={match.score_a} align="left" />
+        <TeamBlock name={match.legionAName || '未知军团'} score={match.scoreA} align="left" />
         <View
           style={{
             width: 48,
@@ -367,7 +355,7 @@ function MatchCard({
         >
           <SwordsIcon color={colors.ink.DEFAULT} size={22} />
         </View>
-        <TeamBlock name={match.legion_b.name} score={match.score_b} align="right" />
+        <TeamBlock name={match.legionBName || '未知军团'} score={match.scoreB} align="right" />
       </View>
 
       <View

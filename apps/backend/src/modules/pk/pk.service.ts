@@ -83,10 +83,54 @@ export class PKService {
   }
 
   async findById(id: string) {
-    const match = await this.db.select().from(pkMatches).where(eq(pkMatches.pkId, id)).limit(1);
+    const match = await this.db
+      .select({
+        pkId: pkMatches.pkId,
+        type: pkMatches.type,
+        legionA: pkMatches.legionA,
+        legionB: pkMatches.legionB,
+        theme: pkMatches.theme,
+        startAt: pkMatches.startAt,
+        endAt: pkMatches.endAt,
+        status: pkMatches.status,
+        scoreA: pkMatches.scoreA,
+        scoreB: pkMatches.scoreB,
+        winnerId: pkMatches.winnerId,
+        mvpUserId: pkMatches.mvpUserId,
+        isOfficial: pkMatches.isOfficial,
+        createdAt: pkMatches.createdAt,
+        updatedAt: pkMatches.updatedAt,
+      })
+      .from(pkMatches)
+      .where(eq(pkMatches.pkId, id))
+      .limit(1);
 
     if (!match[0]) throw new NotFoundException('PK 不存在');
-    return match[0];
+
+    const legionIds = [match[0].legionA, match[0].legionB].filter(Boolean) as string[];
+    const legionMap = new Map<string, { name: string; avatarUrl: string | null }>();
+    if (legionIds.length > 0) {
+      const legionRows = await this.db
+        .select({
+          id: legions.legionId,
+          name: legions.name,
+          avatarUrl: legions.avatarUrl,
+        })
+        .from(legions)
+        .where(inArray(legions.legionId, legionIds));
+      for (const l of legionRows) {
+        legionMap.set(l.id, { name: l.name, avatarUrl: l.avatarUrl });
+      }
+    }
+
+    const m = match[0];
+    return {
+      ...m,
+      legionAName: legionMap.get(m.legionA)?.name ?? '',
+      legionAAvatarUrl: legionMap.get(m.legionA)?.avatarUrl ?? null,
+      legionBName: legionMap.get(m.legionB)?.name ?? '',
+      legionBAvatarUrl: legionMap.get(m.legionB)?.avatarUrl ?? null,
+    };
   }
 
   async create(userId: string, dto: CreatePKDto) {

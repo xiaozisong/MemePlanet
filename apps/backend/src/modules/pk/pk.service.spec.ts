@@ -94,7 +94,12 @@ describe('PKService', () => {
 
   describe('findById', () => {
     it('should find by id', async () => {
+      // findById now does 2 queries: pk match + legion names
       (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult(mockMatch).from });
+      // legion name query — first select needs item for inArray to be non-empty
+      const whereFn = jest.fn().mockResolvedValue([{ id: 'legion-001', name: '军团A', avatarUrl: null }]);
+      const fromFn = jest.fn().mockReturnValue({ where: whereFn });
+      (db.select as jest.Mock).mockReturnValueOnce({ from: fromFn });
       await expect(service.findById('pk-001')).resolves.toBeDefined();
     });
 
