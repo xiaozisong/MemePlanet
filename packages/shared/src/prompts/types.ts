@@ -16,8 +16,7 @@ export function renderTemplate(
   template: Pick<PromptTemplateDef, 'userTemplate' | 'systemPrompt'>,
   vars: Record<string, string>,
 ): { system: string; user: string } {
-  const replace = (s: string) =>
-    s.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => vars[k] ?? '');
+  const replace = (s: string) => s.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => vars[k] ?? '');
   return { system: replace(template.systemPrompt), user: replace(template.userTemplate) };
 }
 

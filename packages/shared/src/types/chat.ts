@@ -24,13 +24,7 @@ export interface Message {
 }
 
 export type NotificationType =
-  | 'rating'
-  | 'god_meme'
-  | 'pk'
-  | 'reward'
-  | 'violation'
-  | 'pro'
-  | 'agent_done';
+  'rating' | 'god_meme' | 'pk' | 'reward' | 'violation' | 'pro' | 'agent_done';
 
 export interface Notification {
   notifId: string;

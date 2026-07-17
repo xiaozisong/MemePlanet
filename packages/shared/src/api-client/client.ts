@@ -74,11 +74,7 @@ export class ApiClient {
     return this.request<T>('PATCH', path, query, body, init);
   }
 
-  async put<T>(
-    path: string,
-    body?: unknown,
-    init?: InternalOptions,
-  ): Promise<T> {
+  async put<T>(path: string, body?: unknown, init?: InternalOptions): Promise<T> {
     return this.request<T>('PUT', path, undefined, body, init);
   }
 

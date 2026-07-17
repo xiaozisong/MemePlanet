@@ -4,2813 +4,2848 @@
  */
 
 export type paths = {
-    readonly "/auth/sms/send": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 发送手机号验证码
-         * @description 向指定手机号发送 6 位数字验证码，60s 内不可重发。
-         *     验证码存 Redis（key=`otp:{phone}`，TTL=5min），登录时校验。
-         */
-        readonly post: operations["sendSmsCode"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+  readonly '/auth/sms/send': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/auth/sms/login": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /** 手机号验证码登录（新用户自动注册） */
-        readonly post: operations["smsLogin"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 发送手机号验证码
+     * @description 向指定手机号发送 6 位数字验证码，60s 内不可重发。
+     *     验证码存 Redis（key=`otp:{phone}`，TTL=5min），登录时校验。
+     */
+    readonly post: operations['sendSmsCode'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/auth/sms/login': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/auth/refresh": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 刷新 access_token
-         * @description 用 refresh_token 换新的 access_token + refresh_token，旧 refresh 即时失效。
-         */
-        readonly post: operations["refreshToken"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /** 手机号验证码登录（新用户自动注册） */
+    readonly post: operations['smsLogin'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/auth/refresh': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/auth/logout": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 退出登录
-         * @description 撤销当前 refresh_token 并将 access_token 加入 Redis 黑名单。
-         */
-        readonly post: operations["logout"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 刷新 access_token
+     * @description 用 refresh_token 换新的 access_token + refresh_token，旧 refresh 即时失效。
+     */
+    readonly post: operations['refreshToken'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/auth/logout': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/auth/me": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 当前登录态校验 */
-        readonly get: operations["getAuthMe"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 退出登录
+     * @description 撤销当前 refresh_token 并将 access_token 加入 Redis 黑名单。
+     */
+    readonly post: operations['logout'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/auth/me': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/users/me": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 我的资料
-         * @description 返回当前登录用户的完整资料，含 level/meme_power/energy_balance 等。
-         */
-        readonly get: operations["getMe"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        /**
-         * 编辑资料
-         * @description 部分字段可选更新。昵称 30 天改 1 次（由 user_profiles.nickname_changed_at 控制）。
-         *     昵称走敏感词 DFA + 阿里云审核。
-         */
-        readonly patch: operations["updateMe"];
-        readonly trace?: never;
+    /** 当前登录态校验 */
+    readonly get: operations['getAuthMe'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/users/me': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/users/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 用户主页 */
-        readonly get: operations["getUserHome"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 我的资料
+     * @description 返回当前登录用户的完整资料，含 level/meme_power/energy_balance 等。
+     */
+    readonly get: operations['getMe'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    /**
+     * 编辑资料
+     * @description 部分字段可选更新。昵称 30 天改 1 次（由 user_profiles.nickname_changed_at 控制）。
+     *     昵称走敏感词 DFA + 阿里云审核。
+     */
+    readonly patch: operations['updateMe'];
+    readonly trace?: never;
+  };
+  readonly '/users/{id}': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/users/me/power": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 我的梗力值/能量概览
-         * @description 返回当前登录用户的梗力值、等级、破防值、能量余额、能量上限及等级进度。
-         *     用于客户端首页/造梗页的能量条与等级展示。
-         */
-        readonly get: operations["getMyMemePower"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** 用户主页 */
+    readonly get: operations['getUserHome'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/users/me/power': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/users/me/level": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 我的等级详情（含下一等级进度）
-         * @description 返回当前用户的等级详情：当前等级、当前等级标签、梗力值、
-         *     到下一等级所需差值与百分比进度。满级时 next 为 null。
-         */
-        readonly get: operations["getMyLevelDetail"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 我的梗力值/能量概览
+     * @description 返回当前登录用户的梗力值、等级、破防值、能量余额、能量上限及等级进度。
+     *     用于客户端首页/造梗页的能量条与等级展示。
+     */
+    readonly get: operations['getMyMemePower'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/users/me/level': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/creations/single": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 单次 prompt 造梗（文本/图片）
-         * @description 同步返回 3 候选（文本）或 1 候选（图片）。
-         *     - 超时 35s
-         *     - 能量扣减：文本 1，图片 5（乐观锁）
-         *     - 24h prompt+style 去重，命中返回原 creation_id（code=6005）
-         *     - prompt 命中黑名单返回 code=6002
-         */
-        readonly post: operations["createSingle"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 我的等级详情（含下一等级进度）
+     * @description 返回当前用户的等级详情：当前等级、当前等级标签、梗力值、
+     *     到下一等级所需差值与百分比进度。满级时 next 为 null。
+     */
+    readonly get: operations['getMyLevelDetail'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/creations/single': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/creations/agent": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * Pro Agent 造梗提交（异步）
-         * @description Pro 会员专属。3 步精简版：RAG 检索神梗 → 生成 3 候选 → 自评选优。
-         *     - 异步任务，返回 202 + job_id
-         *     - 限流 10 次/日/Pro 用户（硬配额）+ 日预算 ¥80 熔断
-         *     - 失败/超时自动降级为单次 prompt 模式，退回 Agent 能量
-         */
-        readonly post: operations["submitAgent"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 单次 prompt 造梗（文本/图片）
+     * @description 同步返回 3 候选（文本）或 1 候选（图片）。
+     *     - 超时 35s
+     *     - 能量扣减：文本 1，图片 5（乐观锁）
+     *     - 24h prompt+style 去重，命中返回原 creation_id（code=6005）
+     *     - prompt 命中黑名单返回 code=6002
+     */
+    readonly post: operations['createSingle'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/creations/agent': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/agent-jobs/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * Agent 任务状态查询（轮询）
-         * @description 客户端每 2s 轮询一次，最长 60s 后切 WebSocket 推送。
-         *     status 状态机：queued → running → succeeded / failed / timeout。
-         *     fallback_used=true 表示已降级为单次 prompt 模式。
-         */
-        readonly get: operations["getAgentJob"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * Pro Agent 造梗提交（异步）
+     * @description Pro 会员专属。3 步精简版：RAG 检索神梗 → 生成 3 候选 → 自评选优。
+     *     - 异步任务，返回 202 + job_id
+     *     - 限流 10 次/日/Pro 用户（硬配额）+ 日预算 ¥80 熔断
+     *     - 失败/超时自动降级为单次 prompt 模式，退回 Agent 能量
+     */
+    readonly post: operations['submitAgent'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/agent-jobs/{id}': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/prompt-templates": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * Prompt 模板库
-         * @description 官方 5 个 + UGC（v1.5+）。支持 mode/style/is_official 过滤。
-         */
-        readonly get: operations["listPromptTemplates"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * Agent 任务状态查询（轮询）
+     * @description 客户端每 2s 轮询一次，最长 60s 后切 WebSocket 推送。
+     *     status 状态机：queued → running → succeeded / failed / timeout。
+     *     fallback_used=true 表示已降级为单次 prompt 模式。
+     */
+    readonly get: operations['getAgentJob'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/prompt-templates': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/prompt-templates/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 获取单个 Prompt 模板详情（含完整 prompt 内容） */
-        readonly get: operations["getPromptTemplateById"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * Prompt 模板库
+     * @description 官方 5 个 + UGC（v1.5+）。支持 mode/style/is_official 过滤。
+     */
+    readonly get: operations['listPromptTemplates'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/prompt-templates/{id}': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/prompt-templates/{id}/render": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 渲染 Prompt 模板
-         * @description 传入变量键值对，将模板内的 {{varName}} 占位替换为实际值，
-         *     并自增 use_count。
-         */
-        readonly post: operations["renderPromptTemplate"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** 获取单个 Prompt 模板详情（含完整 prompt 内容） */
+    readonly get: operations['getPromptTemplateById'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/prompt-templates/{id}/render': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/videos": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 视频生成提交（异步）
-         * @description 异步任务，返回 202 + job_id。
-         *     - 配额：免费 1 次/周（需任务解锁）/ Pro 3 次/日
-         *     - 模型：豆包 Seedance 2.0 mini（主力）/ 标准版（Pro 高端）/ SiliconFlow fallback / 图片+TTS 兜底
-         *     - 时长：5 / 10 / 15 秒
-         *     - 日预算熔断：超 ¥100 自动降级到图片+TTS，超 ¥200 暂停真视频
-         */
-        readonly post: operations["submitVideo"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 渲染 Prompt 模板
+     * @description 传入变量键值对，将模板内的 {{varName}} 占位替换为实际值，
+     *     并自增 use_count。
+     */
+    readonly post: operations['renderPromptTemplate'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/videos': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/videos/{id}/status": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 视频生成状态查询
-         * @description 客户端每 3s 轮询，最长 180s 后切 Webhook 推送。
-         *     status：generating / reviewing / published / rejected / timeout。
-         *     is_fallback=true 表示已降级为图片+TTS+Ken Burns 兜底。
-         */
-        readonly get: operations["getVideoStatus"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 视频生成提交（异步）
+     * @description 异步任务，返回 202 + job_id。
+     *     - 配额：免费 1 次/周（需任务解锁）/ Pro 3 次/日
+     *     - 模型：豆包 Seedance 2.0 mini（主力）/ 标准版（Pro 高端）/ SiliconFlow fallback / 图片+TTS 兜底
+     *     - 时长：5 / 10 / 15 秒
+     *     - 日预算熔断：超 ¥100 自动降级到图片+TTS，超 ¥200 暂停真视频
+     */
+    readonly post: operations['submitVideo'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/videos/{id}/status': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/memes": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 发布梗卡
-         * @description 从造梗会话/视频包装为梗卡，入审核队列。
-         *     - status 流转：draft → pending_audit → published / manual_review / rejected / offline
-         *     - AI 生成内容强制带 watermarked=true 与 is_ai_generated=true（合规）
-         */
-        readonly post: operations["publishMeme"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 视频生成状态查询
+     * @description 客户端每 3s 轮询，最长 180s 后切 Webhook 推送。
+     *     status：generating / reviewing / published / rejected / timeout。
+     *     is_fallback=true 表示已降级为图片+TTS+Ken Burns 兜底。
+     */
+    readonly get: operations['getVideoStatus'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/memes': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/memes/feed": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 推荐 feed（热度召回 v1）
-         * @description 游客可读。M1 走热度召回 v1（Redis ZSet + 新品 Top 混合 + 多样性重排）；
-         *     M2 升级为双塔召回 + LightGBM 排序（走 /recommend/feed）。
-         *     游标分页。
-         */
-        readonly get: operations["getMemeFeed"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 发布梗卡
+     * @description 从造梗会话/视频包装为梗卡，入审核队列。
+     *     - status 流转：draft → pending_audit → published / manual_review / rejected / offline
+     *     - AI 生成内容强制带 watermarked=true 与 is_ai_generated=true（合规）
+     */
+    readonly post: operations['publishMeme'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/memes/feed': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/memes/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 梗卡详情
-         * @description 游客可读 published 状态梗卡。返回完整字段含作者摘要、视频、我的评分/收藏。
-         */
-        readonly get: operations["getMeme"];
-        readonly put?: never;
-        readonly post?: never;
-        /**
-         * 删除梗卡（软删除）
-         * @description 作者或管理员可删，软删除（deleted_at）。
-         */
-        readonly delete: operations["deleteMeme"];
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 推荐 feed（热度召回 v1）
+     * @description 游客可读。M1 走热度召回 v1（Redis ZSet + 新品 Top 混合 + 多样性重排）；
+     *     M2 升级为双塔召回 + LightGBM 排序（走 /recommend/feed）。
+     *     游标分页。
+     */
+    readonly get: operations['getMemeFeed'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/memes/{id}': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/memes/{id}/ratings": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 评分列表 */
-        readonly get: operations["listRatings"];
-        readonly put?: never;
-        /**
-         * 评分（1-5 星）
-         * @description 一人一梗一评，24h 内可改分（走 PATCH /ratings/{id}）。
-         *     - 评分权重：评审官 1.5x、新用户 0.5x、同军团 0.8x、普通 1.0x
-         *     - 达 200 评分触发神/烂梗判定 job
-         *     - 青少年模式不可评分
-         */
-        readonly post: operations["createRating"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 梗卡详情
+     * @description 游客可读 published 状态梗卡。返回完整字段含作者摘要、视频、我的评分/收藏。
+     */
+    readonly get: operations['getMeme'];
+    readonly put?: never;
+    readonly post?: never;
+    /**
+     * 删除梗卡（软删除）
+     * @description 作者或管理员可删，软删除（deleted_at）。
+     */
+    readonly delete: operations['deleteMeme'];
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/memes/{id}/ratings': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/memes/{id}/comments": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 评论列表 */
-        readonly get: operations["listComments"];
-        readonly put?: never;
-        /**
-         * 评论 / 回复
-         * @description 走敏感词 DFA + 可疑走阿里云。parent_id 楼中楼（≤3 层）。
-         */
-        readonly post: operations["createComment"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** 评分列表 */
+    readonly get: operations['listRatings'];
+    readonly put?: never;
+    /**
+     * 评分（1-5 星）
+     * @description 一人一梗一评，24h 内可改分（走 PATCH /ratings/{id}）。
+     *     - 评分权重：评审官 1.5x、新用户 0.5x、同军团 0.8x、普通 1.0x
+     *     - 达 200 评分触发神/烂梗判定 job
+     *     - 青少年模式不可评分
+     */
+    readonly post: operations['createRating'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/memes/{id}/comments': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/legions": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 军团广场列表 */
-        readonly get: operations["listLegions"];
-        readonly put?: never;
-        /**
-         * 创建军团
-         * @description - 创建者需 Lv.3+
-         *     - 名称唯一（citext 不区分大小写），3-12 字，禁止敏感词与冒充官方
-         *     - 创建时人审（status=active 但创建后排队人审，违规可 retro-ban）
-         *     - 创建者自动成为 leader 并占用一个军团名额（≤3）
-         */
-        readonly post: operations["createLegion"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** 评论列表 */
+    readonly get: operations['listComments'];
+    readonly put?: never;
+    /**
+     * 评论 / 回复
+     * @description 走敏感词 DFA + 可疑走阿里云。parent_id 楼中楼（≤3 层）。
+     */
+    readonly post: operations['createComment'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/legions': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/legions/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 军团详情
-         * @description 含基础字段 + 成员榜 Top10 + 今日战报 + PK 战绩摘要。
-         */
-        readonly get: operations["getLegion"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** 军团广场列表 */
+    readonly get: operations['listLegions'];
+    readonly put?: never;
+    /**
+     * 创建军团
+     * @description - 创建者需 Lv.3+
+     *     - 名称唯一（citext 不区分大小写），3-12 字，禁止敏感词与冒充官方
+     *     - 创建时人审（status=active 但创建后排队人审，违规可 retro-ban）
+     *     - 创建者自动成为 leader 并占用一个军团名额（≤3）
+     */
+    readonly post: operations['createLegion'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/legions/{id}': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/legions/{id}/join": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 加入军团
-         * @description - join_mode=public 立即加入
-         *     - join_mode=approval 创建 join_request，等待队长审批（status=pending）
-         *     - 用户已加入军团数 ≤ 3
-         */
-        readonly post: operations["joinLegion"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 军团详情
+     * @description 含基础字段 + 成员榜 Top10 + 今日战报 + PK 战绩摘要。
+     */
+    readonly get: operations['getLegion'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/legions/{id}/join': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/pk/matches": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** PK 大厅列表 */
-        readonly get: operations["listPkMatches"];
-        readonly put?: never;
-        /**
-         * 创建 PK（约战/官方）
-         * @description - 鉴权：leader 或运营
-         *     - legion_b 可为空（系统匹配，进入 challenged）
-         *     - 跨段位保护：低 2 段以上不可挑战
-         *     - 单军团同时最多 1 场进行中 PK
-         */
-        readonly post: operations["createPkMatch"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 加入军团
+     * @description - join_mode=public 立即加入
+     *     - join_mode=approval 创建 join_request，等待队长审批（status=pending）
+     *     - 用户已加入军团数 ≤ 3
+     */
+    readonly post: operations['joinLegion'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/pk/matches': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/pk/matches/{id}/vote": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 投票
-         * @description - 3 票/日/PK/用户
-         *     - Redis 实时计数 + DB 异步落盘
-         *     - 实时比分通过 Redis pubsub → WebSocket 推送
-         */
-        readonly post: operations["votePk"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** PK 大厅列表 */
+    readonly get: operations['listPkMatches'];
+    readonly put?: never;
+    /**
+     * 创建 PK（约战/官方）
+     * @description - 鉴权：leader 或运营
+     *     - legion_b 可为空（系统匹配，进入 challenged）
+     *     - 跨段位保护：低 2 段以上不可挑战
+     *     - 单军团同时最多 1 场进行中 PK
+     */
+    readonly post: operations['createPkMatch'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/pk/matches/{id}/vote': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/chat/rooms/{id}/messages": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 消息列表
-         * @description 游标分页，30 天前数据归档不可查。
-         */
-        readonly get: operations["listMessages"];
-        readonly put?: never;
-        /**
-         * 发送消息
-         * @description - msg_type: text/image/meme/voice/system
-         *     - extra 支持 ref_message_id（引用）、mentions（@）、ref_meme_id（梗卡分享）
-         *     - 新成员前 24h 限 3 条/min
-         */
-        readonly post: operations["sendMessage"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 投票
+     * @description - 3 票/日/PK/用户
+     *     - Redis 实时计数 + DB 异步落盘
+     *     - 实时比分通过 Redis pubsub → WebSocket 推送
+     */
+    readonly post: operations['votePk'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/chat/rooms/{id}/messages': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/recommend/feed": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /**
-         * 个性化 feed
-         * @description 鉴权为是（登录后）。M2 起走双塔召回 + LightGBM 排序。
-         *     /memes/feed 的个性化版本。
-         */
-        readonly get: operations["getRecommendFeed"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 消息列表
+     * @description 游标分页，30 天前数据归档不可查。
+     */
+    readonly get: operations['listMessages'];
+    readonly put?: never;
+    /**
+     * 发送消息
+     * @description - msg_type: text/image/meme/voice/system
+     *     - extra 支持 ref_message_id（引用）、mentions（@）、ref_meme_id（梗卡分享）
+     *     - 新成员前 24h 限 3 条/min
+     */
+    readonly post: operations['sendMessage'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/recommend/feed': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/pro/subscriptions": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 订阅 Pro
-         * @description 创建订单 + 拉起微信支付。月费 ¥18（1800 分）。
-         */
-        readonly post: operations["subscribePro"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /**
+     * 个性化 feed
+     * @description 鉴权为是（登录后）。M2 起走双塔召回 + LightGBM 排序。
+     *     /memes/feed 的个性化版本。
+     */
+    readonly get: operations['getRecommendFeed'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/pro/subscriptions': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/orders/wx-pay/callback": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        /**
-         * 微信支付回调
-         * @description 微信支付 v3 规范回调。
-         *     - 路径前缀 /api/internal/webhooks/orders/wx-pay（不走红框包装）
-         *     - 验签：平台证书 RSA-SHA256 + timestamp 防重放
-         *     - 解密：AES-256-GCM resource.ciphertext
-         *     - 业务：更新 orders/payments/pro_subscriptions/video_packages
-         *     - 响应 200 + {"code":"SUCCESS","message":"OK"}（微信规范）
-         *     - 幂等：(order_id, channel_txn_id) 唯一约束防重
-         *     - 重试：微信按 15s/15s/30s/3m/10m/20m/30m/30m/1h/2h/6h/6h 重试 12 次
-         */
-        readonly post: operations["wxPayCallback"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 订阅 Pro
+     * @description 创建订单 + 拉起微信支付。月费 ¥18（1800 分）。
+     */
+    readonly post: operations['subscribePro'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/orders/wx-pay/callback': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/notifications": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 通知列表 */
-        readonly get: operations["listNotifications"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    readonly get?: never;
+    readonly put?: never;
+    /**
+     * 微信支付回调
+     * @description 微信支付 v3 规范回调。
+     *     - 路径前缀 /api/internal/webhooks/orders/wx-pay（不走红框包装）
+     *     - 验签：平台证书 RSA-SHA256 + timestamp 防重放
+     *     - 解密：AES-256-GCM resource.ciphertext
+     *     - 业务：更新 orders/payments/pro_subscriptions/video_packages
+     *     - 响应 200 + {"code":"SUCCESS","message":"OK"}（微信规范）
+     *     - 幂等：(order_id, channel_txn_id) 唯一约束防重
+     *     - 重试：微信按 15s/15s/30s/3m/10m/20m/30m/30m/1h/2h/6h/6h 重试 12 次
+     */
+    readonly post: operations['wxPayCallback'];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/notifications': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly "/health": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        /** 健康检查 */
-        readonly get: operations["health"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
+    /** 通知列表 */
+    readonly get: operations['listNotifications'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly '/health': {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
+    /** 健康检查 */
+    readonly get: operations['health'];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
 };
 export type webhooks = Record<string, never>;
 export type components = {
-    schemas: {
-        readonly ApiResponse: {
-            /**
-             * @description 0=成功，非 0=业务错误码
-             * @example 0
-             */
-            readonly code: number;
-            /** @description 业务数据，错误时为 null */
-            readonly data?: unknown;
-            /** @example ok */
-            readonly message: string;
-            /**
-             * @description 32 位 ULID，链路追踪
-             * @example 01HQK8X9J2RT7N1V4Y6Z3B5M6P
-             */
-            readonly request_id?: string;
-        };
-        readonly Paged: {
-            readonly list: readonly unknown[];
-            readonly total: number;
-            readonly page: number;
-            readonly page_size: number;
-            readonly has_more: boolean;
-        };
-        readonly Error: {
-            readonly code: number;
-            readonly message: string;
-            readonly request_id?: string;
-        };
-        readonly SmsSendRequest: {
-            /**
-             * @description E.164 格式，含国家码
-             * @example +8613800000000
-             */
-            readonly phone: string;
-            /**
-             * @default login
-             * @enum {string}
-             */
-            readonly scene: "login" | "bind" | "reset";
-        };
-        readonly SmsSendResponse: {
-            /** @example true */
-            readonly sent?: boolean;
-            /**
-             * @description 验证码有效期（秒）
-             * @example 300
-             */
-            readonly expire_in?: number;
-            /**
-             * @description 下次可发送间隔（秒）
-             * @example 60
-             */
-            readonly next_send_in?: number;
-        };
-        readonly SmsLoginRequest: {
-            readonly phone: string;
-            readonly code: string;
-            /** @description 设备指纹，用于风控 */
-            readonly device_id?: string;
-        };
-        readonly RefreshRequest: {
-            /** Format: uuid */
-            readonly refresh_token: string;
-        };
-        readonly AuthToken: {
-            readonly access_token?: string;
-            /** Format: uuid */
-            readonly refresh_token?: string;
-            /** @example 7200 */
-            readonly expires_in?: number;
-            /** @example Bearer */
-            readonly token_type?: string;
-            readonly user?: components["schemas"]["UserSummary"];
-        };
-        readonly UserSummary: {
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly nickname?: string;
-            readonly avatar_url?: string | null;
-            readonly level?: number;
-            readonly meme_power?: number;
-            readonly is_pro?: boolean;
-            readonly is_new_user?: boolean;
-            readonly need_interest_tags?: boolean;
-        };
-        /** @description 当前用户资料，对齐 users + user_profiles 表 */
-        readonly UserProfile: {
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly nickname?: string;
-            readonly avatar_url?: string | null;
-            /** @enum {string} */
-            readonly gender?: "male" | "female" | "other" | "unknown";
-            /** Format: date */
-            readonly birthday?: string | null;
-            readonly bio?: string | null;
-            readonly level?: number;
-            /** @description 梗力值 */
-            readonly meme_power?: number;
-            /** @description 破防值 */
-            readonly defense_value?: number;
-            /** @description 梗能量余额 */
-            readonly energy_balance?: number;
-            /** @description 已加入军团数（≤3） */
-            readonly legion_count?: number;
-            readonly is_pro?: boolean;
-            readonly interest_tags?: readonly string[];
-            readonly badges?: readonly string[];
-            /** @enum {string} */
-            readonly status?: "active" | "banned" | "teen_mode" | "deleted";
-            /** Format: date-time */
-            readonly last_login_at?: string;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly UpdateUserRequest: {
-            readonly nickname?: string;
-            readonly avatar_url?: string;
-            /** @enum {string} */
-            readonly gender?: "male" | "female" | "other" | "unknown";
-            readonly bio?: string;
-            /** Format: date */
-            readonly birthday?: string;
-        };
-        readonly UserHome: {
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly nickname?: string;
-            readonly avatar_url?: string | null;
-            readonly bio?: string | null;
-            readonly level?: number;
-            readonly meme_power?: number;
-            readonly defense_value?: number;
-            readonly is_pro?: boolean;
-            readonly is_following?: boolean;
-            readonly legion_ids?: readonly string[];
-            readonly stats?: {
-                readonly meme_count?: number;
-                readonly god_meme_count?: number;
-                /** Format: float */
-                readonly avg_score?: number;
-                readonly pk_wins?: number;
-            };
-            readonly badges?: readonly string[];
-        };
-        /** @description 梗力值 & 能量概览 */
-        readonly MemePower: {
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly meme_power?: number;
-            readonly level?: number;
-            readonly defense_value?: number;
-            readonly energy_balance?: number;
-            readonly max_energy?: number;
-            readonly level_progress?: {
-                readonly current_level?: number;
-                readonly current_label?: string;
-                readonly current_meme_power?: number;
-                readonly next_level?: number | null;
-                readonly next_label?: string | null;
-                /** @description 到下一级还需 x 梗力值 */
-                readonly meme_power_needed?: number;
-                /**
-                 * Format: float
-                 * @description 本等级进度百分比 0-100
-                 */
-                readonly progress_percent?: number;
-            };
-        };
-        /** @description 等级详情（含下一等级进度），满级时 next 字段为 null */
-        readonly LevelDetail: {
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly current_level?: number;
-            readonly current_label?: string;
-            readonly meme_power?: number;
-            readonly next?: {
-                readonly level?: number;
-                readonly label?: string;
-                readonly meme_power_needed?: number;
-                /** Format: float */
-                readonly progress_percent?: number;
-            } | null;
-            /** @description 是否已满级 */
-            readonly max_level?: boolean;
-        };
-        readonly CreationSingleRequest: {
-            /** @enum {string} */
-            readonly mode: "text" | "image";
-            readonly prompt: string;
-            /** @description text=abstract/yin_yang/pun/twist/meme_caption；image=realistic/anime/expression_pack/oil_paint */
-            readonly style?: string;
-            /** Format: uuid */
-            readonly template_id?: string | null;
-            /**
-             * Format: uuid
-             * @description 基于 creation_id 重新生成
-             */
-            readonly regenerate_from?: string | null;
-        };
-        readonly CreationResult: {
-            /** Format: uuid */
-            readonly creation_id?: string;
-            /** @enum {string} */
-            readonly status?: "pending" | "ready" | "published" | "failed";
-            readonly mode?: string;
-            readonly candidates?: readonly components["schemas"]["CreationCandidate"][];
-            readonly energy_cost?: number;
-            /** @example deepseek-v3 */
-            readonly model_version?: string;
-            /** @description 是否命中 Redis prompt 缓存 */
-            readonly cached?: boolean;
-        };
-        readonly CreationCandidate: {
-            /** Format: uuid */
-            readonly candidate_id?: string;
-            readonly idx?: number;
-            readonly content?: string | null;
-            readonly image_url?: string | null;
-            /** Format: float */
-            readonly self_score?: number | null;
-        };
-        /** @description 模板列表摘要（不含 prompt 正文） */
-        readonly PromptTemplateSummary: {
-            /** Format: uuid */
-            readonly template_id?: string;
-            /** @enum {string} */
-            readonly mode?: "text" | "image" | "script";
-            readonly name?: string;
-            readonly style?: string | null;
-            /** @description 模板声明的变量名列表 */
-            readonly variables?: readonly string[];
-            readonly is_official?: boolean;
-            readonly use_count?: number;
-            readonly status?: string;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        /** @description 模板完整详情（含 prompt 正文） */
-        readonly PromptTemplateDetail: components["schemas"]["PromptTemplateSummary"] & {
-            /** @description 系统提示词（给 AI 的行为指令） */
-            readonly system_prompt?: string;
-            /** @description 用户模板（含 {{varName}} 占位） */
-            readonly user_template?: string;
-            /** @description 示例输出 */
-            readonly example_output?: Record<string, never> | null;
-            /** Format: uuid */
-            readonly creator_id?: string | null;
-        };
-        /** @description 模板渲染结果 */
-        readonly PromptTemplateRenderResult: {
-            /** Format: uuid */
-            readonly template_id?: string;
-            readonly mode?: string;
-            readonly name?: string;
-            readonly system_prompt?: string;
-            /** @description 变量插值后的用户提示词 */
-            readonly rendered_user_template?: string;
-            /** @description Agent 自评分（仅 agent 模式） */
-            readonly style?: string | null;
-            readonly self_reason?: string | null;
-        };
-        readonly AgentSubmitRequest: {
-            /** @enum {string} */
-            readonly mode: "text";
-            readonly prompt: string;
-            readonly style?: string;
-            /** Format: uuid */
-            readonly template_id?: string | null;
-        };
-        readonly AgentJobAck: {
-            /** Format: uuid */
-            readonly job_id?: string;
-            /** Format: uuid */
-            readonly creation_id?: string;
-            /** @enum {string} */
-            readonly status?: "queued";
-            /** @example /api/v1/agent-jobs/uuid-job-1 */
-            readonly poll_url?: string;
-            /** @example 25 */
-            readonly estimated_seconds?: number;
-        };
-        readonly AgentJob: {
-            /** Format: uuid */
-            readonly job_id?: string;
-            /** Format: uuid */
-            readonly creation_id?: string;
-            /** @enum {string} */
-            readonly status?: "queued" | "running" | "succeeded" | "failed" | "timeout";
-            /** @example 3 */
-            readonly steps_total?: number;
-            readonly steps_done?: number;
-            /** @description true=已降级为单次 prompt 模式 */
-            readonly fallback_used?: boolean;
-            /** Format: float */
-            readonly cost_estimate?: number;
-            /** Format: date-time */
-            readonly started_at?: string | null;
-            /** Format: date-time */
-            readonly finished_at?: string | null;
-            readonly candidates?: readonly components["schemas"]["CreationCandidate"][];
-            readonly chosen_idx?: number | null;
-            readonly error?: string | null;
-        };
-        /** @description 对齐 prompt_templates 表 */
-        readonly PromptTemplate: {
-            /** Format: uuid */
-            readonly template_id?: string;
-            /** @enum {string} */
-            readonly mode?: "text" | "image" | "script";
-            readonly name?: string;
-            readonly style?: string;
-            readonly is_official?: boolean;
-            readonly use_count?: number;
-            readonly variables?: readonly string[];
-            readonly example_output?: Record<string, never>;
-        };
-        readonly VideoSubmitRequest: {
-            /** Format: uuid */
-            readonly creation_id?: string | null;
-            /** @enum {string} */
-            readonly source_type: "text_to_video" | "image_to_video" | "fallback_image_tts";
-            /** @enum {integer} */
-            readonly duration: 5 | 10 | 15;
-            /** @enum {string} */
-            readonly voice_id?: "funny" | "northeast" | "queen" | "robot";
-            readonly subtitle_text?: string;
-        };
-        readonly VideoJobAck: {
-            /** Format: uuid */
-            readonly job_id?: string;
-            /** Format: uuid */
-            readonly video_id?: string;
-            /** @enum {string} */
-            readonly status?: "queued";
-            readonly poll_url?: string;
-            readonly is_fallback?: boolean;
-            readonly estimated_seconds?: number;
-        };
-        /** @description 对齐 meme_videos 表 */
-        readonly VideoStatus: {
-            /** Format: uuid */
-            readonly video_id?: string;
-            /** @enum {string} */
-            readonly status?: "generating" | "reviewing" | "published" | "rejected" | "timeout";
-            readonly progress?: number;
-            readonly is_fallback?: boolean;
-            /** @example seedance-2-mini */
-            readonly model_version?: string;
-            readonly file_url?: string | null;
-            readonly cover_url?: string | null;
-            readonly duration?: number;
-            readonly voice_id?: string | null;
-            readonly subtitle_text?: string | null;
-            /** Format: float */
-            readonly ai_cost?: number;
-            readonly error?: string | null;
-        };
-        readonly MemePublishRequest: {
-            /** Format: uuid */
-            readonly creation_id?: string | null;
-            /** Format: uuid */
-            readonly video_id?: string | null;
-            /** @enum {string} */
-            readonly type: "text" | "image" | "video";
-            readonly title: string;
-            readonly tags?: readonly string[];
-            /** Format: uuid */
-            readonly legion_id?: string | null;
-            readonly cover_url?: string | null;
-            readonly is_ai_generated: boolean;
-        };
-        /** @description 对齐 meme_cards 表 */
-        readonly MemeCard: {
-            /** Format: uuid */
-            readonly meme_id?: string;
-            /** Format: uuid */
-            readonly author_id?: string;
-            /** Format: uuid */
-            readonly creation_id?: string | null;
-            /** @enum {string} */
-            readonly type?: "text" | "image" | "video";
-            readonly cover_url?: string | null;
-            readonly title?: string;
-            readonly tags?: readonly string[];
-            /** Format: uuid */
-            readonly legion_id?: string | null;
-            /** @enum {string} */
-            readonly status?: "draft" | "pending_audit" | "published" | "manual_review" | "rejected" | "offline";
-            /** @enum {string} */
-            readonly god_trash_status?: "pending" | "god" | "trash";
-            readonly is_ai_generated?: boolean;
-            readonly watermarked?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        /** @description feed 列表项 */
-        readonly MemeCardSummary: {
-            /** Format: uuid */
-            readonly meme_id?: string;
-            /** Format: uuid */
-            readonly author_id?: string;
-            readonly author_nickname?: string;
-            readonly author_avatar_url?: string | null;
-            /** @enum {string} */
-            readonly type?: "text" | "image" | "video";
-            readonly cover_url?: string | null;
-            readonly title?: string;
-            readonly tags?: readonly string[];
-            /** Format: uuid */
-            readonly legion_id?: string | null;
-            /** Format: float */
-            readonly score_avg?: number;
-            readonly score_count?: number;
-            readonly comment_count?: number;
-            readonly share_count?: number;
-            /** Format: float */
-            readonly hot_score?: number;
-            /** @enum {string} */
-            readonly god_trash_status?: "pending" | "god" | "trash";
-            readonly is_ai_generated?: boolean;
-            /** Format: date-time */
-            readonly published_at?: string;
-        };
-        readonly MemeDetail: components["schemas"]["MemeCardSummary"] & {
-            readonly author?: components["schemas"]["UserSummary"];
-            readonly legion?: {
-                /** Format: uuid */
-                readonly legion_id?: string;
-                readonly name?: string;
-                readonly avatar_url?: string;
-            } | null;
-            readonly favorite_count?: number;
-            readonly view_count?: number;
-            /** Format: float */
-            readonly completion_rate?: number;
-            readonly video?: components["schemas"]["VideoStatus"];
-            /** @description 我的评分（1-5），未评分为 null */
-            readonly my_rating?: number | null;
-            readonly my_favorite?: boolean;
-            /** Format: date-time */
-            readonly published_at?: string | null;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly RatingCreateRequest: {
-            readonly star: number;
-            readonly dimensions?: {
-                readonly laugh?: number;
-                readonly creative?: number;
-                readonly spread?: number;
-            };
-            /** @description 二元判定（神/烂梗） */
-            readonly is_god_trash_vote?: boolean;
-            readonly comment?: string;
-        };
-        /** @description 对齐 ratings 表 */
-        readonly Rating: {
-            /** Format: uuid */
-            readonly score_id?: string;
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly user_nickname?: string;
-            readonly user_avatar_url?: string | null;
-            readonly star?: number;
-            readonly is_judge?: boolean;
-            readonly is_god_trash_vote?: boolean;
-            readonly comment?: string | null;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly RatingResult: {
-            /** Format: uuid */
-            readonly score_id?: string;
-            /** Format: uuid */
-            readonly meme_id?: string;
-            /** Format: uuid */
-            readonly user_id?: string;
-            readonly star?: number;
-            readonly is_judge?: boolean;
-            /** Format: float */
-            readonly weight?: number;
-            /** Format: float */
-            readonly meme_score_avg?: number;
-            readonly meme_score_count?: number;
-            readonly god_trash_triggered?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly CommentCreateRequest: {
-            readonly content: string;
-            /** Format: uuid */
-            readonly parent_id?: string | null;
-            /**
-             * Format: uuid
-             * @description 引用梗卡（造梗接龙）
-             */
-            readonly ref_meme_id?: string | null;
-            /** @description 评论本身是否为新梗卡 */
-            readonly is_meme_card?: boolean;
-        };
-        /** @description 对齐 comments 表 */
-        readonly Comment: {
-            /** Format: uuid */
-            readonly comment_id?: string;
-            /** Format: uuid */
-            readonly meme_id?: string;
-            /** Format: uuid */
-            readonly user_id?: string;
-            /** Format: uuid */
-            readonly parent_id?: string | null;
-            readonly content?: string;
-            readonly like_count?: number;
-            readonly is_god_comment?: boolean;
-            /** @enum {string} */
-            readonly status?: "published" | "hidden" | "deleted";
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly LegionCreateRequest: {
-            readonly name: string;
-            readonly slogan?: string;
-            readonly avatar_url?: string;
-            readonly theme_tags?: readonly string[];
-            /**
-             * @default approval
-             * @enum {string}
-             */
-            readonly join_mode: "public" | "approval";
-        };
-        /** @description 对齐 legions 表 */
-        readonly Legion: {
-            /** Format: uuid */
-            readonly legion_id?: string;
-            readonly name?: string;
-            readonly slogan?: string | null;
-            readonly avatar_url?: string | null;
-            readonly theme_tags?: readonly string[];
-            /** Format: uuid */
-            readonly leader_id?: string;
-            readonly level?: number;
-            readonly activity_score?: number;
-            readonly member_count?: number;
-            readonly member_cap?: number;
-            /** @enum {string} */
-            readonly join_mode?: "public" | "approval";
-            readonly badges?: readonly string[];
-            readonly pk_wins?: number;
-            readonly pk_losses?: number;
-            /** @enum {string} */
-            readonly status?: "active" | "frozen" | "dissolved";
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly LegionDetail: components["schemas"]["Legion"] & {
-            readonly top_members?: readonly {
-                /** Format: uuid */
-                readonly user_id?: string;
-                readonly nickname?: string;
-                readonly avatar_url?: string;
-                readonly contribution?: number;
-                readonly role?: string;
-            }[];
-            readonly today_report?: {
-                readonly new_members?: number;
-                readonly new_memes?: number;
-                readonly pk_progress?: string;
-            };
-        };
-        readonly LegionJoinResult: {
-            /** Format: uuid */
-            readonly membership_id?: string;
-            /** Format: uuid */
-            readonly legion_id?: string;
-            /** Format: uuid */
-            readonly user_id?: string;
-            /** @enum {string} */
-            readonly role?: "leader" | "vice_leader" | "member";
-            readonly contribution?: number;
-            /** Format: date-time */
-            readonly joined_at?: string;
-            /** @enum {string} */
-            readonly status?: "joined" | "pending";
-        };
-        readonly PkCreateRequest: {
-            /** @enum {string} */
-            readonly type: "creation" | "vote" | "hotness";
-            /** Format: uuid */
-            readonly legion_a: string;
-            /**
-             * Format: uuid
-             * @description 为空表示系统匹配
-             */
-            readonly legion_b?: string | null;
-            readonly theme: string;
-            /** Format: date-time */
-            readonly start_at: string;
-            /** Format: date-time */
-            readonly end_at: string;
-            /** @default false */
-            readonly is_official: boolean;
-        };
-        /** @description 对齐 pk_matches 表 */
-        readonly PkMatch: {
-            /** Format: uuid */
-            readonly pk_id?: string;
-            /** @enum {string} */
-            readonly type?: "creation" | "vote" | "hotness";
-            readonly legion_a?: {
-                /** Format: uuid */
-                readonly legion_id?: string;
-                readonly name?: string;
-                readonly avatar_url?: string;
-            };
-            readonly legion_b?: {
-                /** Format: uuid */
-                readonly legion_id?: string;
-                readonly name?: string;
-                readonly avatar_url?: string;
-            };
-            readonly theme?: string;
-            /** Format: date-time */
-            readonly start_at?: string;
-            /** Format: date-time */
-            readonly end_at?: string;
-            /** @enum {string} */
-            readonly status?: "idle" | "challenged" | "accepted" | "preparing" | "battling" | "judging" | "settled" | "archived";
-            /** Format: float */
-            readonly score_a?: number;
-            /** Format: float */
-            readonly score_b?: number;
-            /** Format: uuid */
-            readonly winner_id?: string | null;
-            /** Format: uuid */
-            readonly mvp_user_id?: string | null;
-            readonly is_official?: boolean;
-            readonly my_votes_today?: number;
-        };
-        readonly PkVoteResult: {
-            /** Format: uuid */
-            readonly vote_id?: string;
-            /** Format: uuid */
-            readonly pk_id?: string;
-            /** Format: uuid */
-            readonly legion_id?: string;
-            readonly my_votes_today?: number;
-            readonly votes_remaining_today?: number;
-            readonly current_scores?: {
-                /** Format: float */
-                readonly legion_a?: number;
-                /** Format: float */
-                readonly legion_b?: number;
-            };
-            /** Format: date-time */
-            readonly voted_at?: string;
-        };
-        readonly MessageSendRequest: {
-            /** @enum {string} */
-            readonly msg_type: "text" | "image" | "meme" | "voice" | "system";
-            readonly content?: string | null;
-            readonly extra?: {
-                /** Format: uuid */
-                readonly ref_message_id?: string | null;
-                readonly mentions?: readonly string[];
-                /** Format: uuid */
-                readonly ref_meme_id?: string | null;
-            };
-        };
-        /** @description 对齐 messages 表 */
-        readonly Message: {
-            /** Format: uuid */
-            readonly message_id?: string;
-            /** Format: uuid */
-            readonly room_id?: string;
-            /** Format: uuid */
-            readonly sender_id?: string;
-            readonly sender_nickname?: string;
-            readonly sender_avatar_url?: string | null;
-            /** @enum {string} */
-            readonly msg_type?: "text" | "image" | "meme" | "voice" | "system";
-            readonly content?: string | null;
-            readonly extra?: Record<string, never>;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        readonly ProSubscribeRequest: {
-            /** @enum {string} */
-            readonly plan: "monthly" | "yearly";
-            /** @default true */
-            readonly auto_renew: boolean;
-            /** @enum {string} */
-            readonly channel: "wechat" | "alipay" | "apple";
-        };
-        /** @description 对齐 orders 表 */
-        readonly OrderCreated: {
-            /** Format: uuid */
-            readonly order_id?: string;
-            /** Format: uuid */
-            readonly sub_id?: string | null;
-            /** @enum {string} */
-            readonly product_type?: "pro" | "video_pkg";
-            /** @example 1800 */
-            readonly amount_cents?: number;
-            readonly channel?: string;
-            /** @enum {string} */
-            readonly status?: "pending" | "paid" | "failed" | "refunded";
-            /** @description 微信支付拉起参数（appid/timestamp/noncestr/package/sign_type/pay_sign） */
-            readonly wx_pay_params?: Record<string, never> | null;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
-        /** @description 对齐 notifications 表 */
-        readonly Notification: {
-            /** Format: uuid */
-            readonly notif_id?: string;
-            /** @enum {string} */
-            readonly type?: "rating" | "god_meme" | "pk" | "reward" | "violation" | "pro" | "agent_done" | "comment" | "follow";
-            readonly title?: string;
-            readonly body?: string;
-            readonly payload?: Record<string, never>;
-            readonly is_read?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
-        };
+  schemas: {
+    readonly ApiResponse: {
+      /**
+       * @description 0=成功，非 0=业务错误码
+       * @example 0
+       */
+      readonly code: number;
+      /** @description 业务数据，错误时为 null */
+      readonly data?: unknown;
+      /** @example ok */
+      readonly message: string;
+      /**
+       * @description 32 位 ULID，链路追踪
+       * @example 01HQK8X9J2RT7N1V4Y6Z3B5M6P
+       */
+      readonly request_id?: string;
     };
-    responses: {
-        /** @description 未认证 / token 失效 */
-        readonly Unauthorized: {
-            headers: {
-                readonly [name: string]: unknown;
-            };
-            content: {
-                readonly "application/json": components["schemas"]["ApiResponse"];
-            };
-        };
-        /** @description 无权限 */
-        readonly Forbidden: {
-            headers: {
-                readonly [name: string]: unknown;
-            };
-            content: {
-                readonly "application/json": components["schemas"]["ApiResponse"];
-            };
-        };
-        /** @description 资源不存在 */
-        readonly NotFound: {
-            headers: {
-                readonly [name: string]: unknown;
-            };
-            content: {
-                readonly "application/json": components["schemas"]["ApiResponse"];
-            };
-        };
-        /** @description 参数错误 */
-        readonly BadRequest: {
-            headers: {
-                readonly [name: string]: unknown;
-            };
-            content: {
-                readonly "application/json": components["schemas"]["ApiResponse"];
-            };
-        };
-        /** @description 限流 */
-        readonly RateLimited: {
-            headers: {
-                readonly "Retry-After"?: number;
-                readonly "X-RateLimit-Limit"?: number;
-                readonly "X-RateLimit-Remaining"?: number;
-                readonly "X-RateLimit-Reset"?: number;
-                readonly [name: string]: unknown;
-            };
-            content: {
-                readonly "application/json": components["schemas"]["ApiResponse"];
-            };
-        };
+    readonly Paged: {
+      readonly list: readonly unknown[];
+      readonly total: number;
+      readonly page: number;
+      readonly page_size: number;
+      readonly has_more: boolean;
     };
-    parameters: {
-        readonly Page: number;
-        readonly PageSize: number;
-        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-        readonly IdempotencyKey: string;
-        readonly UserIdPath: string;
+    readonly Error: {
+      readonly code: number;
+      readonly message: string;
+      readonly request_id?: string;
     };
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    readonly SmsSendRequest: {
+      /**
+       * @description E.164 格式，含国家码
+       * @example +8613800000000
+       */
+      readonly phone: string;
+      /**
+       * @default login
+       * @enum {string}
+       */
+      readonly scene: 'login' | 'bind' | 'reset';
+    };
+    readonly SmsSendResponse: {
+      /** @example true */
+      readonly sent?: boolean;
+      /**
+       * @description 验证码有效期（秒）
+       * @example 300
+       */
+      readonly expire_in?: number;
+      /**
+       * @description 下次可发送间隔（秒）
+       * @example 60
+       */
+      readonly next_send_in?: number;
+    };
+    readonly SmsLoginRequest: {
+      readonly phone: string;
+      readonly code: string;
+      /** @description 设备指纹，用于风控 */
+      readonly device_id?: string;
+    };
+    readonly RefreshRequest: {
+      /** Format: uuid */
+      readonly refresh_token: string;
+    };
+    readonly AuthToken: {
+      readonly access_token?: string;
+      /** Format: uuid */
+      readonly refresh_token?: string;
+      /** @example 7200 */
+      readonly expires_in?: number;
+      /** @example Bearer */
+      readonly token_type?: string;
+      readonly user?: components['schemas']['UserSummary'];
+    };
+    readonly UserSummary: {
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly nickname?: string;
+      readonly avatar_url?: string | null;
+      readonly level?: number;
+      readonly meme_power?: number;
+      readonly is_pro?: boolean;
+      readonly is_new_user?: boolean;
+      readonly need_interest_tags?: boolean;
+    };
+    /** @description 当前用户资料，对齐 users + user_profiles 表 */
+    readonly UserProfile: {
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly nickname?: string;
+      readonly avatar_url?: string | null;
+      /** @enum {string} */
+      readonly gender?: 'male' | 'female' | 'other' | 'unknown';
+      /** Format: date */
+      readonly birthday?: string | null;
+      readonly bio?: string | null;
+      readonly level?: number;
+      /** @description 梗力值 */
+      readonly meme_power?: number;
+      /** @description 破防值 */
+      readonly defense_value?: number;
+      /** @description 梗能量余额 */
+      readonly energy_balance?: number;
+      /** @description 已加入军团数（≤3） */
+      readonly legion_count?: number;
+      readonly is_pro?: boolean;
+      readonly interest_tags?: readonly string[];
+      readonly badges?: readonly string[];
+      /** @enum {string} */
+      readonly status?: 'active' | 'banned' | 'teen_mode' | 'deleted';
+      /** Format: date-time */
+      readonly last_login_at?: string;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly UpdateUserRequest: {
+      readonly nickname?: string;
+      readonly avatar_url?: string;
+      /** @enum {string} */
+      readonly gender?: 'male' | 'female' | 'other' | 'unknown';
+      readonly bio?: string;
+      /** Format: date */
+      readonly birthday?: string;
+    };
+    readonly UserHome: {
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly nickname?: string;
+      readonly avatar_url?: string | null;
+      readonly bio?: string | null;
+      readonly level?: number;
+      readonly meme_power?: number;
+      readonly defense_value?: number;
+      readonly is_pro?: boolean;
+      readonly is_following?: boolean;
+      readonly legion_ids?: readonly string[];
+      readonly stats?: {
+        readonly meme_count?: number;
+        readonly god_meme_count?: number;
+        /** Format: float */
+        readonly avg_score?: number;
+        readonly pk_wins?: number;
+      };
+      readonly badges?: readonly string[];
+    };
+    /** @description 梗力值 & 能量概览 */
+    readonly MemePower: {
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly meme_power?: number;
+      readonly level?: number;
+      readonly defense_value?: number;
+      readonly energy_balance?: number;
+      readonly max_energy?: number;
+      readonly level_progress?: {
+        readonly current_level?: number;
+        readonly current_label?: string;
+        readonly current_meme_power?: number;
+        readonly next_level?: number | null;
+        readonly next_label?: string | null;
+        /** @description 到下一级还需 x 梗力值 */
+        readonly meme_power_needed?: number;
+        /**
+         * Format: float
+         * @description 本等级进度百分比 0-100
+         */
+        readonly progress_percent?: number;
+      };
+    };
+    /** @description 等级详情（含下一等级进度），满级时 next 字段为 null */
+    readonly LevelDetail: {
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly current_level?: number;
+      readonly current_label?: string;
+      readonly meme_power?: number;
+      readonly next?: {
+        readonly level?: number;
+        readonly label?: string;
+        readonly meme_power_needed?: number;
+        /** Format: float */
+        readonly progress_percent?: number;
+      } | null;
+      /** @description 是否已满级 */
+      readonly max_level?: boolean;
+    };
+    readonly CreationSingleRequest: {
+      /** @enum {string} */
+      readonly mode: 'text' | 'image';
+      readonly prompt: string;
+      /** @description text=abstract/yin_yang/pun/twist/meme_caption；image=realistic/anime/expression_pack/oil_paint */
+      readonly style?: string;
+      /** Format: uuid */
+      readonly template_id?: string | null;
+      /**
+       * Format: uuid
+       * @description 基于 creation_id 重新生成
+       */
+      readonly regenerate_from?: string | null;
+    };
+    readonly CreationResult: {
+      /** Format: uuid */
+      readonly creation_id?: string;
+      /** @enum {string} */
+      readonly status?: 'pending' | 'ready' | 'published' | 'failed';
+      readonly mode?: string;
+      readonly candidates?: readonly components['schemas']['CreationCandidate'][];
+      readonly energy_cost?: number;
+      /** @example deepseek-v3 */
+      readonly model_version?: string;
+      /** @description 是否命中 Redis prompt 缓存 */
+      readonly cached?: boolean;
+    };
+    readonly CreationCandidate: {
+      /** Format: uuid */
+      readonly candidate_id?: string;
+      readonly idx?: number;
+      readonly content?: string | null;
+      readonly image_url?: string | null;
+      /** Format: float */
+      readonly self_score?: number | null;
+    };
+    /** @description 模板列表摘要（不含 prompt 正文） */
+    readonly PromptTemplateSummary: {
+      /** Format: uuid */
+      readonly template_id?: string;
+      /** @enum {string} */
+      readonly mode?: 'text' | 'image' | 'script';
+      readonly name?: string;
+      readonly style?: string | null;
+      /** @description 模板声明的变量名列表 */
+      readonly variables?: readonly string[];
+      readonly is_official?: boolean;
+      readonly use_count?: number;
+      readonly status?: string;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    /** @description 模板完整详情（含 prompt 正文） */
+    readonly PromptTemplateDetail: components['schemas']['PromptTemplateSummary'] & {
+      /** @description 系统提示词（给 AI 的行为指令） */
+      readonly system_prompt?: string;
+      /** @description 用户模板（含 {{varName}} 占位） */
+      readonly user_template?: string;
+      /** @description 示例输出 */
+      readonly example_output?: Record<string, never> | null;
+      /** Format: uuid */
+      readonly creator_id?: string | null;
+    };
+    /** @description 模板渲染结果 */
+    readonly PromptTemplateRenderResult: {
+      /** Format: uuid */
+      readonly template_id?: string;
+      readonly mode?: string;
+      readonly name?: string;
+      readonly system_prompt?: string;
+      /** @description 变量插值后的用户提示词 */
+      readonly rendered_user_template?: string;
+      /** @description Agent 自评分（仅 agent 模式） */
+      readonly style?: string | null;
+      readonly self_reason?: string | null;
+    };
+    readonly AgentSubmitRequest: {
+      /** @enum {string} */
+      readonly mode: 'text';
+      readonly prompt: string;
+      readonly style?: string;
+      /** Format: uuid */
+      readonly template_id?: string | null;
+    };
+    readonly AgentJobAck: {
+      /** Format: uuid */
+      readonly job_id?: string;
+      /** Format: uuid */
+      readonly creation_id?: string;
+      /** @enum {string} */
+      readonly status?: 'queued';
+      /** @example /api/v1/agent-jobs/uuid-job-1 */
+      readonly poll_url?: string;
+      /** @example 25 */
+      readonly estimated_seconds?: number;
+    };
+    readonly AgentJob: {
+      /** Format: uuid */
+      readonly job_id?: string;
+      /** Format: uuid */
+      readonly creation_id?: string;
+      /** @enum {string} */
+      readonly status?: 'queued' | 'running' | 'succeeded' | 'failed' | 'timeout';
+      /** @example 3 */
+      readonly steps_total?: number;
+      readonly steps_done?: number;
+      /** @description true=已降级为单次 prompt 模式 */
+      readonly fallback_used?: boolean;
+      /** Format: float */
+      readonly cost_estimate?: number;
+      /** Format: date-time */
+      readonly started_at?: string | null;
+      /** Format: date-time */
+      readonly finished_at?: string | null;
+      readonly candidates?: readonly components['schemas']['CreationCandidate'][];
+      readonly chosen_idx?: number | null;
+      readonly error?: string | null;
+    };
+    /** @description 对齐 prompt_templates 表 */
+    readonly PromptTemplate: {
+      /** Format: uuid */
+      readonly template_id?: string;
+      /** @enum {string} */
+      readonly mode?: 'text' | 'image' | 'script';
+      readonly name?: string;
+      readonly style?: string;
+      readonly is_official?: boolean;
+      readonly use_count?: number;
+      readonly variables?: readonly string[];
+      readonly example_output?: Record<string, never>;
+    };
+    readonly VideoSubmitRequest: {
+      /** Format: uuid */
+      readonly creation_id?: string | null;
+      /** @enum {string} */
+      readonly source_type: 'text_to_video' | 'image_to_video' | 'fallback_image_tts';
+      /** @enum {integer} */
+      readonly duration: 5 | 10 | 15;
+      /** @enum {string} */
+      readonly voice_id?: 'funny' | 'northeast' | 'queen' | 'robot';
+      readonly subtitle_text?: string;
+    };
+    readonly VideoJobAck: {
+      /** Format: uuid */
+      readonly job_id?: string;
+      /** Format: uuid */
+      readonly video_id?: string;
+      /** @enum {string} */
+      readonly status?: 'queued';
+      readonly poll_url?: string;
+      readonly is_fallback?: boolean;
+      readonly estimated_seconds?: number;
+    };
+    /** @description 对齐 meme_videos 表 */
+    readonly VideoStatus: {
+      /** Format: uuid */
+      readonly video_id?: string;
+      /** @enum {string} */
+      readonly status?: 'generating' | 'reviewing' | 'published' | 'rejected' | 'timeout';
+      readonly progress?: number;
+      readonly is_fallback?: boolean;
+      /** @example seedance-2-mini */
+      readonly model_version?: string;
+      readonly file_url?: string | null;
+      readonly cover_url?: string | null;
+      readonly duration?: number;
+      readonly voice_id?: string | null;
+      readonly subtitle_text?: string | null;
+      /** Format: float */
+      readonly ai_cost?: number;
+      readonly error?: string | null;
+    };
+    readonly MemePublishRequest: {
+      /** Format: uuid */
+      readonly creation_id?: string | null;
+      /** Format: uuid */
+      readonly video_id?: string | null;
+      /** @enum {string} */
+      readonly type: 'text' | 'image' | 'video';
+      readonly title: string;
+      readonly tags?: readonly string[];
+      /** Format: uuid */
+      readonly legion_id?: string | null;
+      readonly cover_url?: string | null;
+      readonly is_ai_generated: boolean;
+    };
+    /** @description 对齐 meme_cards 表 */
+    readonly MemeCard: {
+      /** Format: uuid */
+      readonly meme_id?: string;
+      /** Format: uuid */
+      readonly author_id?: string;
+      /** Format: uuid */
+      readonly creation_id?: string | null;
+      /** @enum {string} */
+      readonly type?: 'text' | 'image' | 'video';
+      readonly cover_url?: string | null;
+      readonly title?: string;
+      readonly tags?: readonly string[];
+      /** Format: uuid */
+      readonly legion_id?: string | null;
+      /** @enum {string} */
+      readonly status?:
+        'draft' | 'pending_audit' | 'published' | 'manual_review' | 'rejected' | 'offline';
+      /** @enum {string} */
+      readonly god_trash_status?: 'pending' | 'god' | 'trash';
+      readonly is_ai_generated?: boolean;
+      readonly watermarked?: boolean;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    /** @description feed 列表项 */
+    readonly MemeCardSummary: {
+      /** Format: uuid */
+      readonly meme_id?: string;
+      /** Format: uuid */
+      readonly author_id?: string;
+      readonly author_nickname?: string;
+      readonly author_avatar_url?: string | null;
+      /** @enum {string} */
+      readonly type?: 'text' | 'image' | 'video';
+      readonly cover_url?: string | null;
+      readonly title?: string;
+      readonly tags?: readonly string[];
+      /** Format: uuid */
+      readonly legion_id?: string | null;
+      /** Format: float */
+      readonly score_avg?: number;
+      readonly score_count?: number;
+      readonly comment_count?: number;
+      readonly share_count?: number;
+      /** Format: float */
+      readonly hot_score?: number;
+      /** @enum {string} */
+      readonly god_trash_status?: 'pending' | 'god' | 'trash';
+      readonly is_ai_generated?: boolean;
+      /** Format: date-time */
+      readonly published_at?: string;
+    };
+    readonly MemeDetail: components['schemas']['MemeCardSummary'] & {
+      readonly author?: components['schemas']['UserSummary'];
+      readonly legion?: {
+        /** Format: uuid */
+        readonly legion_id?: string;
+        readonly name?: string;
+        readonly avatar_url?: string;
+      } | null;
+      readonly favorite_count?: number;
+      readonly view_count?: number;
+      /** Format: float */
+      readonly completion_rate?: number;
+      readonly video?: components['schemas']['VideoStatus'];
+      /** @description 我的评分（1-5），未评分为 null */
+      readonly my_rating?: number | null;
+      readonly my_favorite?: boolean;
+      /** Format: date-time */
+      readonly published_at?: string | null;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly RatingCreateRequest: {
+      readonly star: number;
+      readonly dimensions?: {
+        readonly laugh?: number;
+        readonly creative?: number;
+        readonly spread?: number;
+      };
+      /** @description 二元判定（神/烂梗） */
+      readonly is_god_trash_vote?: boolean;
+      readonly comment?: string;
+    };
+    /** @description 对齐 ratings 表 */
+    readonly Rating: {
+      /** Format: uuid */
+      readonly score_id?: string;
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly user_nickname?: string;
+      readonly user_avatar_url?: string | null;
+      readonly star?: number;
+      readonly is_judge?: boolean;
+      readonly is_god_trash_vote?: boolean;
+      readonly comment?: string | null;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly RatingResult: {
+      /** Format: uuid */
+      readonly score_id?: string;
+      /** Format: uuid */
+      readonly meme_id?: string;
+      /** Format: uuid */
+      readonly user_id?: string;
+      readonly star?: number;
+      readonly is_judge?: boolean;
+      /** Format: float */
+      readonly weight?: number;
+      /** Format: float */
+      readonly meme_score_avg?: number;
+      readonly meme_score_count?: number;
+      readonly god_trash_triggered?: boolean;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly CommentCreateRequest: {
+      readonly content: string;
+      /** Format: uuid */
+      readonly parent_id?: string | null;
+      /**
+       * Format: uuid
+       * @description 引用梗卡（造梗接龙）
+       */
+      readonly ref_meme_id?: string | null;
+      /** @description 评论本身是否为新梗卡 */
+      readonly is_meme_card?: boolean;
+    };
+    /** @description 对齐 comments 表 */
+    readonly Comment: {
+      /** Format: uuid */
+      readonly comment_id?: string;
+      /** Format: uuid */
+      readonly meme_id?: string;
+      /** Format: uuid */
+      readonly user_id?: string;
+      /** Format: uuid */
+      readonly parent_id?: string | null;
+      readonly content?: string;
+      readonly like_count?: number;
+      readonly is_god_comment?: boolean;
+      /** @enum {string} */
+      readonly status?: 'published' | 'hidden' | 'deleted';
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly LegionCreateRequest: {
+      readonly name: string;
+      readonly slogan?: string;
+      readonly avatar_url?: string;
+      readonly theme_tags?: readonly string[];
+      /**
+       * @default approval
+       * @enum {string}
+       */
+      readonly join_mode: 'public' | 'approval';
+    };
+    /** @description 对齐 legions 表 */
+    readonly Legion: {
+      /** Format: uuid */
+      readonly legion_id?: string;
+      readonly name?: string;
+      readonly slogan?: string | null;
+      readonly avatar_url?: string | null;
+      readonly theme_tags?: readonly string[];
+      /** Format: uuid */
+      readonly leader_id?: string;
+      readonly level?: number;
+      readonly activity_score?: number;
+      readonly member_count?: number;
+      readonly member_cap?: number;
+      /** @enum {string} */
+      readonly join_mode?: 'public' | 'approval';
+      readonly badges?: readonly string[];
+      readonly pk_wins?: number;
+      readonly pk_losses?: number;
+      /** @enum {string} */
+      readonly status?: 'active' | 'frozen' | 'dissolved';
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly LegionDetail: components['schemas']['Legion'] & {
+      readonly top_members?: readonly {
+        /** Format: uuid */
+        readonly user_id?: string;
+        readonly nickname?: string;
+        readonly avatar_url?: string;
+        readonly contribution?: number;
+        readonly role?: string;
+      }[];
+      readonly today_report?: {
+        readonly new_members?: number;
+        readonly new_memes?: number;
+        readonly pk_progress?: string;
+      };
+    };
+    readonly LegionJoinResult: {
+      /** Format: uuid */
+      readonly membership_id?: string;
+      /** Format: uuid */
+      readonly legion_id?: string;
+      /** Format: uuid */
+      readonly user_id?: string;
+      /** @enum {string} */
+      readonly role?: 'leader' | 'vice_leader' | 'member';
+      readonly contribution?: number;
+      /** Format: date-time */
+      readonly joined_at?: string;
+      /** @enum {string} */
+      readonly status?: 'joined' | 'pending';
+    };
+    readonly PkCreateRequest: {
+      /** @enum {string} */
+      readonly type: 'creation' | 'vote' | 'hotness';
+      /** Format: uuid */
+      readonly legion_a: string;
+      /**
+       * Format: uuid
+       * @description 为空表示系统匹配
+       */
+      readonly legion_b?: string | null;
+      readonly theme: string;
+      /** Format: date-time */
+      readonly start_at: string;
+      /** Format: date-time */
+      readonly end_at: string;
+      /** @default false */
+      readonly is_official: boolean;
+    };
+    /** @description 对齐 pk_matches 表 */
+    readonly PkMatch: {
+      /** Format: uuid */
+      readonly pk_id?: string;
+      /** @enum {string} */
+      readonly type?: 'creation' | 'vote' | 'hotness';
+      readonly legion_a?: {
+        /** Format: uuid */
+        readonly legion_id?: string;
+        readonly name?: string;
+        readonly avatar_url?: string;
+      };
+      readonly legion_b?: {
+        /** Format: uuid */
+        readonly legion_id?: string;
+        readonly name?: string;
+        readonly avatar_url?: string;
+      };
+      readonly theme?: string;
+      /** Format: date-time */
+      readonly start_at?: string;
+      /** Format: date-time */
+      readonly end_at?: string;
+      /** @enum {string} */
+      readonly status?:
+        | 'idle'
+        | 'challenged'
+        | 'accepted'
+        | 'preparing'
+        | 'battling'
+        | 'judging'
+        | 'settled'
+        | 'archived';
+      /** Format: float */
+      readonly score_a?: number;
+      /** Format: float */
+      readonly score_b?: number;
+      /** Format: uuid */
+      readonly winner_id?: string | null;
+      /** Format: uuid */
+      readonly mvp_user_id?: string | null;
+      readonly is_official?: boolean;
+      readonly my_votes_today?: number;
+    };
+    readonly PkVoteResult: {
+      /** Format: uuid */
+      readonly vote_id?: string;
+      /** Format: uuid */
+      readonly pk_id?: string;
+      /** Format: uuid */
+      readonly legion_id?: string;
+      readonly my_votes_today?: number;
+      readonly votes_remaining_today?: number;
+      readonly current_scores?: {
+        /** Format: float */
+        readonly legion_a?: number;
+        /** Format: float */
+        readonly legion_b?: number;
+      };
+      /** Format: date-time */
+      readonly voted_at?: string;
+    };
+    readonly MessageSendRequest: {
+      /** @enum {string} */
+      readonly msg_type: 'text' | 'image' | 'meme' | 'voice' | 'system';
+      readonly content?: string | null;
+      readonly extra?: {
+        /** Format: uuid */
+        readonly ref_message_id?: string | null;
+        readonly mentions?: readonly string[];
+        /** Format: uuid */
+        readonly ref_meme_id?: string | null;
+      };
+    };
+    /** @description 对齐 messages 表 */
+    readonly Message: {
+      /** Format: uuid */
+      readonly message_id?: string;
+      /** Format: uuid */
+      readonly room_id?: string;
+      /** Format: uuid */
+      readonly sender_id?: string;
+      readonly sender_nickname?: string;
+      readonly sender_avatar_url?: string | null;
+      /** @enum {string} */
+      readonly msg_type?: 'text' | 'image' | 'meme' | 'voice' | 'system';
+      readonly content?: string | null;
+      readonly extra?: Record<string, never>;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    readonly ProSubscribeRequest: {
+      /** @enum {string} */
+      readonly plan: 'monthly' | 'yearly';
+      /** @default true */
+      readonly auto_renew: boolean;
+      /** @enum {string} */
+      readonly channel: 'wechat' | 'alipay' | 'apple';
+    };
+    /** @description 对齐 orders 表 */
+    readonly OrderCreated: {
+      /** Format: uuid */
+      readonly order_id?: string;
+      /** Format: uuid */
+      readonly sub_id?: string | null;
+      /** @enum {string} */
+      readonly product_type?: 'pro' | 'video_pkg';
+      /** @example 1800 */
+      readonly amount_cents?: number;
+      readonly channel?: string;
+      /** @enum {string} */
+      readonly status?: 'pending' | 'paid' | 'failed' | 'refunded';
+      /** @description 微信支付拉起参数（appid/timestamp/noncestr/package/sign_type/pay_sign） */
+      readonly wx_pay_params?: Record<string, never> | null;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+    /** @description 对齐 notifications 表 */
+    readonly Notification: {
+      /** Format: uuid */
+      readonly notif_id?: string;
+      /** @enum {string} */
+      readonly type?:
+        | 'rating'
+        | 'god_meme'
+        | 'pk'
+        | 'reward'
+        | 'violation'
+        | 'pro'
+        | 'agent_done'
+        | 'comment'
+        | 'follow';
+      readonly title?: string;
+      readonly body?: string;
+      readonly payload?: Record<string, never>;
+      readonly is_read?: boolean;
+      /** Format: date-time */
+      readonly created_at?: string;
+    };
+  };
+  responses: {
+    /** @description 未认证 / token 失效 */
+    readonly Unauthorized: {
+      headers: {
+        readonly [name: string]: unknown;
+      };
+      content: {
+        readonly 'application/json': components['schemas']['ApiResponse'];
+      };
+    };
+    /** @description 无权限 */
+    readonly Forbidden: {
+      headers: {
+        readonly [name: string]: unknown;
+      };
+      content: {
+        readonly 'application/json': components['schemas']['ApiResponse'];
+      };
+    };
+    /** @description 资源不存在 */
+    readonly NotFound: {
+      headers: {
+        readonly [name: string]: unknown;
+      };
+      content: {
+        readonly 'application/json': components['schemas']['ApiResponse'];
+      };
+    };
+    /** @description 参数错误 */
+    readonly BadRequest: {
+      headers: {
+        readonly [name: string]: unknown;
+      };
+      content: {
+        readonly 'application/json': components['schemas']['ApiResponse'];
+      };
+    };
+    /** @description 限流 */
+    readonly RateLimited: {
+      headers: {
+        readonly 'Retry-After'?: number;
+        readonly 'X-RateLimit-Limit'?: number;
+        readonly 'X-RateLimit-Remaining'?: number;
+        readonly 'X-RateLimit-Reset'?: number;
+        readonly [name: string]: unknown;
+      };
+      content: {
+        readonly 'application/json': components['schemas']['ApiResponse'];
+      };
+    };
+  };
+  parameters: {
+    readonly Page: number;
+    readonly PageSize: number;
+    /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+    readonly IdempotencyKey: string;
+    readonly UserIdPath: string;
+  };
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 };
 export type $defs = Record<string, never>;
 export interface operations {
-    readonly sendSmsCode: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["SmsSendRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 发送成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["SmsSendResponse"];
-                    };
-                };
-            };
-            readonly 400: components["responses"]["BadRequest"];
-            readonly 429: components["responses"]["RateLimited"];
-        };
+  readonly sendSmsCode: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly smsLogin: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["SmsLoginRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 登录成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["AuthToken"];
-                    };
-                };
-            };
-            /** @description 验证码错误或过期 */
-            readonly 400: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            /** @description 用户被封禁 */
-            readonly 403: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            readonly 429: components["responses"]["RateLimited"];
-        };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['SmsSendRequest'];
+      };
     };
-    readonly refreshToken: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 发送成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["RefreshRequest"];
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['SmsSendResponse'];
+          };
         };
-        readonly responses: {
-            /** @description 刷新成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["AuthToken"];
-                    };
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
-        };
+      };
+      readonly 400: components['responses']['BadRequest'];
+      readonly 429: components['responses']['RateLimited'];
     };
-    readonly logout: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    /** Format: uuid */
-                    readonly refresh_token: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description 退出成功（无返回体） */
-            readonly 204: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-            readonly 401: components["responses"]["Unauthorized"];
-        };
+  };
+  readonly smsLogin: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly getAuthMe: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 登录态有效 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: {
-                            readonly user?: components["schemas"]["UserSummary"];
-                            /** Format: date-time */
-                            readonly expires_at?: string;
-                        };
-                    };
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
-        };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['SmsLoginRequest'];
+      };
     };
-    readonly getMe: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 登录成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["UserProfile"];
-                    };
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['AuthToken'];
+          };
         };
+      };
+      /** @description 验证码错误或过期 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      /** @description 用户被封禁 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      readonly 429: components['responses']['RateLimited'];
     };
-    readonly updateMe: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["UpdateUserRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 更新成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["UserProfile"];
-                    };
-                };
-            };
-            /** @description 昵称违规或未到改昵称时间 */
-            readonly 400: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
-        };
+  };
+  readonly refreshToken: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly getUserHome: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: components["parameters"]["UserIdPath"];
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["UserHome"];
-                    };
-                };
-            };
-            /** @description 用户不存在 */
-            readonly 404: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['RefreshRequest'];
+      };
     };
-    readonly getMyMemePower: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 刷新成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["MemePower"];
-                    };
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['AuthToken'];
+          };
         };
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly getMyLevelDetail: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["LevelDetail"];
-                    };
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
-        };
+  };
+  readonly logout: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly createSingle: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': {
+          /** Format: uuid */
+          readonly refresh_token: string;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["CreationSingleRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 生成成功（同步） */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["CreationResult"];
-                    };
-                };
-            };
-            /** @description 参数错误 / 能量不足 / prompt 重复 */
-            readonly 400: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            readonly 429: components["responses"]["RateLimited"];
-        };
+      };
     };
-    readonly submitAgent: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 退出成功（无返回体） */
+      readonly 204: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["AgentSubmitRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 已接受 */
-            readonly 202: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["AgentJobAck"];
-                    };
-                };
-            };
-            /** @description 非 Pro 用户 */
-            readonly 403: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            /** @description 配额耗尽 / 熔断 */
-            readonly 429: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+        content?: never;
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly getAgentJob: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 任务状态 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["AgentJob"];
-                    };
-                };
-            };
-            readonly 401: components["responses"]["Unauthorized"];
-            readonly 404: components["responses"]["NotFound"];
-        };
+  };
+  readonly getAuthMe: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly listPromptTemplates: {
-        readonly parameters: {
-            readonly query?: {
-                readonly mode?: "text" | "image" | "script";
-                readonly style?: string;
-                readonly is_official?: boolean;
-                readonly page?: components["parameters"]["Page"];
-                readonly page_size?: components["parameters"]["PageSize"];
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 登录态有效 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["PromptTemplate"][];
-                        };
-                    };
-                };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: {
+              readonly user?: components['schemas']['UserSummary'];
+              /** Format: date-time */
+              readonly expires_at?: string;
             };
+          };
         };
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly getPromptTemplateById: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["PromptTemplateDetail"];
-                    };
-                };
-            };
-        };
+  };
+  readonly getMe: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly renderPromptTemplate: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    /**
-                     * @description 变量名 → 变量值映射
-                     * @example {
-                     *       "keyword": "上班",
-                     *       "style": "搞笑"
-                     *     }
-                     */
-                    readonly variables: {
-                        readonly [key: string]: string;
-                    };
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['UserProfile'];
+          };
         };
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["PromptTemplateRenderResult"];
-                    };
-                };
-            };
-            readonly 404: components["responses"]["NotFound"];
-        };
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly submitVideo: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["VideoSubmitRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 已接受 */
-            readonly 202: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["VideoJobAck"];
-                    };
-                };
-            };
-            /** @description 能量不足 */
-            readonly 400: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            /** @description 配额耗尽 / 熔断 */
-            readonly 429: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+  };
+  readonly updateMe: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly getVideoStatus: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 状态 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["VideoStatus"];
-                    };
-                };
-            };
-        };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['UpdateUserRequest'];
+      };
     };
-    readonly publishMeme: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 更新成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["MemePublishRequest"];
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['UserProfile'];
+          };
         };
-        readonly responses: {
-            /** @description 创建成功 */
-            readonly 201: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["MemeCard"];
-                    };
-                };
-            };
-            /** @description creation 已发布过 */
-            readonly 409: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
+      };
+      /** @description 昵称违规或未到改昵称时间 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
         };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly getMemeFeed: {
-        readonly parameters: {
-            readonly query?: {
-                readonly cursor?: string;
-                readonly page_size?: number;
-                readonly feed_type?: "hot" | "new" | "personalized" | "god";
-                readonly legion_id?: string;
-                readonly tag?: string;
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["MemeCardSummary"][];
-                            readonly next_cursor?: string | null;
-                        };
-                    };
-                };
-            };
-        };
+  };
+  readonly getUserHome: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: components['parameters']['UserIdPath'];
+      };
+      readonly cookie?: never;
     };
-    readonly getMeme: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["MemeDetail"];
-                    };
-                };
-            };
-            /** @description 梗卡不存在 */
-            readonly 404: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['UserHome'];
+          };
         };
+      };
+      /** @description 用户不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
     };
-    readonly deleteMeme: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 删除成功（无返回体） */
-            readonly 204: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-            readonly 403: components["responses"]["Forbidden"];
-            readonly 404: components["responses"]["NotFound"];
-        };
+  };
+  readonly getMyMemePower: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly listRatings: {
-        readonly parameters: {
-            readonly query?: {
-                readonly page?: components["parameters"]["Page"];
-                readonly page_size?: components["parameters"]["PageSize"];
-                readonly sort?: string;
-            };
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["Rating"][];
-                        };
-                    };
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['MemePower'];
+          };
         };
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly createRating: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["RatingCreateRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 评分成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["RatingResult"];
-                    };
-                };
-            };
-            /** @description 已评分过 */
-            readonly 409: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+  };
+  readonly getMyLevelDetail: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly listComments: {
-        readonly parameters: {
-            readonly query?: {
-                readonly page?: components["parameters"]["Page"];
-                readonly page_size?: components["parameters"]["PageSize"];
-                readonly sort?: string;
-            };
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["Comment"][];
-                        };
-                    };
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['LevelDetail'];
+          };
         };
+      };
+      readonly 401: components['responses']['Unauthorized'];
     };
-    readonly createComment: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["CommentCreateRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 评论成功 */
-            readonly 201: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Comment"];
-                    };
-                };
-            };
-            /** @description 敏感词命中 / 楼层过深 */
-            readonly 400: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+  };
+  readonly createSingle: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly listLegions: {
-        readonly parameters: {
-            readonly query?: {
-                readonly page?: components["parameters"]["Page"];
-                readonly page_size?: components["parameters"]["PageSize"];
-                /** @description 如 theme_tags:contains:抽象 */
-                readonly filter?: string;
-                readonly sort?: string;
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["Legion"][];
-                        };
-                    };
-                };
-            };
-        };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['CreationSingleRequest'];
+      };
     };
-    readonly createLegion: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 生成成功（同步） */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["LegionCreateRequest"];
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['CreationResult'];
+          };
         };
-        readonly responses: {
-            /** @description 创建成功 */
-            readonly 201: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Legion"];
-                    };
-                };
-            };
-            /** @description 等级不足 / 军团数上限 */
-            readonly 403: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            /** @description 名称重复 */
-            readonly 409: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
+      };
+      /** @description 参数错误 / 能量不足 / prompt 重复 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
         };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      readonly 429: components['responses']['RateLimited'];
     };
-    readonly getLegion: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["LegionDetail"];
-                    };
-                };
-            };
-        };
+  };
+  readonly submitAgent: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly joinLegion: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly message?: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description 加入成功 / 待审批 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["LegionJoinResult"];
-                    };
-                };
-            };
-            /** @description 已加入军团上限 */
-            readonly 403: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['AgentSubmitRequest'];
+      };
     };
-    readonly listPkMatches: {
-        readonly parameters: {
-            readonly query?: {
-                readonly page?: components["parameters"]["Page"];
-                readonly page_size?: components["parameters"]["PageSize"];
-                readonly status?: "idle" | "challenged" | "accepted" | "preparing" | "battling" | "judging" | "settled" | "archived";
-                readonly type?: "creation" | "vote" | "hotness";
-                readonly is_official?: boolean;
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 已接受 */
+      readonly 202: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["PkMatch"][];
-                        };
-                    };
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['AgentJobAck'];
+          };
         };
+      };
+      /** @description 非 Pro 用户 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      /** @description 配额耗尽 / 熔断 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
     };
-    readonly createPkMatch: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["PkCreateRequest"];
-            };
-        };
-        readonly responses: {
-            /** @description 创建成功 */
-            readonly 201: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["PkMatch"];
-                    };
-                };
-            };
-            /** @description PK 状态非法 / 跨段位 */
-            readonly 409: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+  };
+  readonly getAgentJob: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
     };
-    readonly votePk: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 任务状态 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    /** Format: uuid */
-                    readonly legion_id: string;
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['AgentJob'];
+          };
         };
-        readonly responses: {
-            /** @description 投票成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["PkVoteResult"];
-                    };
-                };
-            };
-            /** @description PK 状态非 battling */
-            readonly 409: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-            /** @description 票数耗尽 */
-            readonly 429: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+      };
+      readonly 401: components['responses']['Unauthorized'];
+      readonly 404: components['responses']['NotFound'];
     };
-    readonly listMessages: {
-        readonly parameters: {
-            readonly query?: {
-                readonly cursor?: string;
-                readonly page_size?: number;
-            };
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["Message"][];
-                            readonly next_cursor?: string | null;
-                        };
-                    };
-                };
-            };
-        };
+  };
+  readonly listPromptTemplates: {
+    readonly parameters: {
+      readonly query?: {
+        readonly mode?: 'text' | 'image' | 'script';
+        readonly style?: string;
+        readonly is_official?: boolean;
+        readonly page?: components['parameters']['Page'];
+        readonly page_size?: components['parameters']['PageSize'];
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
     };
-    readonly sendMessage: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["MessageSendRequest"];
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['PromptTemplate'][];
             };
+          };
         };
-        readonly responses: {
-            /** @description 发送成功 */
-            readonly 201: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Message"];
-                    };
-                };
-            };
-        };
+      };
     };
-    readonly getRecommendFeed: {
-        readonly parameters: {
-            readonly query?: {
-                readonly cursor?: string;
-                readonly page_size?: number;
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["MemeCardSummary"][];
-                            readonly next_cursor?: string | null;
-                        };
-                    };
-                };
-            };
-        };
+  };
+  readonly getPromptTemplateById: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
     };
-    readonly subscribePro: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: {
-                /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
-                readonly "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
-            };
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": components["schemas"]["ProSubscribeRequest"];
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['PromptTemplateDetail'];
+          };
         };
-        readonly responses: {
-            /** @description 订单创建成功 */
-            readonly 201: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["OrderCreated"];
-                    };
-                };
-            };
-            /** @description 已订阅 */
-            readonly 409: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"];
-                };
-            };
-        };
+      };
     };
-    readonly wxPayCallback: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": Record<string, never>;
-            };
-        };
-        readonly responses: {
-            /** @description 处理成功（微信规范） */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": {
-                        /** @example SUCCESS */
-                        readonly code?: string;
-                        /** @example OK */
-                        readonly message?: string;
-                    };
-                };
-            };
-        };
+  };
+  readonly renderPromptTemplate: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
     };
-    readonly listNotifications: {
-        readonly parameters: {
-            readonly query?: {
-                readonly type?: "rating" | "god_meme" | "pk" | "reward" | "violation" | "pro" | "agent_done" | "comment" | "follow";
-                readonly is_read?: boolean;
-                readonly page?: components["parameters"]["Page"];
-                readonly page_size?: components["parameters"]["PageSize"];
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': {
+          /**
+           * @description 变量名 → 变量值映射
+           * @example {
+           *       "keyword": "上班",
+           *       "style": "搞笑"
+           *     }
+           */
+          readonly variables: {
+            readonly [key: string]: string;
+          };
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 成功 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ApiResponse"] & {
-                        readonly data?: components["schemas"]["Paged"] & {
-                            readonly list?: readonly components["schemas"]["Notification"][];
-                        };
-                    };
-                };
-            };
-        };
+      };
     };
-    readonly health: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
         };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description 健康 */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": {
-                        /** @example ok */
-                        readonly status?: string;
-                        readonly version?: string;
-                        readonly uptime?: number;
-                    };
-                };
-            };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['PromptTemplateRenderResult'];
+          };
         };
+      };
+      readonly 404: components['responses']['NotFound'];
     };
+  };
+  readonly submitVideo: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['VideoSubmitRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 已接受 */
+      readonly 202: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['VideoJobAck'];
+          };
+        };
+      };
+      /** @description 能量不足 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      /** @description 配额耗尽 / 熔断 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly getVideoStatus: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 状态 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['VideoStatus'];
+          };
+        };
+      };
+    };
+  };
+  readonly publishMeme: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['MemePublishRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 创建成功 */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['MemeCard'];
+          };
+        };
+      };
+      /** @description creation 已发布过 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly getMemeFeed: {
+    readonly parameters: {
+      readonly query?: {
+        readonly cursor?: string;
+        readonly page_size?: number;
+        readonly feed_type?: 'hot' | 'new' | 'personalized' | 'god';
+        readonly legion_id?: string;
+        readonly tag?: string;
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['MemeCardSummary'][];
+              readonly next_cursor?: string | null;
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly getMeme: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['MemeDetail'];
+          };
+        };
+      };
+      /** @description 梗卡不存在 */
+      readonly 404: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly deleteMeme: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 删除成功（无返回体） */
+      readonly 204: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content?: never;
+      };
+      readonly 403: components['responses']['Forbidden'];
+      readonly 404: components['responses']['NotFound'];
+    };
+  };
+  readonly listRatings: {
+    readonly parameters: {
+      readonly query?: {
+        readonly page?: components['parameters']['Page'];
+        readonly page_size?: components['parameters']['PageSize'];
+        readonly sort?: string;
+      };
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['Rating'][];
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly createRating: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['RatingCreateRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 评分成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['RatingResult'];
+          };
+        };
+      };
+      /** @description 已评分过 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly listComments: {
+    readonly parameters: {
+      readonly query?: {
+        readonly page?: components['parameters']['Page'];
+        readonly page_size?: components['parameters']['PageSize'];
+        readonly sort?: string;
+      };
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['Comment'][];
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly createComment: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['CommentCreateRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 评论成功 */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Comment'];
+          };
+        };
+      };
+      /** @description 敏感词命中 / 楼层过深 */
+      readonly 400: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly listLegions: {
+    readonly parameters: {
+      readonly query?: {
+        readonly page?: components['parameters']['Page'];
+        readonly page_size?: components['parameters']['PageSize'];
+        /** @description 如 theme_tags:contains:抽象 */
+        readonly filter?: string;
+        readonly sort?: string;
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['Legion'][];
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly createLegion: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['LegionCreateRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 创建成功 */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Legion'];
+          };
+        };
+      };
+      /** @description 等级不足 / 军团数上限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      /** @description 名称重复 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly getLegion: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['LegionDetail'];
+          };
+        };
+      };
+    };
+  };
+  readonly joinLegion: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: {
+      readonly content: {
+        readonly 'application/json': {
+          readonly message?: string;
+        };
+      };
+    };
+    readonly responses: {
+      /** @description 加入成功 / 待审批 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['LegionJoinResult'];
+          };
+        };
+      };
+      /** @description 已加入军团上限 */
+      readonly 403: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly listPkMatches: {
+    readonly parameters: {
+      readonly query?: {
+        readonly page?: components['parameters']['Page'];
+        readonly page_size?: components['parameters']['PageSize'];
+        readonly status?:
+          | 'idle'
+          | 'challenged'
+          | 'accepted'
+          | 'preparing'
+          | 'battling'
+          | 'judging'
+          | 'settled'
+          | 'archived';
+        readonly type?: 'creation' | 'vote' | 'hotness';
+        readonly is_official?: boolean;
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['PkMatch'][];
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly createPkMatch: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['PkCreateRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 创建成功 */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['PkMatch'];
+          };
+        };
+      };
+      /** @description PK 状态非法 / 跨段位 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly votePk: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': {
+          /** Format: uuid */
+          readonly legion_id: string;
+        };
+      };
+    };
+    readonly responses: {
+      /** @description 投票成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['PkVoteResult'];
+          };
+        };
+      };
+      /** @description PK 状态非 battling */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+      /** @description 票数耗尽 */
+      readonly 429: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly listMessages: {
+    readonly parameters: {
+      readonly query?: {
+        readonly cursor?: string;
+        readonly page_size?: number;
+      };
+      readonly header?: never;
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['Message'][];
+              readonly next_cursor?: string | null;
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly sendMessage: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path: {
+        readonly id: string;
+      };
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['MessageSendRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 发送成功 */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Message'];
+          };
+        };
+      };
+    };
+  };
+  readonly getRecommendFeed: {
+    readonly parameters: {
+      readonly query?: {
+        readonly cursor?: string;
+        readonly page_size?: number;
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['MemeCardSummary'][];
+              readonly next_cursor?: string | null;
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly subscribePro: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        /** @description 写操作幂等键，24h 内相同 key 返回首次响应。 */
+        readonly 'Idempotency-Key'?: components['parameters']['IdempotencyKey'];
+      };
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': components['schemas']['ProSubscribeRequest'];
+      };
+    };
+    readonly responses: {
+      /** @description 订单创建成功 */
+      readonly 201: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['OrderCreated'];
+          };
+        };
+      };
+      /** @description 已订阅 */
+      readonly 409: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'];
+        };
+      };
+    };
+  };
+  readonly wxPayCallback: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly 'application/json': Record<string, never>;
+      };
+    };
+    readonly responses: {
+      /** @description 处理成功（微信规范） */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': {
+            /** @example SUCCESS */
+            readonly code?: string;
+            /** @example OK */
+            readonly message?: string;
+          };
+        };
+      };
+    };
+  };
+  readonly listNotifications: {
+    readonly parameters: {
+      readonly query?: {
+        readonly type?:
+          | 'rating'
+          | 'god_meme'
+          | 'pk'
+          | 'reward'
+          | 'violation'
+          | 'pro'
+          | 'agent_done'
+          | 'comment'
+          | 'follow';
+        readonly is_read?: boolean;
+        readonly page?: components['parameters']['Page'];
+        readonly page_size?: components['parameters']['PageSize'];
+      };
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 成功 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': components['schemas']['ApiResponse'] & {
+            readonly data?: components['schemas']['Paged'] & {
+              readonly list?: readonly components['schemas']['Notification'][];
+            };
+          };
+        };
+      };
+    };
+  };
+  readonly health: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description 健康 */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly 'application/json': {
+            /** @example ok */
+            readonly status?: string;
+            readonly version?: string;
+            readonly uptime?: number;
+          };
+        };
+      };
+    };
+  };
 }

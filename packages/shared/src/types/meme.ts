@@ -2,12 +2,7 @@
 
 export type MemeType = 'text' | 'image' | 'video';
 export type MemeStatus =
-  | 'draft'
-  | 'pending_audit'
-  | 'published'
-  | 'manual_review'
-  | 'rejected'
-  | 'offline';
+  'draft' | 'pending_audit' | 'published' | 'manual_review' | 'rejected' | 'offline';
 export type GodTrashStatus = 'pending' | 'god' | 'trash';
 
 export interface MemeCard {
