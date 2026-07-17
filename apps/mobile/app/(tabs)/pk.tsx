@@ -1,9 +1,11 @@
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { LiveDotIcon, ShieldIcon, SwordsIcon, UserIcon } from '../../src/components/icons';
 import { colors, layout } from '../../src/theme';
 import { useActivePKs } from '../../src/api/pk';
 
 export default function PKScreen() {
+  const router = useRouter();
   const { data: matches, isLoading, isError } = useActivePKs();
 
   if (isLoading) {
@@ -199,6 +201,7 @@ export default function PKScreen() {
             选择两个军团，设定主题与时间，开始对决
           </Text>
           <Pressable
+            onPress={() => router.push('/pk/create')}
             style={{
               backgroundColor: colors.brand.DEFAULT,
               borderRadius: 12,

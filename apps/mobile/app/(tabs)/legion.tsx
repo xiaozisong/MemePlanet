@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import {
   CrownIcon,
   ShieldIcon,
@@ -12,6 +13,7 @@ import { useLegions } from '../../src/api/legion';
 const CATEGORIES = ['推荐', '热梗', '新军团', 'PK 强队'];
 
 export default function LegionScreen() {
+  const router = useRouter();
   const { data, isLoading, isError } = useLegions(1);
   const legions = data?.list ?? [];
 
@@ -195,7 +197,8 @@ export default function LegionScreen() {
 
       {/* Create Legion CTA */}
       <View style={{ paddingHorizontal: layout.pagePadding, paddingTop: 12, paddingBottom: 96 }}>
-        <View
+        <Pressable
+          onPress={() => router.push('/legion/create')}
           style={{
             backgroundColor: colors.ink.soft,
             borderRadius: 16,
@@ -245,7 +248,7 @@ export default function LegionScreen() {
               {'>'}
             </Text>
           </View>
-        </View>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -294,6 +297,7 @@ function LegionCard({
   };
   rank: number;
 }) {
+  const router = useRouter();
   const color =
     rank === 1 ? colors.brand.DEFAULT : rank === 2 ? colors.accent.DEFAULT : colors.accent.info!;
   const memberText =
@@ -307,6 +311,7 @@ function LegionCard({
 
   return (
     <Pressable
+      onPress={() => router.push(`/legion/${legion.legion_id}`)}
       style={{
         backgroundColor: colors.ink.soft,
         borderRadius: 16,
