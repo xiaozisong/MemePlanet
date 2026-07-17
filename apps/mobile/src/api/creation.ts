@@ -21,12 +21,13 @@ interface CreationResult {
 }
 
 interface CreateCreationPayload {
-  mode: 'text' | 'image';
+  mode: 'text' | 'image' | 'script';
   prompt: string;
   style?: string;
   template_id?: string;
   prompt_hash?: string;
   legion_id?: string;
+  agentMode?: boolean;
 }
 
 /** 发起造梗任务（POST /creations，返回 202 含 creation_id） */
@@ -34,11 +35,12 @@ export function useStartCreation() {
   const api = useApi();
   return useMutation({
     mutationFn: (params: {
-      mode: 'text' | 'image';
+      mode: 'text' | 'image' | 'script';
       prompt: string;
       style?: string;
       template_id?: string;
       legion_id?: string;
+      agentMode?: boolean;
     }) => {
       tracker.trackCore(CORE_EVENTS.MEME_CREATE_START, {
         mode: params.mode,
@@ -50,6 +52,7 @@ export function useStartCreation() {
         style: params.style,
         template_id: params.template_id,
         legion_id: params.legion_id,
+        agentMode: params.agentMode ?? false,
       } satisfies CreateCreationPayload);
     },
   });

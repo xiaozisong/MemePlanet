@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Image,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +14,9 @@ import { useRouter } from 'expo-router';
 import { colors, layout, spacing, radius } from '../../src/theme';
 import { PrimaryButton } from '../../src/components/ui/PrimaryButton';
 
-type Stage = 'INPUT' | 'LOADING' | 'PREVIEW' | 'PUBLISHED';
+import { useStartCreation, useCreationStatus, useChooseCandidate } from '../../src/api/creation';
+
+type Stage = 'INPUT' | 'LOADING' | 'PREVIEW' | 'PUBLISHING' | 'PUBLISHED' | 'ERROR';
 
 const IMAGE_STYLES = [
   { label: '写实', color: colors.accent.info },
@@ -36,30 +39,82 @@ export default function CreateImageScreen() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [selectedRatio, setSelectedRatio] = useState('1:1');
   const [selectedStyleColor, setSelectedStyleColor] = useState<string>(colors.brand.DEFAULT);
+  const [creationId, setCreationId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const startCreation = useStartCreation();
+  const { data: creationResult } = useCreationStatus(creationId);
+  const chooseCandidate = useChooseCandidate();
+
+  // 监听造梗结果
   useEffect(() => {
-    if (stage === 'LOADING') {
-      const timer = setTimeout(() => {
-        setStage('PREVIEW');
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (creationResult?.status === 'ready' || creationResult?.status === 'published') {
+      setStage('PREVIEW');
+    } else if (creationResult?.status === 'failed') {
+      setStage('ERROR');
+      setErrorMsg('AI 图片生成失败，请稍后重试');
     }
-  }, [stage]);
+  }, [creationResult?.status]);
+
+  // 监听发布结果
+  useEffect(() => {
+    if (chooseCandidate.isSuccess) {
+      setStage('PUBLISHED');
+    } else if (chooseCandidate.isError) {
+      setStage('ERROR');
+      setErrorMsg(chooseCandidate.error?.message ?? '发布失败');
+    }
+  }, [chooseCandidate.isSuccess, chooseCandidate.isError]);
 
   const handleStartGenerate = useCallback(() => {
     setStage('LOADING');
-  }, []);
+    startCreation.mutate(
+      {
+        mode: 'image',
+        prompt: description,
+        style: selectedStyle ?? undefined,
+      },
+      {
+        onSuccess: (data) => {
+          setCreationId(data.creation_id);
+        },
+        onError: (err) => {
+          setStage('ERROR');
+          setErrorMsg(err.message ?? '图片生成任务提交失败');
+        },
+      },
+    );
+  }, [description, selectedStyle, startCreation]);
 
   const handleRegenerate = useCallback(() => {
-    setDescription('');
-    setSelectedStyle(null);
-    setSelectedRatio('1:1');
-    setStage('INPUT');
-  }, []);
+    if (!creationId) {
+      handleStartGenerate();
+      return;
+    }
+    setStage('LOADING');
+    startCreation.mutate(
+      {
+        mode: 'image',
+        prompt: description,
+        style: selectedStyle ?? undefined,
+      },
+      {
+        onSuccess: (data) => {
+          setCreationId(data.creation_id);
+        },
+        onError: (err) => {
+          setStage('ERROR');
+          setErrorMsg(err.message ?? '重新生成失败');
+        },
+      },
+    );
+  }, [creationId, description, selectedStyle, startCreation, handleStartGenerate]);
 
   const handlePublish = useCallback(() => {
-    setStage('PUBLISHED');
-  }, []);
+    if (!creationId) return;
+    setStage('PUBLISHING');
+    chooseCandidate.mutate({ creationId, idx: 0 });
+  }, [creationId, chooseCandidate]);
 
   const handleBack = useCallback(() => {
     router.back();
@@ -163,8 +218,9 @@ export default function CreateImageScreen() {
         variant="primary"
         size="lg"
         fullWidth
-        disabled={description.trim().length === 0}
+        disabled={description.trim().length === 0 || startCreation.isPending}
         onPress={handleStartGenerate}
+        loading={startCreation.isPending}
       >
         开始生成
       </PrimaryButton>
@@ -179,38 +235,65 @@ export default function CreateImageScreen() {
     </View>
   );
 
-  const renderPreviewStage = () => (
-    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.previewTitle}>为你生成了 1 张梗图</Text>
+  const renderPreviewStage = () => {
+    const candidate = creationResult?.candidates?.[0];
+    const imageUrl = candidate?.image_url;
+    return (
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.previewTitle}>
+          为你生成了 {creationResult?.candidates?.length ?? 1} 张梗图
+        </Text>
 
-      <View style={styles.previewCard}>
-        <Text style={styles.previewEmoji}>🖼️</Text>
-        <Text style={styles.previewPlaceholderText}>梗图预览</Text>
-      </View>
-
-      <View style={styles.previewTags}>
-        <View style={[styles.styleTag, { backgroundColor: `${selectedStyleColor}20` }]}>
-          <Text style={[styles.styleTagText, { color: selectedStyleColor }]}>
-            {selectedStyle || '卡通'}
-          </Text>
+        <View style={styles.previewCard}>
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={{ width: '100%', height: 280, borderRadius: radius.lg }}
+              resizeMode="cover"
+            />
+          ) : (
+            <>
+              <Text style={styles.previewEmoji}>🖼️</Text>
+              <Text style={styles.previewPlaceholderText}>梗图预览</Text>
+            </>
+          )}
         </View>
-        <View style={styles.aiTag}>
-          <Text style={styles.aiTagText}>AI 生成</Text>
-        </View>
-      </View>
 
-      <View style={styles.previewActions}>
-        <PrimaryButton variant="ghost" size="md" onPress={handleRegenerate}>
-          再来一次
-        </PrimaryButton>
-        <View style={styles.previewActionsRight}>
-          <PrimaryButton variant="primary" size="md" onPress={handlePublish}>
-            发布
+        <View style={styles.previewTags}>
+          <View style={[styles.styleTag, { backgroundColor: `${selectedStyleColor}20` }]}>
+            <Text style={[styles.styleTagText, { color: selectedStyleColor }]}>
+              {selectedStyle || '卡通'}
+            </Text>
+          </View>
+          <View style={styles.aiTag}>
+            <Text style={styles.aiTagText}>AI 生成</Text>
+          </View>
+        </View>
+
+        <View style={styles.previewActions}>
+          <PrimaryButton
+            variant="ghost"
+            size="md"
+            onPress={handleRegenerate}
+            loading={startCreation.isPending}
+          >
+            再来一次
           </PrimaryButton>
+          <View style={styles.previewActionsRight}>
+            <PrimaryButton
+              variant="primary"
+              size="md"
+              onPress={handlePublish}
+              disabled={!candidate}
+              loading={chooseCandidate.isPending}
+            >
+              发布
+            </PrimaryButton>
+          </View>
         </View>
-      </View>
-    </ScrollView>
-  );
+      </ScrollView>
+    );
+  };
 
   const renderPublishedStage = () => (
     <View style={styles.centerContainer}>
@@ -224,6 +307,26 @@ export default function CreateImageScreen() {
     </View>
   );
 
+  const renderPublishingStage = () => (
+    <View style={styles.centerContainer}>
+      <ActivityIndicator size="large" color={colors.brand.DEFAULT} />
+      <Text style={styles.loadingTitle}>正在发布...</Text>
+    </View>
+  );
+
+  const renderErrorStage = () => (
+    <View style={styles.centerContainer}>
+      <Text
+        style={{ color: colors.status.error, fontSize: 14, marginBottom: 16, textAlign: 'center' }}
+      >
+        {errorMsg}
+      </Text>
+      <PrimaryButton variant="primary" size="md" onPress={() => setStage('INPUT')}>
+        返回重试
+      </PrimaryButton>
+    </View>
+  );
+
   const renderStage = () => {
     switch (stage) {
       case 'INPUT':
@@ -232,8 +335,14 @@ export default function CreateImageScreen() {
         return renderLoadingStage();
       case 'PREVIEW':
         return renderPreviewStage();
+      case 'PUBLISHING':
+        return renderPublishingStage();
       case 'PUBLISHED':
         return renderPublishedStage();
+      case 'ERROR':
+        return renderErrorStage();
+      default:
+        return null;
     }
   };
 

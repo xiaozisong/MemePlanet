@@ -12,44 +12,32 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors, spacing, radius } from '../../src/theme';
 import { PrimaryButton } from '../../src/components/ui/PrimaryButton';
+import {
+  useStartCreation,
+  useCreationStatus,
+  useChooseCandidate,
+  useRegenerate,
+} from '../../src/api/creation';
 
-type Stage = 'INPUT' | 'LOADING' | 'CANDIDATES' | 'PUBLISHING' | 'PUBLISHED';
+type Stage = 'INPUT' | 'LOADING' | 'CANDIDATES' | 'PUBLISHING' | 'PUBLISHED' | 'ERROR';
 
-interface CandidateCard {
-  id: number;
-  title: string;
-  style: string;
+interface CandidateItem {
+  candidate_id: string;
+  idx: number;
+  content: string | null;
+  image_url: string | null;
+  self_score: number | null;
 }
 
 const LOADING_PHASES = ['检索中...', '分析趋势...', '生成候选...'];
 
 const STYLE_OPTIONS = [
   { label: '跟热点', color: colors.brand.DEFAULT },
-  { label: '谐音梗', color: colors.accent.info },
-  { label: '反转梗', color: colors.accent.light },
+  { label: '谐音梗', color: colors.accent.info! },
+  { label: '反转梗', color: colors.accent.light! },
   { label: '抽象艺术', color: colors.ai.DEFAULT },
-  { label: '情绪共鸣', color: colors.accent.dark },
+  { label: '情绪共鸣', color: colors.accent.dark! },
 ];
-
-const MOCK_CANDIDATES: CandidateCard[] = [
-  {
-    id: 1,
-    title: '程序员的三大错觉：这个 bug 很简单 / 明天再改也行 / 这段代码不需要注释',
-    style: '跟热点',
-  },
-  {
-    id: 2,
-    title: '周一综合症：灵魂还在被窝里，肉体已经在地铁上了',
-    style: '情绪共鸣',
-  },
-  {
-    id: 3,
-    title: '产品经理：这个需求很简单。开发：这个简单的需求很复杂。',
-    style: '反转梗',
-  },
-];
-
-const ORDER_LABELS = ['1', '2', '3'];
 
 export default function CreateAgentScreen() {
   const router = useRouter();
@@ -57,9 +45,36 @@ export default function CreateAgentScreen() {
   const [inputText, setInputText] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<string>(STYLE_OPTIONS[0]!.label);
   const [loadingPhaseIndex, setLoadingPhaseIndex] = useState(0);
-  const [selectedCandidateId, setSelectedCandidateId] = useState<number | null>(null);
-  const [candidates] = useState<CandidateCard[]>(MOCK_CANDIDATES);
+  const [creationId, setCreationId] = useState<string | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const startCreation = useStartCreation();
+  const { data: creationResult } = useCreationStatus(creationId);
+  const chooseCandidate = useChooseCandidate();
+  const regenerate = useRegenerate();
+
+  // 监听造梗结果
+  useEffect(() => {
+    if (creationResult?.status === 'ready') {
+      setStage('CANDIDATES');
+    } else if (creationResult?.status === 'failed') {
+      setStage('ERROR');
+      setErrorMsg('AI 造梗失败，请稍后重试');
+    }
+  }, [creationResult?.status]);
+
+  // 监听发布结果
+  useEffect(() => {
+    if (chooseCandidate.isSuccess) {
+      setStage('PUBLISHED');
+    } else if (chooseCandidate.isError) {
+      setStage('ERROR');
+      setErrorMsg(chooseCandidate.error?.message ?? '发布失败');
+    }
+  }, [chooseCandidate.isSuccess, chooseCandidate.isError]);
+
+  // 加载动画
   useEffect(() => {
     if (stage !== 'LOADING') return;
     const interval = setInterval(() => {
@@ -68,29 +83,52 @@ export default function CreateAgentScreen() {
     return () => clearInterval(interval);
   }, [stage]);
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     setStage('LOADING');
     setLoadingPhaseIndex(0);
-    setTimeout(() => {
-      setStage('CANDIDATES');
-    }, 6000);
-  }, []);
+    startCreation.mutate(
+      {
+        mode: 'script',
+        prompt: inputText,
+        style: selectedStyle,
+        agentMode: true,
+      },
+      {
+        onSuccess: (data) => {
+          setCreationId(data.creation_id);
+        },
+        onError: (err) => {
+          setStage('ERROR');
+          setErrorMsg(err.message ?? '造梗任务提交失败');
+        },
+      },
+    );
+  }, [inputText, selectedStyle, startCreation]);
 
   const handleRegenerate = useCallback(() => {
+    if (!creationId) {
+      handleGenerate();
+      return;
+    }
     setStage('LOADING');
     setLoadingPhaseIndex(0);
-    setSelectedCandidateId(null);
-    setTimeout(() => {
-      setStage('CANDIDATES');
-    }, 6000);
-  }, []);
+    setSelectedIdx(null);
+    regenerate.mutate(
+      { creationId },
+      {
+        onError: (err) => {
+          setStage('ERROR');
+          setErrorMsg(err.message ?? '重新生成失败');
+        },
+      },
+    );
+  }, [creationId, regenerate, handleGenerate]);
 
   const handlePublish = useCallback(() => {
+    if (!creationId || selectedIdx === null) return;
     setStage('PUBLISHING');
-    setTimeout(() => {
-      setStage('PUBLISHED');
-    }, 2000);
-  }, []);
+    chooseCandidate.mutate({ creationId, idx: selectedIdx });
+  }, [creationId, selectedIdx, chooseCandidate]);
 
   const handleBack = useCallback(() => {
     if (stage === 'INPUT') {
@@ -104,150 +142,168 @@ export default function CreateAgentScreen() {
     router.back();
   }, [router]);
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
-        <Text style={styles.backArrow}>{'<'}</Text>
-      </Pressable>
-      <Text style={styles.headerTitle}>Pro Agent 造梗</Text>
-      <View style={styles.headerSpacer} />
-    </View>
-  );
+  const candidates: CandidateItem[] = creationResult?.candidates ?? [];
 
   const renderInputStage = () => (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-    >
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
       <View style={styles.proBadge}>
-        <Text style={styles.proBadgeText}>Pro 专属</Text>
+        <Text style={styles.proBadgeText}>PRO</Text>
       </View>
-
-      <Text style={styles.quotaText}>今日剩余 7/10 次</Text>
+      <Text style={styles.quotaText}>今日剩余 10 次 · 自动检索 + RAG 增强</Text>
 
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.textInput}
-          placeholder="描述你想要的梗主题，Agent 会自动检索热门梗、分析趋势、生成最佳候选..."
+          placeholder="输入你想造梗的方向或关键词..."
           placeholderTextColor={colors.text.muted}
           value={inputText}
           onChangeText={setInputText}
           multiline
-          textAlignVertical="top"
+          maxLength={500}
         />
       </View>
 
-      <Text style={styles.sectionLabel}>造梗风格</Text>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.styleScroll}
-      >
-        {STYLE_OPTIONS.map((option) => {
-          const isSelected = selectedStyle === option.label;
+      <Text style={styles.sectionLabel}>风格偏好</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.styleScroll}>
+        {STYLE_OPTIONS.map((opt) => {
+          const active = selectedStyle === opt.label;
           return (
             <Pressable
-              key={option.label}
+              key={opt.label}
+              onPress={() => setSelectedStyle(opt.label)}
               style={[
                 styles.styleCapsule,
-                { backgroundColor: isSelected ? option.color : 'transparent' },
-                !isSelected && styles.styleCapsuleUnselected,
+                active
+                  ? { backgroundColor: `${opt.color}22`, borderColor: opt.color }
+                  : styles.styleCapsuleUnselected,
               ]}
-              onPress={() => setSelectedStyle(option.label)}
             >
               <Text
-                style={[
-                  styles.styleCapsuleText,
-                  { color: isSelected ? colors.text.primary : option.color },
-                ]}
+                style={[styles.styleCapsuleText, { color: active ? opt.color : colors.text.muted }]}
               >
-                {option.label}
+                {opt.label}
               </Text>
             </Pressable>
           );
         })}
       </ScrollView>
 
-      <Text style={styles.energyText}>消耗 1 能量 · 剩余 4</Text>
-
-      <View style={styles.generateButtonWrapper}>
-        <PrimaryButton
-          fullWidth
-          disabled={inputText.trim().length === 0}
-          onPress={handleGenerate}
-          size="lg"
-        >
-          开始生成
-        </PrimaryButton>
-      </View>
+      <PrimaryButton
+        fullWidth
+        size="lg"
+        onPress={handleGenerate}
+        disabled={!inputText.trim() || startCreation.isPending}
+        loading={startCreation.isPending}
+      >
+        Pro 造梗
+      </PrimaryButton>
     </ScrollView>
   );
 
   const renderLoadingStage = () => (
     <View style={styles.centeredContainer}>
       <ActivityIndicator size="large" color={colors.brand.DEFAULT} />
-      <Text style={styles.loadingMainText}>Agent 正在检索热门梗...</Text>
       <Text style={styles.loadingPhaseText}>{LOADING_PHASES[loadingPhaseIndex]}</Text>
     </View>
   );
 
   const renderCandidatesStage = () => (
-    <View style={styles.candidatesContainer}>
-      <Text style={styles.candidatesTitle}>Agent 为你生成了 3 个候选</Text>
-
+    <View style={{ flex: 1 }}>
       <ScrollView
         style={styles.candidatesScroll}
         contentContainerStyle={styles.candidatesScrollContent}
       >
-        {candidates.map((candidate, index) => {
-          const isSelected = selectedCandidateId === candidate.id;
-          return (
-            <Pressable
-              key={candidate.id}
-              style={[styles.candidateCard, isSelected && styles.candidateCardSelected]}
-              onPress={() => setSelectedCandidateId(candidate.id)}
-            >
-              <View style={styles.candidateRow}>
-                <View style={styles.candidateNumberCircle}>
-                  <Text style={styles.candidateNumberText}>{ORDER_LABELS[index]}</Text>
-                </View>
+        {candidates.length === 0 ? (
+          <Text style={{ color: colors.text.muted, textAlign: 'center', padding: 20 }}>
+            暂无候选结果
+          </Text>
+        ) : (
+          candidates.map((candidate, index) => {
+            const isSelected = selectedIdx === candidate.idx;
+            const title = candidate.content ?? '(无文本)';
+            return (
+              <Pressable
+                key={candidate.candidate_id}
+                style={[styles.candidateCard, isSelected && styles.candidateCardSelected]}
+                onPress={() => setSelectedIdx(candidate.idx)}
+              >
+                <View style={styles.candidateRow}>
+                  <View style={styles.candidateNumberCircle}>
+                    <Text style={styles.candidateNumberText}>{String(index + 1)}</Text>
+                  </View>
 
-                <View style={styles.candidateContent}>
-                  <Text style={styles.candidateTitle}>{candidate.title}</Text>
-                  <View style={styles.candidateTags}>
-                    <View style={styles.candidateStylePill}>
-                      <Text style={styles.candidateStylePillText}>{candidate.style}</Text>
-                    </View>
-                    <View style={styles.aiPill}>
-                      <Text style={styles.aiPillText}>AI 生成</Text>
+                  <View style={styles.candidateContent}>
+                    <Text style={styles.candidateTitle}>{title}</Text>
+                    <View style={styles.candidateTags}>
+                      <View
+                        style={{
+                          borderRadius: 9999,
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          backgroundColor: `${colors.brand.DEFAULT}22`,
+                          marginRight: 6,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontFamily: 'Poppins_600SemiBold',
+                            color: colors.brand.DEFAULT,
+                          }}
+                        >
+                          {selectedStyle}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          borderRadius: 9999,
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          backgroundColor: `${colors.ai.DEFAULT}22`,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontFamily: 'Poppins_500Medium',
+                            color: colors.ai.DEFAULT,
+                          }}
+                        >
+                          AI 生成
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                <View
-                  style={[styles.selectionCircle, isSelected && styles.selectionCircleSelected]}
-                >
-                  {isSelected && <View style={styles.selectionDot} />}
+                  <View
+                    style={[styles.selectionCircle, isSelected && styles.selectionCircleSelected]}
+                  >
+                    {isSelected && <View style={styles.selectionDot} />}
+                  </View>
                 </View>
-              </View>
-            </Pressable>
-          );
-        })}
+              </Pressable>
+            );
+          })
+        )}
       </ScrollView>
 
       <View style={styles.bottomActions}>
         <View style={styles.bottomActionRow}>
-          <PrimaryButton variant="ghost" onPress={handleRegenerate} size="md">
+          <PrimaryButton
+            variant="ghost"
+            onPress={handleRegenerate}
+            size="md"
+            loading={regenerate.isPending}
+          >
             重新生成
           </PrimaryButton>
           <View style={styles.publishButtonWrapper}>
             <PrimaryButton
               fullWidth
-              disabled={selectedCandidateId === null}
+              disabled={selectedIdx === null}
               onPress={handlePublish}
               size="md"
+              loading={chooseCandidate.isPending}
             >
               发布选中
             </PrimaryButton>
@@ -276,6 +332,15 @@ export default function CreateAgentScreen() {
     </View>
   );
 
+  const renderErrorStage = () => (
+    <View style={styles.centeredContainer}>
+      <Text style={{ color: colors.status.error, fontSize: 16, marginBottom: 16 }}>{errorMsg}</Text>
+      <PrimaryButton onPress={() => setStage('INPUT')} size="md">
+        返回重试
+      </PrimaryButton>
+    </View>
+  );
+
   const renderStage = () => {
     switch (stage) {
       case 'INPUT':
@@ -288,6 +353,8 @@ export default function CreateAgentScreen() {
         return renderPublishingStage();
       case 'PUBLISHED':
         return renderPublishedStage();
+      case 'ERROR':
+        return renderErrorStage();
       default:
         return null;
     }
@@ -299,6 +366,18 @@ export default function CreateAgentScreen() {
       <View style={styles.content}>{renderStage()}</View>
     </SafeAreaView>
   );
+
+  function renderHeader() {
+    return (
+      <View style={styles.header}>
+        <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
+          <Text style={styles.backArrow}>‹</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>Pro Agent</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -402,175 +481,123 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
   },
-  energyText: {
-    fontSize: 13,
-    fontFamily: 'Poppins_400Regular',
-    color: colors.text.muted,
-    marginBottom: spacing[4],
-  },
-  generateButtonWrapper: {
-    marginTop: spacing[2],
-  },
   centeredContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: spacing[8],
-  },
-  loadingMainText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    color: colors.text.primary,
-    marginTop: spacing[6],
-    textAlign: 'center',
+    justifyContent: 'center',
+    padding: spacing[4],
   },
   loadingPhaseText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Poppins_400Regular',
     color: colors.text.secondary,
-    marginTop: spacing[3],
-    textAlign: 'center',
+    marginTop: spacing[4],
   },
-  candidatesContainer: {
-    flex: 1,
-  },
-  candidatesTitle: {
+  statusText: {
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
     color: colors.text.primary,
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[3],
+    marginTop: spacing[4],
+    marginBottom: spacing[4],
+  },
+  checkmarkCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: `${colors.status.success}22`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing[3],
+  },
+  checkmarkSymbol: {
+    fontSize: 28,
+    color: colors.status.success,
+    fontFamily: 'Poppins_700Bold',
   },
   candidatesScroll: {
     flex: 1,
   },
   candidatesScrollContent: {
     paddingHorizontal: spacing[4],
-    gap: spacing[3],
-    paddingBottom: spacing[4],
+    paddingBottom: spacing[5],
   },
   candidateCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border.DEFAULT,
     backgroundColor: colors.ink.soft,
-    borderRadius: radius.xl,
     padding: spacing[4],
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+    marginBottom: spacing[3],
   },
   candidateCardSelected: {
-    backgroundColor: 'rgba(247, 184, 75, 0.08)',
     borderColor: colors.brand.DEFAULT,
+    backgroundColor: `${colors.brand.DEFAULT}08`,
   },
   candidateRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   candidateNumberCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: colors.brand.DEFAULT,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.ink.elevated,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing[3],
-    marginTop: 1,
+    marginTop: 2,
   },
   candidateNumberText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Poppins_700Bold',
     color: colors.text.primary,
   },
   candidateContent: {
     flex: 1,
-    marginRight: spacing[3],
   },
   candidateTitle: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
     color: colors.text.primary,
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: spacing[2],
   },
   candidateTags: {
     flexDirection: 'row',
-    gap: spacing[2],
+    alignItems: 'center',
     flexWrap: 'wrap',
-  },
-  candidateStylePill: {
-    backgroundColor: 'rgba(247, 184, 75, 0.15)',
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-  },
-  candidateStylePillText: {
-    fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    color: colors.brand.DEFAULT,
-  },
-  aiPill: {
-    backgroundColor: 'rgba(158, 92, 189, 0.15)',
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-  },
-  aiPillText: {
-    fontSize: 11,
-    fontFamily: 'Poppins_500Medium',
-    color: colors.ai.DEFAULT,
   },
   selectionCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border.strong,
+    borderColor: colors.text.muted,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: spacing[3],
+    marginTop: 2,
   },
   selectionCircleSelected: {
     borderColor: colors.brand.DEFAULT,
-    backgroundColor: colors.brand.DEFAULT,
   },
   selectionDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.text.primary,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.brand.DEFAULT,
   },
   bottomActions: {
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[4],
-    borderTopWidth: 1,
-    borderTopColor: colors.border.DEFAULT,
+    paddingBottom: spacing[6],
+    paddingTop: spacing[3],
   },
   bottomActionRow: {
     flexDirection: 'row',
-    gap: spacing[3],
     alignItems: 'center',
+    gap: spacing[3],
   },
   publishButtonWrapper: {
     flex: 1,
-  },
-  statusText: {
-    fontSize: 16,
-    fontFamily: 'Poppins_500Medium',
-    color: colors.text.primary,
-    marginTop: spacing[6],
-    marginBottom: spacing[8],
-    textAlign: 'center',
-  },
-  checkmarkCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.status.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing[4],
-  },
-  checkmarkSymbol: {
-    fontSize: 30,
-    fontFamily: 'Poppins_700Bold',
-    color: colors.text.primary,
   },
 });

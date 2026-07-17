@@ -3,8 +3,8 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-17
-**当前阶段**：M1 全部完成 ✅ + M2 社交模块骨架已启动（Legion/PK/Chat/Admin Service 真实 Drizzle 实现）+ RN 军团/PK 页面已对接真实 API
-**当前会话焦点**：M2 推进 — RN 社交页面对接真实 API（legion/pk 已完成，chat 待对接）
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块骨架已启动（Legion/PK/Chat/Admin Service 真实 Drizzle 实现）+ RN 军团/PK/Chat 页面已对接真实 API + Admin Web 后台全部对接真实 API + RN 造梗 4 模式（text/image/video/agent）全部对接真实 API
+**当前会话焦点**：M2 推进 — RN 造梗 4 模式对接真实 API（S3 已完成 text.tsx，本会话补 image/video/agent） + 推进 bug 修复（admin controller @Param → @Query）+ Admin Web 后台 6 页面对接真实 API + RN Chat 模块新增
 **上次会话产出**（2026-07-16）：M2 社交模块 4 Service 真实实现 + T4.4 Web 落地页 + T4.5 Admin shell + @types/react 版本锁定 + 全 3 端 typecheck/lint 双零
 **本会话产出**（2026-07-17）：**M2 RN 军团 + PK + Chat 页面 + Admin Web 后台对接真实 API**：
 - RN Legion 页面：从硬编码 mock 切换到 `useLegions(1)` 真实 API；HeroMetric 显示真实军团总数；军团卡片按 rank 着色，展示真实 member_count/activity_score 与 slogan；空态/加载/错误态完整覆盖
