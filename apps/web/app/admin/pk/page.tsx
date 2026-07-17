@@ -1,20 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-interface PKMatch {
-  pk_id: string;
-  theme: string;
-  status: string;
-  legion_a: string;
-  legion_b: string;
-  score_a: number;
-  score_b: number;
-  start_at: string;
-  end_at: string;
-}
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
+import { fetchAdminActivePKs, type AdminPKMatch } from '@/lib/admin-api';
 
 const STATUS_LABEL: Record<string, string> = {
   preparing: '即将开始',
@@ -33,21 +20,23 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function AdminPKPage() {
-  const [matches, setMatches] = useState<PKMatch[]>([]);
+  const [matches, setMatches] = useState<AdminPKMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    fetch(`${API_BASE}/pk/active`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.json())
-      .then((d) => setMatches(d.data ?? []))
-      .catch(() => {})
+  function load() {
+    setLoading(true);
+    setError(null);
+    fetchAdminActivePKs()
+      .then(setMatches)
+      .catch((e: unknown) => setError((e as Error).message))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(load, []);
 
   if (loading) return <div className="text-gray-400">加载中...</div>;
+  if (error) return <div className="text-red-400">加载失败：{error}</div>;
 
   return (
     <div>
@@ -76,7 +65,7 @@ export default function AdminPKPage() {
               <p className="font-medium">{m.theme}</p>
               <div className="mt-2 flex items-center gap-4 text-sm">
                 <span className="text-gray-400">{m.legion_a}</span>
-                <span className="text-brand font-bold">
+                <span className="font-bold text-brand">
                   {m.score_a} : {m.score_b}
                 </span>
                 <span className="text-gray-400">{m.legion_b}</span>

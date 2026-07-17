@@ -1,11 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { PolicyEngine } from './policy-engine.js';
+import { AiCostLogService } from './ai-cost-log.service.js';
+import { DRIZZLE, type DbType } from '../../database/drizzle.module.js';
+import { aiCostLogs } from '../../database/schema.js';
+import { desc } from 'drizzle-orm';
 
 @Injectable()
 export class AIOrchService {
   private readonly logger = new Logger(AIOrchService.name);
 
-  constructor(private readonly policy: PolicyEngine) {}
+  constructor(
+    private readonly policy: PolicyEngine,
+    private readonly costLog: AiCostLogService,
+    @Inject(DRIZZLE) private readonly db: DbType,
+  ) {}
 
   async chat(req: Parameters<PolicyEngine['chat']>[0]) {
     return this.policy.chat(req);
@@ -25,8 +33,19 @@ export class AIOrchService {
   }
 
   async costToday() {
-    // TODO: 查 ai_cost_logs 聚合
-    return { todayCents: 0, byProvider: {} };
+    const { totalCents, byProvider } = await this.costLog.todayCostByProvider();
+    return { todayCents: totalCents, byProvider };
+  }
+
+  async costLogList(page = 1, pageSize = 50) {
+    const offset = (page - 1) * pageSize;
+    const items = await this.db
+      .select()
+      .from(aiCostLogs)
+      .orderBy(desc(aiCostLogs.createdAt))
+      .limit(pageSize)
+      .offset(offset);
+    return { list: items };
   }
 
   async resetCircuit(provider?: string) {

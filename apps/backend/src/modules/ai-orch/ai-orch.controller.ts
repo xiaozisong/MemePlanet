@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
@@ -18,6 +18,11 @@ export class AIOrchController {
   @Get('cost/today')
   async costToday() {
     return this.orch.costToday();
+  }
+
+  @Get('cost/logs')
+  async costLogs(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+    return this.orch.costLogList(Number(page ?? 1), Number(pageSize ?? 50));
   }
 
   @Post('policy/circuit/reset')

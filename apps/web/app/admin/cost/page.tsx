@@ -1,47 +1,34 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
-
-interface CostRecord {
-  id: string;
-  provider: string;
-  model: string;
-  type: string;
-  tokens_input: number;
-  tokens_output: number;
-  cost_cents: number;
-  latency_ms: number;
-  created_at: string;
-}
+import { fetchAICostLogs, type AICostLog } from '@/lib/admin-api';
 
 export default function AdminCostPage() {
-  const [records, setRecords] = useState<CostRecord[]>([]);
+  const [records, setRecords] = useState<AICostLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    fetch(`${API_BASE}/ai-cost-logs?page=1&pageSize=50`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.json())
-      .then((d) => setRecords(d.data?.list ?? []))
-      .catch(() => {})
+    fetchAICostLogs()
+      .then((r) => setRecords(r.list))
+      .catch((e: unknown) => setError((e as Error).message))
       .finally(() => setLoading(false));
   }, []);
 
   const totalCost = records.reduce((sum, r) => sum + r.cost_cents, 0);
 
   if (loading) return <div className="text-gray-400">加载中...</div>;
+  if (error) return <div className="text-red-400">加载失败：{error}</div>;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">AI 成本</h1>
-        <div className="bg-ink-soft rounded-xl px-4 py-2 text-right">
+        <div className="rounded-xl bg-ink-soft px-4 py-2 text-right">
           <div className="text-xs text-gray-400">当前列表总成本</div>
-          <div className="text-brand text-lg font-bold">¥{(totalCost / 100).toFixed(2)}</div>
+          <div className="text-lg font-bold text-brand">
+            ¥{(totalCost / 100).toFixed(2)}
+          </div>
         </div>
       </div>
 
@@ -51,7 +38,7 @@ export default function AdminCostPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-ink-soft border-b text-gray-400">
+              <tr className="border-b border-ink-soft text-gray-400">
                 <th className="pb-2 pr-3">时间</th>
                 <th className="pb-2 pr-3">Provider</th>
                 <th className="pb-2 pr-3">模型</th>
@@ -64,7 +51,10 @@ export default function AdminCostPage() {
             </thead>
             <tbody>
               {records.map((r) => (
-                <tr key={r.id} className="border-ink-soft/50 border-b text-xs">
+                <tr
+                  key={r.id}
+                  className="border-b border-ink-soft/50 text-xs"
+                >
                   <td className="py-2 pr-3 text-gray-500">
                     {new Date(r.created_at).toLocaleString('zh-CN', {
                       month: 'numeric',

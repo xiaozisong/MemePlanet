@@ -93,3 +93,36 @@ export async function banUser(
     body: JSON.stringify({ reason, until }),
   });
 }
+
+export interface AdminPKMatch {
+  pk_id: string;
+  theme: string;
+  status: string;
+  legion_a: string;
+  legion_b: string;
+  score_a: number;
+  score_b: number;
+  start_at: string;
+  end_at: string;
+}
+
+export async function fetchAdminActivePKs(): Promise<AdminPKMatch[]> {
+  const data = await request<{ items: AdminPKMatch[] } | AdminPKMatch[]>('/pk/active');
+  return Array.isArray(data) ? data : (data.items ?? []);
+}
+
+export interface AICostLog {
+  id: string;
+  provider: string;
+  model: string;
+  type: string;
+  tokens_input: number;
+  tokens_output: number;
+  cost_cents: number;
+  latency_ms: number;
+  created_at: string;
+}
+
+export async function fetchAICostLogs(page = 1, pageSize = 50): Promise<{ list: AICostLog[] }> {
+  return request<{ list: AICostLog[] }>(`/ai-orch/cost/logs?page=${page}&pageSize=${pageSize}`);
+}
