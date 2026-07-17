@@ -3,10 +3,19 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-17
-**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接 + RN 页面全部对接真实 API + 测试基础设施修复完成
-**当前会话焦点**：M2 RN 社交补页（Legion 详情页 + Profile 编辑页）
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接 + RN 页面全栈对接 + 创建/编辑流闭环
+**当前会话焦点**：M2 RN 社交交互闭环 — Legion 创建页 / PK 发起页 / Profile 编辑页 / Legion 详情页
 **上次会话产出**（2026-07-17 早）：M2 e2e 集成测试 + mobile smoke 测试修复 15/15 + M2 social 4 Service 真实实现 + Web/Admin 真实数据对接
-**本会话产出**（2026-07-17 续）：**M2 RN 社交补页**：
+**本会话产出**（2026-07-17 续）：**M2 RN 社交交互完整闭环 + 后端 4 Service 单测**：
+- M2 e2e spec（新文件 `test/e2e/07.m2-social.spec.ts`）：Legion 分页+keyword+create+join+leave、PK 活跃列表+404+鉴权、Chat rooms+鉴权+send 404、Admin 403/401 — typecheck=0 ✅ 已推送
+- 测试 mock 基线提交：6 个 mock（async-storage, expo-{constants,device,secure-store}, react-native-{safe-area-context,svg}）+ creation spec toEqual→toMatchObject ✅ 已推送
+- **Mobile smoke 测试全修复**：15/15 全部通过（之前 3/15）✅ 已推送
+- **RN Legion 详情页**：`app/legion/[id].tsx` — 头部信息卡 + 成员列表 + 操作区 ✅ 已推送
+- **RN Profile 编辑页**：`app/profile/edit.tsx` — 昵称/头像/简介/性别 ✅ 已推送
+- **RN Legion 创建页**：`app/legion/create.tsx` — 名称/口号/12 标签选择/加入方式/人数上限 + 真实 POST /legions ✅ 已提交
+- **RN PK 发起页**：`app/pk/create.tsx` — 双军团底部弹层选择 + PK 类型 + 持续时间 + 真实 POST /pk ✅ 已提交
+- **Legion/PK 列表导航接入**：CTA 跳创建页 + 卡片跳详情页 ✅ 已提交
+- **后端 4 Service 单测（新 56 用例）**：Legion 14 + PK 17 + Chat 11 + Admin 14 = 56 新用例，backend 全部 10 套件 88 测试通过（之前 69→88）✅ 已提交
 - M2 e2e spec（新文件 `test/e2e/07.m2-social.spec.ts`）：Legion 分页+keyword+create+join+leave、PK 活跃列表+404+鉴权、Chat rooms+鉴权+send 404、Admin 403/401 — typecheck=0 ✅ 已推送
 - 测试 mock 基线提交：6 个 mock（async-storage, expo-{constants,device,secure-store}, react-native-{safe-area-context,svg}）+ creation spec toEqual→toMatchObject ✅ 已推送
 - **Mobile smoke 测试全修复**：15/15 全部通过（之前 3/15）。
