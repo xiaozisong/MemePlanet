@@ -48,16 +48,15 @@ export interface UserInfo {
   nickname: string;
   avatarUrl: string | null;
   phone: string;
-  role: string;
-  isPro: boolean;
-  level: number;
-  memePower: number;
   status: string;
   createdAt: string;
+  lastLoginAt: string;
+  level: number;
 }
 
 export interface UserListResponse {
-  list: UserInfo[];
+  items: UserInfo[];
+  page: number;
   total: number;
 }
 

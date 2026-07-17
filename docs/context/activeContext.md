@@ -2,11 +2,18 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-16
-**当前阶段**：M1 全部完成 ✅ + M2 社交模块骨架已启动（Legion/PK/Chat/Admin Service 真实 Drizzle 实现）
-**当前会话焦点**：M2 预备 — 社交模块骨架 + Drizzle schema 补齐
-**上次会话产出**（2026-07-16）：完成 S3 RN 前端 8 项任务（T3.7-T3.14）：API hooks 层 6 文件 + Tracker SDK + 6 页面对接真实 API + _layout 接 useMe；补全 backend Drizzle camelCase 与前端类型对齐；typecheck/lint 全 0。
-**本会话产出**（2026-07-16）：**M2 社交模块 4 Service 真实实现** + **T4.4 Web 落地页 + T4.5 Admin shell**：
+**最后更新**：2026-07-17
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块骨架已启动（Legion/PK/Chat/Admin Service 真实 Drizzle 实现）+ RN 军团/PK 页面已对接真实 API
+**当前会话焦点**：M2 推进 — RN 社交页面对接真实 API（legion/pk 已完成，chat 待对接）
+**上次会话产出**（2026-07-16）：M2 社交模块 4 Service 真实实现 + T4.4 Web 落地页 + T4.5 Admin shell + @types/react 版本锁定 + 全 3 端 typecheck/lint 双零
+**本会话产出**（2026-07-17）：**M2 RN 军团 + PK + Chat 页面 + Admin Web 后台对接真实 API**：
+- RN Legion 页面：从硬编码 mock 切换到 `useLegions(1)` 真实 API；HeroMetric 显示真实军团总数；军团卡片按 rank 着色，展示真实 member_count/activity_score 与 slogan；空态/加载/错误态完整覆盖
+- RN PK 页面：从硬编码 mock 切换到 `useActivePKs()` 真实 API；ArenaMetric 显示真实进行中数量与总场次；MatchCard 展示真实 theme/score_a/score_b/状态/参与人数，按 start_at 计算已耗时，battling 显示 LIVE 徽章；空态/加载/错误态完整覆盖
+- RN 聊天模块新增：`app/chat/index.tsx`（会话列表 + 未读徽章 + 军团/私聊头像区分）+ `app/chat/[roomId].tsx`（消息流 + 发送消息 + KeyboardAvoidingView + 自动滚动到底）
+- API hooks 层新增 legion.ts (5 hook) + pk.ts (4 hook) + chat.ts (3 hook)，与 S3 已有 6 个 hook 合计 13 个 RN API hook
+- API index.ts 补 re-export legion/pk/chat 3 模块（修复 import 缺失）
+- **Admin Web 后台 6 页面真实数据**：新增 `apps/web/lib/admin-api.ts`（5 函数：fetchDashboard / fetchAuditQueue / performAuditAction / fetchUsers / banUser）；dashboard 页显示在线/PK/造梗/AI 成本；audit 页拉取真实举报+机审复核队列，按钮触发通过/驳回；users 页表格分页拉取 +-Pro 标记 + 角色徽章 + 封禁操作；pk 页拉取活跃 PK 列表 + 状态徽章 + 实时比分；analytics 页复用 dashboard + 留存/漏斗占位说明；cost 页拉取 ai_cost_logs 表 + 成本合计
+- mobile typecheck=0 errors + lint=0 errors / web typecheck=0 + lint=0 / backend 同步 0 ✅
 - M2-1: Drizzle schema 补 13 社交域表（legions, legion_members, pk_matches, pk_votes, chat_rooms, messages, message_reads, notifications, sensitive_words, reports, banned_users, audit_logs）
 - M2-2: LegionService 真实 Drizzle 查询（list 分页模糊搜索/findById JOIN members/create leader校验+INSERT/join memberCap+限3团/leave 团长保护）
 - M2-3: PKService 真实 Drizzle 查询（listActive 活跃 PK/findById/create 双军团leader校验/vote Redis 每日限票 3 次+分数更新+实时 pubsub/settle 结算胜负）

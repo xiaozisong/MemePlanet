@@ -23,10 +23,12 @@ export default function AdminUsersPage() {
     setLoading(true);
     fetchUsers(p)
       .then((r) => {
-        setUsers(r.list);
+        setUsers(r.items);
         setTotal(r.total);
       })
-      .catch(() => {})
+      .catch(() => {
+        setUsers([]);
+      })
       .finally(() => setLoading(false));
   }
 
@@ -60,10 +62,9 @@ export default function AdminUsersPage() {
                 <tr className="border-ink-soft border-b text-gray-400">
                   <th className="pb-2 pr-4">昵称</th>
                   <th className="pb-2 pr-4">手机</th>
-                  <th className="pb-2 pr-4">角色</th>
                   <th className="pb-2 pr-4">等级</th>
-                  <th className="pb-2 pr-4">Pro</th>
                   <th className="pb-2 pr-4">状态</th>
+                  <th className="pb-2 pr-4">最近登录</th>
                   <th className="pb-2 pr-4">注册时间</th>
                   <th className="pb-2">操作</th>
                 </tr>
@@ -73,20 +74,11 @@ export default function AdminUsersPage() {
                   <tr key={u.userId} className="border-ink-soft/50 border-b">
                     <td className="py-3 pr-4">{u.nickname}</td>
                     <td className="py-3 pr-4 font-mono text-xs">{u.phone}</td>
-                    <td className="py-3 pr-4">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs ${
-                          u.role === 'admin' || u.role === 'super_admin'
-                            ? 'bg-purple-500/20 text-purple-300'
-                            : 'bg-gray-500/20 text-gray-400'
-                        }`}
-                      >
-                        {u.role}
-                      </span>
-                    </td>
                     <td className="py-3 pr-4">Lv.{u.level}</td>
-                    <td className="py-3 pr-4">{u.isPro ? '✅' : '—'}</td>
                     <td className="py-3 pr-4">{u.status}</td>
+                    <td className="py-3 pr-4 text-xs text-gray-500">
+                      {u.lastLoginAt ? formatTime(u.lastLoginAt) : '—'}
+                    </td>
                     <td className="py-3 pr-4 text-xs text-gray-500">{formatTime(u.createdAt)}</td>
                     <td className="py-3">
                       <button

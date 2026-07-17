@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
@@ -26,7 +26,7 @@ export class AdminController {
   }
 
   @Get('users')
-  async users(@Param('page') page?: string) {
+  async users(@Query('page') page?: string) {
     return this.admin.listUsers(Number(page ?? 1));
   }
 
