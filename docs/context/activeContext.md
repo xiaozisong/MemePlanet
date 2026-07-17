@@ -3,10 +3,20 @@
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
 **最后更新**：2026-07-17
-**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接（Legion/PK/Chat/Admin Service 真实 Drizzle 实现 + RN 军团/PK/Chat 页面 + Admin Web 后台 6 页 + RN 造梗 4 模式全部对接真实 API）
-**当前会话焦点**：M2 推进 — 全栈社交模块对接 + 造梗页 mock→真实 API + bug 修复 + Admin 后台实装 + AI cost 真实实现
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接 + 测试基础设施修复完成
+**当前会话焦点**：M2 质量与测试修复 — mobile smoke 测试、M2 e2e spec、issue 修复
 **上次会话产出**（2026-07-16）：M2 社交模块 4 Service 真实实现 + T4.4 Web 落地页 + T4.5 Admin shell + @types/react 版本锁定 + 全 3 端 typecheck/lint 双零
-**本会话产出**（2026-07-17）：**M2 RN 军团 + PK + Chat 页面 + Admin Web 后台对接真实 API**：
+**本会话产出**（2026-07-17 第二段）：**M2 e2e 集成测试 + mobile smoke 测试修复**：
+- M2 e2e spec（新文件 `test/e2e/07.m2-social.spec.ts`）：Legion 分页+keyword+create+join+leave、PK 活跃列表+404+鉴权、Chat rooms+鉴权+send 404、Admin 403/401 — typecheck=0 ✅ 已推送
+- 测试 mock 基线提交：6 个 mock（async-storage, expo-{constants,device,secure-store}, react-native-{safe-area-context,svg}）+ creation spec toEqual→toMatchObject ✅ 已推送
+- **Mobile smoke 测试全修复**：15/15 全部通过（之前 3/15）。
+  根因：原方案直接调用函数组件绕过 React 调和器。修复方案：
+  - 改用 react-test-renderer + jsdom 环境走真实调和器
+  - 新建 `jest.setup.ts` 预置 fetch/Response/TextEncoder polyfill
+  - expo-router mock 补 `useLocalSearchParams` + `useFocusEffect`
+  - react-native-svg mock 修复 default export 为组件（不是对象）
+  - 测试包裹 `QueryClientProvider` + `ApiProvider` 提供 react-query 上下文
+- typecheck=0 errors / lint=0 errors（全 3 端）✅
 - RN Legion 页面：从硬编码 mock 切换到 `useLegions(1)` 真实 API；HeroMetric 显示真实军团总数；军团卡片按 rank 着色，展示真实 member_count/activity_score 与 slogan；空态/加载/错误态完整覆盖
 - RN PK 页面：从硬编码 mock 切换到 `useActivePKs()` 真实 API；ArenaMetric 显示真实进行中数量与总场次；MatchCard 展示真实 theme/score_a/score_b/状态/参与人数，按 start_at 计算已耗时，battling 显示 LIVE 徽章；空态/加载/错误态完整覆盖
 - RN 聊天模块新增：`app/chat/index.tsx`（会话列表 + 未读徽章 + 军团/私聊头像区分）+ `app/chat/[roomId].tsx`（消息流 + 发送消息 + KeyboardAvoidingView + 自动滚动到底）
@@ -128,12 +138,13 @@
 
 1. **⏳ S1/S2 外部 key** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通
 2. **🎬 M1 Demo 录制** — 脚本已就绪（`docs/context/m1-demo-review.md` §1），只需 QuickTime 录屏 ~15min
-3. **🚀 M2 后续编码方向**：
-   - **集成测试补全**：补 Legion/PK/Chat/Admin Service 的 e2e spec，覆盖 M2 后端路径
-   - **RN jest mock 修复**：本会话发现 mobile 测试因 `react-native-safe-area-context` native mock + `Platform.select` undefined 失败，与功能无关但需修
-   - **Web e2e 修复**：本会话发现 web Playwright 测试因 Babel 配置无法解析 TS path alias 失败
-   - **视频造梗真实 LLM**：T2.15 待外部 key 后串通
-   - **Legion Member 列表页 + Profile 编辑页**：M2 RN 社交还可以补的小页面
+3. **本会话（2026-07-17）已完成**：
+   - ✅ **M2 e2e 集成测试**：新增 `test/e2e/07.m2-social.spec.ts`，覆盖 Legion/PK/Chat/Admin 4 域语义
+   - ✅ **Mobile smoke 测试修复**：15/15 全通过（之前 3/15）—— react-test-renderer + jsdom + polyfills
+   - ✅ **测试 mock 基线**：6 个 mock 文件 + 创建 spec 修复 + expo-router mock 补全
+4. **🚀 下一步可推进方向**：
+   - **Web e2e 修复**：Playwright 测试因 Babel TS path alias 配置无法解析，需排查修复
+   - **Legion Member 列表页 + Profile 编辑页**：M2 RN 社交小型补页
 
 ---
 
