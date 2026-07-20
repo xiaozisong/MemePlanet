@@ -131,16 +131,16 @@ describe('NotificationService', () => {
 
   describe('markAllRead', () => {
     it('应批量标记为已读（rowCount 路径）', async () => {
-      (db.update as jest.Mock).mockReturnValueOnce(
-        updateWhereResolved({ rowCount: 3 }),
-      );
+      (db.update as jest.Mock).mockReturnValueOnce(updateWhereResolved({ rowCount: 3 }));
       const result = await service.markAllRead('user-001');
       expect(result.ok).toBe(true);
       expect(result.affected).toBe(3);
     });
 
     it('应支持返回数组路径', async () => {
-      (db.update as jest.Mock).mockReturnValueOnce(updateWhereResolved([{ notifId: 'a' }, { notifId: 'b' }]));
+      (db.update as jest.Mock).mockReturnValueOnce(
+        updateWhereResolved([{ notifId: 'a' }, { notifId: 'b' }]),
+      );
       const result = await service.markAllRead('user-001');
       expect(result.affected).toBe(2);
     });
@@ -159,10 +159,15 @@ describe('NotificationService', () => {
         insertResult([{ notifId: 'notif-002', type: 'like', createdAt }]),
       );
 
-      const result = await service.sendPush('user-001', 'like', { memeId: 'm-01' }, {
-        title: '有人赞了你',
-        body: 'cx 给你的梗卡点赞',
-      });
+      const result = await service.sendPush(
+        'user-001',
+        'like',
+        { memeId: 'm-01' },
+        {
+          title: '有人赞了你',
+          body: 'cx 给你的梗卡点赞',
+        },
+      );
       expect(result).toEqual({ notifId: 'notif-002', type: 'like', createdAt });
     });
 
