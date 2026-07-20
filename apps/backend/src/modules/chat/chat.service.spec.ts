@@ -6,7 +6,12 @@ import { SensitiveWordService } from '../audit/sensitive-word.service.js';
 import type { SendMessageDto } from './dto.js';
 
 function mockDb() {
-  return { select: jest.fn(), insert: jest.fn(), update: jest.fn(), delete: jest.fn() } as unknown as jest.Mocked<DbType>;
+  return {
+    select: jest.fn(),
+    insert: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  } as unknown as jest.Mocked<DbType>;
 }
 
 function mockRedis(): jest.Mocked<Redis> {
@@ -14,7 +19,10 @@ function mockRedis(): jest.Mocked<Redis> {
 }
 
 function mockSensitive(): jest.Mocked<SensitiveWordService> {
-  return { hasSensitive: jest.fn().mockReturnValue(false), match: jest.fn().mockReturnValue([]) } as unknown as jest.Mocked<SensitiveWordService>;
+  return {
+    hasSensitive: jest.fn().mockReturnValue(false),
+    match: jest.fn().mockReturnValue([]),
+  } as unknown as jest.Mocked<SensitiveWordService>;
 }
 
 /** select → from → where → limit (single row lookup) */
@@ -66,18 +74,35 @@ function updateChain() {
 }
 
 const mockRoom = {
-  roomId: 'room-001', type: 'legion', legionId: 'legion-001', userA: null, userB: null,
-  lastMsgAt: new Date(), createdAt: new Date(),
+  roomId: 'room-001',
+  type: 'legion',
+  legionId: 'legion-001',
+  userA: null,
+  userB: null,
+  lastMsgAt: new Date(),
+  createdAt: new Date(),
 };
 
 const mockPrivateRoom = {
-  roomId: 'room-002', type: 'private', legionId: null, userA: 'user-001', userB: 'user-002',
-  lastMsgAt: new Date(), createdAt: new Date(),
+  roomId: 'room-002',
+  type: 'private',
+  legionId: null,
+  userA: 'user-001',
+  userB: 'user-002',
+  lastMsgAt: new Date(),
+  createdAt: new Date(),
 };
 
 const mockMsg = {
-  messageId: 'msg-001', roomId: 'room-001', senderId: 'user-001', msgType: 'text',
-  content: 'hello', extra: {}, createdAt: new Date(), senderName: '用户1', senderAvatar: null,
+  messageId: 'msg-001',
+  roomId: 'room-001',
+  senderId: 'user-001',
+  msgType: 'text',
+  content: 'hello',
+  extra: {},
+  createdAt: new Date(),
+  senderName: '用户1',
+  senderAvatar: null,
 };
 
 describe('ChatService', () => {
@@ -87,8 +112,14 @@ describe('ChatService', () => {
   let service: ChatService;
 
   beforeEach(() => {
-    db = mockDb(); redis = mockRedis(); sensitive = mockSensitive();
-    service = new ChatService(db as unknown as DbType, redis as unknown as Redis, sensitive as unknown as SensitiveWordService);
+    db = mockDb();
+    redis = mockRedis();
+    sensitive = mockSensitive();
+    service = new ChatService(
+      db as unknown as DbType,
+      redis as unknown as Redis,
+      sensitive as unknown as SensitiveWordService,
+    );
   });
 
   describe('listRooms', () => {
@@ -137,7 +168,9 @@ describe('ChatService', () => {
 
     it('should throw Forbidden for private room without access', async () => {
       (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult(mockPrivateRoom).from });
-      await expect(service.listMessages('user-003', 'room-002')).rejects.toThrow(ForbiddenException);
+      await expect(service.listMessages('user-003', 'room-002')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -148,7 +181,9 @@ describe('ChatService', () => {
       // 1st select: room lookup
       (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult(mockRoom).from });
       // insert: message with returning
-      (db.insert as jest.Mock).mockReturnValueOnce(insertResult([{ messageId: 'msg-001', createdAt: new Date() }]));
+      (db.insert as jest.Mock).mockReturnValueOnce(
+        insertResult([{ messageId: 'msg-001', createdAt: new Date() }]),
+      );
       // update: room lastMsgAt
       (db.update as jest.Mock).mockReturnValueOnce(updateChain());
 

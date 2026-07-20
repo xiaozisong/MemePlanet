@@ -14,7 +14,11 @@ export class NotificationController {
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
-    return this.notifs.list(user.sub, page ? Number(page) : undefined, pageSize ? Number(pageSize) : undefined);
+    return this.notifs.list(
+      user.sub,
+      page ? Number(page) : undefined,
+      pageSize ? Number(pageSize) : undefined,
+    );
   }
 
   @Post(':id/read')

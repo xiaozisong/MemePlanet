@@ -361,6 +361,17 @@ export function LiveDotIcon({ size = 8, color = '#FF4444' }: IconProps) {
 const BRAND_ACTIVE = '#F7B84B';
 const BRAND_INACTIVE = '#5E6468';
 
+export function BellIcon({ size = 24, color = '#fff' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
 export function TabFeedIcon({
   focused,
   size = 24,

@@ -90,11 +90,16 @@ export class NotificationService {
     return { ok: true as const, affected: affectedRows };
   }
 
-  async sendPush(userId: string, type: string, payload: Record<string, unknown>, opts?: {
-    title?: string;
-    body?: string;
-    push?: boolean;
-  }) {
+  async sendPush(
+    userId: string,
+    type: string,
+    payload: Record<string, unknown>,
+    opts?: {
+      title?: string;
+      body?: string;
+      push?: boolean;
+    },
+  ) {
     const title = opts?.title ?? null;
     const body = opts?.body ?? null;
     const pushStatus = opts?.push === false ? 'skipped' : 'pending';

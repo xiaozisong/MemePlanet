@@ -4,7 +4,12 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type Redis from 'ioredis';
 
 function mockDb() {
-  return { select: jest.fn(), insert: jest.fn(), update: jest.fn(), delete: jest.fn() } as unknown as jest.Mocked<DbType>;
+  return {
+    select: jest.fn(),
+    insert: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  } as unknown as jest.Mocked<DbType>;
 }
 
 function mockRedis(): jest.Mocked<Redis> {
@@ -64,15 +69,25 @@ function updateChain() {
 }
 
 const mockReport = {
-  reportId: 'report-001', targetType: 'meme', targetId: 'meme-001',
-  reason: 'spam', detail: '垃圾广告', status: 'pending',
-  createdAt: new Date(), reporterId: 'user-001',
+  reportId: 'report-001',
+  targetType: 'meme',
+  targetId: 'meme-001',
+  reason: 'spam',
+  detail: '垃圾广告',
+  status: 'pending',
+  createdAt: new Date(),
+  reporterId: 'user-001',
 };
 
 const mockUser = {
-  userId: 'user-001', nickname: '测试用户', phone: '13800138000',
-  status: 'active', createdAt: new Date(), lastLoginAt: new Date(),
-  level: 1, avatarUrl: null,
+  userId: 'user-001',
+  nickname: '测试用户',
+  phone: '13800138000',
+  status: 'active',
+  createdAt: new Date(),
+  lastLoginAt: new Date(),
+  level: 1,
+  avatarUrl: null,
 };
 
 describe('AdminService', () => {
@@ -81,7 +96,8 @@ describe('AdminService', () => {
   let service: AdminService;
 
   beforeEach(() => {
-    db = mockDb(); redis = mockRedis();
+    db = mockDb();
+    redis = mockRedis();
     service = new AdminService(db as unknown as DbType, redis as unknown as Redis);
   });
 
@@ -110,7 +126,9 @@ describe('AdminService', () => {
     });
     it('should handle meme card audit (fallback)', async () => {
       (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult(null).from });
-      (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult({ memeId: 'meme-001', status: 'pending_audit' }).from });
+      (db.select as jest.Mock).mockReturnValueOnce({
+        from: singleResult({ memeId: 'meme-001', status: 'pending_audit' }).from,
+      });
       (db.update as jest.Mock).mockReturnValue(updateChain());
       (db.insert as jest.Mock).mockReturnValue(insertValues());
 
@@ -118,12 +136,16 @@ describe('AdminService', () => {
       expect(result.action).toBe('approve');
     });
     it('should throw for invalid action', async () => {
-      await expect(service.auditAction('admin-001', 'r', 'invalid')).rejects.toThrow(BadRequestException);
+      await expect(service.auditAction('admin-001', 'r', 'invalid')).rejects.toThrow(
+        BadRequestException,
+      );
     });
     it('should throw NotFound for unknown', async () => {
       (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult(null).from });
       (db.select as jest.Mock).mockReturnValueOnce({ from: singleResult(null).from });
-      await expect(service.auditAction('admin-001', 'unknown', 'approve')).rejects.toThrow(NotFoundException);
+      await expect(service.auditAction('admin-001', 'unknown', 'approve')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -157,7 +179,9 @@ describe('AdminService', () => {
       (db.select as jest.Mock).mockReturnValueOnce({ from: pureWhereResult([{ total: 10 }]).from });
       (db.select as jest.Mock).mockReturnValueOnce({ from: pureWhereResult([{ total: 3 }]).from });
       (db.select as jest.Mock).mockReturnValueOnce({ from: pureWhereResult([{ total: 15 }]).from });
-      (db.select as jest.Mock).mockReturnValueOnce({ from: pureWhereResult([{ total: 500 }]).from });
+      (db.select as jest.Mock).mockReturnValueOnce({
+        from: pureWhereResult([{ total: 500 }]).from,
+      });
       const result = await service.dashboard();
       expect(result.online).toBe(10);
       expect(result.activePKs).toBe(3);

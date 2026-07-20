@@ -108,7 +108,9 @@ describe('LegionService', () => {
   describe('list', () => {
     it('should return paginated legions', async () => {
       // 1st select: items (paginated)
-      (db.select as jest.Mock).mockReturnValueOnce({ from: paginatedListResult([mockLegion]).from });
+      (db.select as jest.Mock).mockReturnValueOnce({
+        from: paginatedListResult([mockLegion]).from,
+      });
       // 2nd select: count
       (db.select as jest.Mock).mockReturnValueOnce({ from: whereResult([{ total: 1 }]).from });
 
@@ -153,7 +155,9 @@ describe('LegionService', () => {
       // 1st select: count of existing legions for user
       (db.select as jest.Mock).mockReturnValueOnce({ from: whereResult([{ total: 0 }]).from });
       // 1st insert: legion with returning
-      (db.insert as jest.Mock).mockReturnValueOnce({ values: insertResult([{ legionId: 'legion-001', status: 'active' }]).values });
+      (db.insert as jest.Mock).mockReturnValueOnce({
+        values: insertResult([{ legionId: 'legion-001', status: 'active' }]).values,
+      });
       // 2nd insert: leader membership (no returning)
       (db.insert as jest.Mock).mockReturnValueOnce({ values: insertValues().values });
 

@@ -23,6 +23,7 @@ export {
   EyeIcon,
   ChevronDownIcon,
   LiveDotIcon,
+  BellIcon,
   TabFeedIcon,
   TabCreateIcon,
   TabLegionIcon,

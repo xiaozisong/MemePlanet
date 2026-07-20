@@ -70,11 +70,8 @@ describe('NotificationService', () => {
 
   describe('list', () => {
     it('应返回分页通知 + 未读数', async () => {
-      // 1st select: paginated items
       (db.select as jest.Mock).mockReturnValueOnce({ from: paginatedListResult([mockNotif]).from });
-      // 2nd select: total count
       (db.select as jest.Mock).mockReturnValueOnce({ from: whereResult([{ value: 5 }]).from });
-      // 3rd select: unread count
       (db.select as jest.Mock).mockReturnValueOnce({ from: whereResult([{ value: 2 }]).from });
 
       const result = await service.list('user-001', 1, 10);
@@ -119,16 +116,15 @@ describe('NotificationService', () => {
   describe('markRead', () => {
     it('应标记通知为已读', async () => {
       (db.update as jest.Mock).mockReturnValueOnce(
-        updateReturning([{ notifId: 'notif-001', isRead: true }]).set,
+        updateReturning([{ notifId: 'notif-001', isRead: true }]),
       );
 
       const result = await service.markRead('user-001', 'notif-001');
-      expect(result.notifId).toBe('notif-001');
-      expect(result.isRead).toBe(true);
+      expect(result).toEqual({ notifId: 'notif-001', isRead: true });
     });
 
     it('通知不存在或不属于当前用户应抛 NotFoundException', async () => {
-      (db.update as jest.Mock).mockReturnValueOnce(updateReturning([]).set);
+      (db.update as jest.Mock).mockReturnValueOnce(updateReturning([]));
       await expect(service.markRead('user-001', 'nope')).rejects.toThrow(NotFoundException);
     });
   });
@@ -136,7 +132,7 @@ describe('NotificationService', () => {
   describe('markAllRead', () => {
     it('应批量标记为已读（rowCount 路径）', async () => {
       (db.update as jest.Mock).mockReturnValueOnce(
-        updateWhereResolved({ rowCount: 3 }).set,
+        updateWhereResolved({ rowCount: 3 }),
       );
       const result = await service.markAllRead('user-001');
       expect(result.ok).toBe(true);
@@ -144,13 +140,13 @@ describe('NotificationService', () => {
     });
 
     it('应支持返回数组路径', async () => {
-      (db.update as jest.Mock).mockReturnValueOnce(updateWhereResolved([{ notifId: 'a' }, { notifId: 'b' }]).set);
+      (db.update as jest.Mock).mockReturnValueOnce(updateWhereResolved([{ notifId: 'a' }, { notifId: 'b' }]));
       const result = await service.markAllRead('user-001');
       expect(result.affected).toBe(2);
     });
 
     it('返回 falsy 结果时 affected=0', async () => {
-      (db.update as jest.Mock).mockReturnValueOnce(updateWhereResolved(undefined).set);
+      (db.update as jest.Mock).mockReturnValueOnce(updateWhereResolved(undefined));
       const result = await service.markAllRead('user-001');
       expect(result.affected).toBe(0);
     });
@@ -160,24 +156,22 @@ describe('NotificationService', () => {
     it('应写入通知并返回 notifId/type/createdAt', async () => {
       const createdAt = new Date('2026-07-20T10:00:00Z');
       (db.insert as jest.Mock).mockReturnValueOnce(
-        insertResult([{ notifId: 'notif-002', type: 'like', createdAt }]).values,
+        insertResult([{ notifId: 'notif-002', type: 'like', createdAt }]),
       );
 
       const result = await service.sendPush('user-001', 'like', { memeId: 'm-01' }, {
         title: '有人赞了你',
         body: 'cx 给你的梗卡点赞',
       });
-      expect(result.notifId).toBe('notif-002');
-      expect(result.type).toBe('like');
+      expect(result).toEqual({ notifId: 'notif-002', type: 'like', createdAt });
     });
 
     it('push=false 时 pushStatus=skipped', async () => {
       const createdAt = new Date('2026-07-20T10:00:00Z');
       (db.insert as jest.Mock).mockReturnValueOnce(
-        insertResult([{ notifId: 'notif-003', type: 'system', createdAt }]).values,
+        insertResult([{ notifId: 'notif-003', type: 'system', createdAt }]),
       );
       await service.sendPush('user-001', 'system', {}, { push: false });
-      // 行为只是写入并打日志，没有 throw 即可
     });
   });
 });
