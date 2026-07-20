@@ -2,11 +2,11 @@
 
 > 本文件记录"当前在做什么 / 下一步 / 阻塞 / 待确认"，是跨会话上下文衔接的核心。每次开新 Agent 会话先读本文件，每次结束会话前更新本文件。
 
-**最后更新**：2026-07-17
-**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接 + RN 页面全栈对接 + 创建/编辑流闭环
-**当前会话焦点**：M2 RN 社交交互闭环 — Legion 创建页 / PK 发起页 / Profile 编辑页 / Legion 详情页
-**上次会话产出**（2026-07-17 早）：M2 e2e 集成测试 + mobile smoke 测试修复 15/15 + M2 social 4 Service 真实实现 + Web/Admin 真实数据对接
-**本会话产出**（2026-07-17 续）：**M2 RN 社交交互完整闭环 + 后端 4 Service 单测 + PK 详情页**：
+**最后更新**：2026-07-20
+**当前阶段**：M1 全部完成 ✅ + M2 社交模块全栈已对接 + RN 全页面 + 通知/Chat WS 真实实现
+**当前会话焦点**：M2 通知中心 + Chat Gateway 鉴权/消息持久化
+**上次会话产出**（2026-07-20 早）：NotificationService 真实实现 + 12 个 spec
+**本会话产出**（2026-07-20 续）：**Chat Gateway JWT 鉴权 + RN 通知中心页 + NotificationService spec 修复**：
 - M2 e2e spec（新文件 `test/e2e/07.m2-social.spec.ts`）：Legion 分页+keyword+create+join+leave、PK 活跃列表+404+鉴权、Chat rooms+鉴权+send 404、Admin 403/401 — typecheck=0 ✅ 已推送
 - 测试 mock 基线提交：6 个 mock（async-storage, expo-{constants,device,secure-store}, react-native-{safe-area-context,svg}）+ creation spec toEqual→toMatchObject ✅ 已推送
 - **Mobile smoke 测试全修复**：15/15 全部通过（之前 3/15）✅ 已推送
@@ -139,20 +139,20 @@
 
 **M1 全 8 Sprint 100% 完成 ✅**（S0+S1+S2+S3+S4 全部 done；S4 包含 T4.1-T4.8 全 8 项）。
 
-**本会话（2026-07-17 续）已完成**：
-- ✅ **M2 e2e 集成测试**：新增 `test/e2e/07.m2-social.spec.ts`，覆盖 Legion/PK/Chat/Admin 4 域语义 — 已推送
-- ✅ **Mobile smoke 测试修复**：15/15 全通过（之前 3/15）— react-test-renderer + jsdom + polyfills — 已推送
-- ✅ **测试 mock 基线**：6 个 mock 文件 + 创建 spec 修复 + expo-router mock 补全 — 已推送
-- ✅ **Legion 详情页 + 成员列表**：`app/legion/[id].tsx` — 军团详情/成员列表/排序/加入退出
-- ✅ **Profile 编辑页**：`app/profile/edit.tsx` — 昵称/简介编辑，useUpdateProfile 保存
-- ✅ 全 3 端 typecheck=0 / lint=0 / mobile test 15/15 ✅
+**本会话（2026-07-20 续）已完成**：
+- ✅ **Chat Gateway JWT 鉴权 + 消息入库/广播** — 删除两个 TODO 桩，握手双轨校验，message 路由 ChatService.send — 已推送
+- ✅ **RN 通知中心页**：`app/notifications.tsx` — FlatList 分页 + 单条/全部已读 + 按类型导航
+- ✅ **RN API hook**：`src/api/notification.ts` — 4 个 hook
+- ✅ Backend 99 测试通过 / Mobile 15/15 / typecheck=0 / lint=0 全 3 端 ✅
 
 1. **⏳ 外部 key 阻塞项** — T1.10 DeepSeek key / T1.11 Policy Engine / T2.3 文本造梗真实 LLM / T2.10 阿里云内容安全 / T2.12 机审队列 / T2.15 发布流程串通
 2. **🎬 M1 Demo 录制** — 脚本已就绪（`docs/context/m1-demo-review.md` §1），需 QuickTime 录屏 ~15min
 3. **🚀 下一可推进方向**：
-   - **Legion 创建页 + PK 发起页**：M2 RN 社交交互补页（form + API 提交）
-   - **全栈端到端验证**：启动 Docker + backend，验证核心闭环 API 全部可用
-   - **后端 service 层单测覆盖**：补 Legion/PK/Chat/Admin service 单测
+   - **Profile 页加通知入口 + 数据联动**：通知中心建好了但缺入口（顶部铃铛 + 未读数 badge）
+   - **openapi.yaml 同步**：补 Notification 5 接口 + Chat WebSocket 事件契约
+   - **Audit Service / Video Service 实现剩余 TODO**（外部内容安全 key 仍阻塞，可补测试桩）
+   - **全栈端到端验证**：启动 Docker + backend 跑核心闭环
+   - ** Legion / PK RN 页面样式微调**
 
 ---
 

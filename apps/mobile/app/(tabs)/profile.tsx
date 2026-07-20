@@ -3,7 +3,9 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useRouter } from 'expo-router';
 import { useUserStore } from '../../src/store/user.store';
 import { useMyProfile, useMemePower } from '../../src/api/user';
+import { useNotifications } from '../../src/api/notification';
 import {
+  BellIcon,
   CrownIcon,
   EditIcon,
   ShieldIcon,
@@ -19,6 +21,9 @@ export default function ProfileScreen() {
   // 后台刷新用户资料（不阻塞渲染）
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const { data: power } = useMemePower();
+  // 仅请求第 1 页用于读取 unreadCount（用于入口 badge）
+  const { data: notifs } = useNotifications(1, 1);
+  const unreadCount = notifs?.unreadCount ?? 0;
 
   const displayUser = profile ?? user;
   const memePower = power?.memePower ?? user?.memePower ?? 0;
@@ -66,20 +71,47 @@ export default function ProfileScreen() {
               个人主页
             </Text>
           </View>
+          {/* Notification Bell */}
           <Pressable
+            onPress={() => router.push('/notifications')}
             style={{
-              backgroundColor: colors.ink.soft,
               width: 40,
               height: 40,
               borderRadius: 20,
+              backgroundColor: colors.ink.soft,
               borderWidth: 1,
               borderColor: colors.border.DEFAULT,
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onPress={() => router.push('/settings')}
           >
-            <EditIcon color={colors.brand.DEFAULT} size={18} />
+            <BellIcon color={colors.brand.DEFAULT} size={20} />
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -2,
+                  right: -2,
+                  backgroundColor: colors.status.error,
+                  borderRadius: 8,
+                  minWidth: 16,
+                  height: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 9,
+                    fontFamily: 'Poppins_600SemiBold',
+                    color: '#fff',
+                  }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </View>
 
@@ -362,6 +394,12 @@ export default function ProfileScreen() {
           常用入口
         </Text>
         <MenuRow
+          icon={<BellIcon color={colors.brand.DEFAULT} size={20} />}
+          title="通知中心"
+          badge={unreadCount > 0 ? (unreadCount > 99 ? '99+' : String(unreadCount)) : undefined}
+          onPress={() => router.push('/notifications')}
+        />
+        <MenuRow
           icon={<EditIcon color={colors.brand.DEFAULT} size={20} />}
           title="编辑资料"
           onPress={() => router.push('/profile/edit')}
@@ -458,11 +496,13 @@ function MenuRow({
   icon,
   title,
   subtitle,
+  badge,
   onPress,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
+  badge?: string;
   onPress: () => void;
 }) {
   return (
@@ -509,6 +549,24 @@ function MenuRow({
           </Text>
         )}
       </View>
+      {badge ? (
+        <View
+          style={{
+            backgroundColor: colors.status.error,
+            borderRadius: 9,
+            minWidth: 18,
+            height: 18,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 5,
+            marginRight: 8,
+          }}
+        >
+          <Text style={{ fontSize: 10, fontFamily: 'Poppins_600SemiBold', color: '#fff' }}>
+            {badge}
+          </Text>
+        </View>
+      ) : null}
       <Text style={{ fontSize: 18, fontFamily: 'Poppins_400Regular', color: colors.text.muted }}>
         {'>'}
       </Text>
