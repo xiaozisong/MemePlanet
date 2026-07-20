@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { NotificationService } from './notification.service.js';
@@ -9,8 +9,12 @@ export class NotificationController {
   constructor(private readonly notifs: NotificationService) {}
 
   @Get()
-  async list(@CurrentUser() user: CurrentUser) {
-    return this.notifs.list(user.sub);
+  async list(
+    @CurrentUser() user: CurrentUser,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.notifs.list(user.sub, page ? Number(page) : undefined, pageSize ? Number(pageSize) : undefined);
   }
 
   @Post(':id/read')
