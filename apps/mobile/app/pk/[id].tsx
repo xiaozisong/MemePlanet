@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { colors, layout } from '../../src/theme';
+import { colors, gradient, layout } from '../../src/theme';
 import { usePKDetail, useVotePK } from '../../src/api/pk';
 import { SwordsIcon, ShieldIcon, CrownIcon, LiveDotIcon } from '../../src/components/icons';
 
@@ -122,14 +123,25 @@ export default function PKDetailPage() {
         <Pressable
           onPress={() => refetch()}
           style={{
-            backgroundColor: colors.brand.DEFAULT,
             borderRadius: 10,
             paddingHorizontal: 20,
             paddingVertical: 10,
             marginTop: 16,
+            overflow: 'hidden',
           }}
         >
-          <Text style={{ color: colors.ink.DEFAULT, fontFamily: 'Poppins_600SemiBold' }}>重试</Text>
+          <LinearGradient
+            colors={gradient.brand}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 10,
+            }}
+          >
+            <Text style={{ color: '#fff', fontFamily: 'Poppins_600SemiBold' }}>重试</Text>
+          </LinearGradient>
         </Pressable>
       </View>
     );
@@ -241,11 +253,13 @@ export default function PKDetailPage() {
                 />
               </View>
               {isSettled && match.winnerId === match.legionA && (
-                <View
+                <LinearGradient
+                  colors={gradient.god}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: colors.brand.DEFAULT,
                     borderRadius: 9999,
                     paddingHorizontal: 8,
                     paddingVertical: 2,
@@ -263,7 +277,7 @@ export default function PKDetailPage() {
                   >
                     胜
                   </Text>
-                </View>
+                </LinearGradient>
               )}
               <Text
                 style={{
@@ -294,41 +308,52 @@ export default function PKDetailPage() {
                   onPress={() => handleVote(match.legionA)}
                   disabled={voteMutation.isPending}
                   style={{
-                    backgroundColor: colors.brand.DEFAULT,
                     borderRadius: 9999,
-                    paddingHorizontal: 20,
-                    paddingVertical: 8,
                     marginTop: 8,
                     opacity: voteMutation.isPending ? 0.6 : 1,
+                    overflow: 'hidden',
                   }}
                 >
-                  <Text
+                  <LinearGradient
+                    colors={gradient.brand}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
-                      fontSize: 13,
-                      fontFamily: 'Poppins_600SemiBold',
-                      color: colors.ink.DEFAULT,
+                      paddingHorizontal: 20,
+                      paddingVertical: 8,
                     }}
                   >
-                    {voteMutation.isPending ? '...' : '投票'}
-                  </Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins_600SemiBold',
+                        color: '#fff',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {voteMutation.isPending ? '...' : '投票'}
+                    </Text>
+                  </LinearGradient>
                 </Pressable>
               )}
             </View>
 
-            {/* VS Badge */}
+            {/* VS Badge — 渐变对抗视觉强化 */}
             <View style={{ width: 48, alignItems: 'center' }}>
-              <View
+              <LinearGradient
+                colors={isLive ? gradient.danger : gradient.aiGlow}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: isLive ? colors.status.error : colors.ink.soft,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <SwordsIcon color={isLive ? colors.ink.DEFAULT : colors.text.muted} size={22} />
-              </View>
+                <SwordsIcon color={colors.text.primary} size={22} />
+              </LinearGradient>
               <Text
                 style={{
                   fontSize: 12,
@@ -369,11 +394,13 @@ export default function PKDetailPage() {
                 />
               </View>
               {isSettled && match.winnerId === match.legionB && (
-                <View
+                <LinearGradient
+                  colors={gradient.brandSoft}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: colors.accent.DEFAULT,
                     borderRadius: 9999,
                     paddingHorizontal: 8,
                     paddingVertical: 2,
@@ -391,7 +418,7 @@ export default function PKDetailPage() {
                   >
                     胜
                   </Text>
-                </View>
+                </LinearGradient>
               )}
               <Text
                 style={{
@@ -422,32 +449,40 @@ export default function PKDetailPage() {
                   onPress={() => handleVote(match.legionB)}
                   disabled={voteMutation.isPending}
                   style={{
-                    backgroundColor: colors.accent.DEFAULT,
                     borderRadius: 9999,
-                    paddingHorizontal: 20,
-                    paddingVertical: 8,
                     marginTop: 8,
                     opacity: voteMutation.isPending ? 0.6 : 1,
+                    overflow: 'hidden',
                   }}
                 >
-                  <Text
+                  <LinearGradient
+                    colors={gradient.brandSoft}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
-                      fontSize: 13,
-                      fontFamily: 'Poppins_600SemiBold',
-                      color: colors.ink.DEFAULT,
+                      paddingHorizontal: 20,
+                      paddingVertical: 8,
                     }}
                   >
-                    {voteMutation.isPending ? '...' : '投票'}
-                  </Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins_600SemiBold',
+                        color: '#fff',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {voteMutation.isPending ? '...' : '投票'}
+                    </Text>
+                  </LinearGradient>
                 </Pressable>
               )}
             </View>
           </View>
 
-          {/* Progress Bar */}
+          {/* Progress Bar — 渐变色对抗 */}
           <View
             style={{
-              backgroundColor: colors.ink.elevated,
               height: 10,
               borderRadius: 5,
               marginTop: 20,
@@ -455,8 +490,22 @@ export default function PKDetailPage() {
               flexDirection: 'row',
             }}
           >
-            <View style={{ flex: leftPercent, backgroundColor: colors.brand.DEFAULT }} />
-            <View style={{ flex: 100 - leftPercent, backgroundColor: colors.accent.DEFAULT }} />
+            <View style={{ flex: leftPercent, overflow: 'hidden' }}>
+              <LinearGradient
+                colors={gradient.brand}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flex: 1, height: 10, borderTopLeftRadius: 5, borderBottomLeftRadius: 5 }}
+              />
+            </View>
+            <View style={{ flex: 100 - leftPercent, overflow: 'hidden' }}>
+              <LinearGradient
+                colors={gradient.brandSoft}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ flex: 1, height: 10, borderTopRightRadius: 5, borderBottomRightRadius: 5 }}
+              />
+            </View>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
             <Text
