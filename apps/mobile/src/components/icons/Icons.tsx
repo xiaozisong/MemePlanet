@@ -423,6 +423,15 @@ export function TabProfileIcon({
   return <UserIcon color={focused ? BRAND_ACTIVE : BRAND_INACTIVE} size={size} />;
 }
 
+export function PlayIcon({ size = 48, color = '#fff' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth={1.5} />
+      <Path d="M10 8l6 4-6 4V8z" fill={color} />
+    </Svg>
+  );
+}
+
 /* NOTE: Rect/G/Line imported but intentionally not used in current icon set. */
 void Rect;
 void G;

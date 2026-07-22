@@ -12,9 +12,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, layout } from '../../src/theme';
 import { MemeCard, MemeCardData } from '../../src/components/MemeCard';
-import { UserAvatar } from '../../src/components/ui/UserAvatar';
 import { LoadingSkeleton, EmptyState } from '../../src/components/ui';
-import { SearchIcon, EyeIcon } from '../../src/components/icons';
+import { SearchIcon } from '../../src/components/icons';
 import { useHomeFeed, useHotRank } from '../../src/api/feed';
 
 const CATEGORIES = [
@@ -193,7 +192,7 @@ function FeedHeader({
 
       <CategoryGrid categories={CATEGORIES} selected={cat} onSelect={setCat} />
 
-      {hotRank.length > 0 && <HotRankSection memes={hotRank} onMemePress={onMemePress} />}
+      {hotRank.length > 0 && <MiniHotRankBar memes={hotRank} onMemePress={onMemePress} />}
     </View>
   );
 }
@@ -253,112 +252,144 @@ function CategoryGrid({
   );
 }
 
-/** 热度排行区（替换原来的 FeaturedMemesSection） */
-function HotRankSection({
+/** 顶部迷你热度榜 — 仅展示前 3 名，紧凑横排 */
+function MiniHotRankBar({
   memes,
   onMemePress,
 }: {
   memes: MemeCardData[];
   onMemePress: (id: string) => void;
 }) {
+  // 复制并按 score_avg 降序后取前 3 名
+  const top3 = [...memes].sort((a, b) => b.score_avg - a.score_avg).slice(0, 3);
+
+  if (top3.length === 0) return null;
+
+  const rankColors = [
+    colors.brand.DEFAULT, // 第1名 — 品牌粉紫
+    colors.brand.light, // 第2名 — 浅粉
+    colors.accent.DEFAULT, // 第3名 — 暖粉
+  ];
+
   return (
-    <View style={{ paddingTop: 20 }}>
+    <View
+      style={{
+        marginTop: 16,
+        backgroundColor: colors.ink.soft,
+        borderRadius: 12,
+        padding: 12,
+      }}
+    >
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 12,
+          marginBottom: 10,
         }}
       >
-        <Text style={{ fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.text.primary }}>
-          热度飙升
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: 'Poppins_700Bold',
+              color: colors.text.primary,
+            }}
+          >
+            🔥 热度前 3
+          </Text>
+        </View>
         <Text
           style={{
-            fontSize: 12,
+            fontSize: 11,
             fontFamily: 'Poppins_500Medium',
             color: colors.brand.DEFAULT,
           }}
         >
-          查看全部
+          查看全部 ›
         </Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {memes.map((meme) => (
+
+      <View style={{ flexDirection: 'row' }}>
+        {top3.map((meme, idx) => (
           <Pressable
             key={meme.meme_id}
             onPress={() => onMemePress(meme.meme_id)}
             style={{
-              width: 240,
-              borderRadius: 16,
-              backgroundColor: colors.ink.soft,
-              marginRight: 12,
-              padding: 16,
+              flex: 1,
+              marginRight: idx < top3.length - 1 ? 8 : 0,
             }}
           >
-            <View style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
-              <UserAvatar uri={meme.author_avatar_url} size="sm" />
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  backgroundColor: rankColors[idx],
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 6,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'Poppins_700Bold',
+                    color: '#fff',
+                  }}
+                >
+                  {idx + 1}
+                </Text>
+              </View>
               <Text
                 style={{
-                  marginLeft: 8,
+                  flex: 1,
                   fontSize: 12,
                   fontFamily: 'Poppins_500Medium',
-                  color: colors.text.secondary,
+                  color: colors.text.primary,
                 }}
                 numberOfLines={1}
               >
-                {meme.author_nickname}
+                {meme.title}
               </Text>
             </View>
-            <Text
+            <View
               style={{
-                fontSize: 15,
-                fontFamily: 'Poppins_600SemiBold',
-                color: colors.text.primary,
-                lineHeight: 20,
+                marginTop: 4,
+                marginLeft: 28,
+                flexDirection: 'row',
+                alignItems: 'center',
               }}
-              numberOfLines={3}
             >
-              {meme.title}
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
               <Text
                 style={{
-                  fontSize: 13,
-                  fontFamily: 'Poppins_700Bold',
+                  fontSize: 10,
+                  fontFamily: 'Poppins_400Regular',
+                  color: colors.text.muted,
+                }}
+              >
+                @{meme.author_nickname}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'Poppins_600SemiBold',
                   color: colors.brand.DEFAULT,
+                  marginLeft: 8,
                 }}
               >
                 {meme.score_avg.toFixed(1)}
               </Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontFamily: 'Poppins_400Regular',
-                  color: colors.text.muted,
-                  marginLeft: 4,
-                }}
-              >
-                分
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 12 }}>
-                <EyeIcon color={colors.text.muted} size={14} />
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontFamily: 'Poppins_400Regular',
-                    color: colors.text.muted,
-                    marginLeft: 4,
-                  }}
-                >
-                  {meme.favorite_count}
-                </Text>
-              </View>
             </View>
           </Pressable>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
