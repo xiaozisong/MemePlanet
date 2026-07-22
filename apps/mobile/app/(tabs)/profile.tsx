@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '../../src/store/user.store';
 import { useMyProfile, useMemePower } from '../../src/api/user';
@@ -12,7 +13,7 @@ import {
   SparklesIcon,
   UserIcon,
 } from '../../src/components/icons';
-import { colors, layout } from '../../src/theme';
+import { colors, gradient, layout } from '../../src/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -126,7 +127,12 @@ export default function ProfileScreen() {
             overflow: 'hidden',
           }}
         >
-          <View style={{ height: 96, backgroundColor: colors.ink.elevated }}>
+          <LinearGradient
+            colors={gradient.brandSoft}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ height: 96 }}
+          >
             <View
               style={{
                 position: 'absolute',
@@ -138,13 +144,15 @@ export default function ProfileScreen() {
                 backgroundColor: `${colors.brand.DEFAULT}20`,
               }}
             />
-            <View
+            <LinearGradient
+              colors={gradient.brand}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
                 position: 'absolute',
                 left: 20,
                 top: 20,
                 borderRadius: 9999,
-                backgroundColor: colors.brand.DEFAULT,
                 paddingHorizontal: 12,
                 paddingVertical: 4,
               }}
@@ -153,13 +161,13 @@ export default function ProfileScreen() {
                 style={{
                   fontSize: 14,
                   fontFamily: 'Poppins_600SemiBold',
-                  color: colors.ink.DEFAULT,
+                  color: '#fff',
                 }}
               >
                 Meme Profile
               </Text>
-            </View>
-          </View>
+            </LinearGradient>
+          </LinearGradient>
 
           <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
             <View

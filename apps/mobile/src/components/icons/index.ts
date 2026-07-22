@@ -24,6 +24,7 @@ export {
   ChevronDownIcon,
   LiveDotIcon,
   BellIcon,
+  PlayIcon,
   TabFeedIcon,
   TabCreateIcon,
   TabLegionIcon,
