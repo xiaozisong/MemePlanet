@@ -592,6 +592,45 @@ export const comments = pgTable(
   }),
 );
 
+// 7.3 shares —— 转发记录（站内/站外）
+
+export const shares = pgTable(
+  'shares',
+  {
+    shareId: uuid('share_id').primaryKey().defaultRandom(),
+    memeId: uuid('meme_id')
+      .notNull()
+      .references(() => memeCards.memeId, { onDelete: 'cascade' }),
+    userId: uuid('user_id').references(() => users.userId, { onDelete: 'set null' }),
+    channel: varchar('channel', { length: 16 }).notNull(), // in_app/wechat/douyin/qq/link
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    memeCreatedIdx: index('idx_shares_meme_created').on(t.memeId, t.createdAt),
+    userCreatedIdx: index('idx_shares_user_created').on(t.userId, t.createdAt),
+  }),
+);
+
+// 7.4 favorites —— 收藏
+
+export const favorites = pgTable(
+  'favorites',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.userId, { onDelete: 'cascade' }),
+    memeId: uuid('meme_id')
+      .notNull()
+      .references(() => memeCards.memeId, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.memeId] }),
+    userCreatedIdx: index('idx_favorites_user_created').on(t.userId, t.createdAt),
+    memeCreatedIdx: index('idx_favorites_meme_created').on(t.memeId, t.createdAt),
+  }),
+);
+
 // -----------------------------------------------------------------------------
 // 8. 军团队 / Legion Domain
 // -----------------------------------------------------------------------------
@@ -683,6 +722,7 @@ export type PKStatus =
   | 'battling'
   | 'judging'
   | 'settled'
+  | 'declined'
   | 'archived';
 
 export const pkMatches = pgTable(
@@ -963,6 +1003,8 @@ export const schema = {
   aiCostLogs,
   ratings,
   comments,
+  shares,
+  favorites,
   legions,
   legionMembers,
   pkMatches,

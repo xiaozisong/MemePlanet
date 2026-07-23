@@ -16,3 +16,11 @@ export const PKVoteSchema = z.object({
 });
 
 export type PKVoteDto = z.infer<typeof PKVoteSchema>;
+
+export const AcceptPKSchema = z.object({});
+
+export type AcceptPKDto = z.infer<typeof AcceptPKSchema>;
+
+export const RejectPKSchema = z.object({});
+
+export type RejectPKDto = z.infer<typeof RejectPKSchema>;

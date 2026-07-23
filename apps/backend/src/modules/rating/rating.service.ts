@@ -103,12 +103,23 @@ export class RatingService {
       `recomputed meme=${memeId}: ratings=${s.totalRatings} avg=${Number(s.avgStar).toFixed(2)} weighted=${Number(s.avgWeightedStar).toFixed(2)}`,
     );
 
-    if (s.totalRatings >= 10) {
+    if (s.totalRatings >= 200) {
+      let newStatus: 'god' | 'trash' | null = null;
       if (Number(s.avgWeightedStar) >= 4.2 && oneStarPercent < 15) {
+        newStatus = 'god';
         this.logger.log(`God meme: ${memeId}`);
       }
       if (Number(s.avgWeightedStar) <= 2.5 && oneStarPercent > 50) {
+        newStatus = 'trash';
         this.logger.log(`Trash meme: ${memeId}`);
+      }
+
+      // 实际更新 meme_cards 表的 god_trash_status
+      if (newStatus) {
+        await this.db
+          .update(memeCards)
+          .set({ godTrashStatus: newStatus, updatedAt: sql`now()` })
+          .where(eq(memeCards.memeId, memeId));
       }
     }
 

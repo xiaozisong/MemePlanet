@@ -34,4 +34,22 @@ export class PKController {
     const dto = PKVoteSchema.parse(body);
     return this.pk.vote(user.sub, id, dto.legionId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/accept')
+  async accept(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+    return this.pk.accept(user.sub, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/reject')
+  async reject(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+    return this.pk.reject(user.sub, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/settle')
+  async settle(@CurrentUser() user: CurrentUser, @Param('id') id: string) {
+    return this.pk.settle(id);
+  }
 }

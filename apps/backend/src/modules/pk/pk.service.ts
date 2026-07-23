@@ -186,6 +186,95 @@ export class PKService {
     return { pkId: match.pkId, status: 'challenged' };
   }
 
+  /**
+   * 接受 PK 挑战
+   *
+   * 流程：
+   * 1. 校验 PK 存在且状态为 challenged
+   * 2. 校验当前用户是 legionB 的团长或副团长
+   * 3. 状态机流转：challenged → preparing
+   */
+  async accept(userId: string, pkId: string) {
+    const [match] = await this.db
+      .select()
+      .from(pkMatches)
+      .where(eq(pkMatches.pkId, pkId))
+      .limit(1);
+
+    if (!match) throw new NotFoundException('PK 不存在');
+    if (match.status !== 'challenged') {
+      throw new BadRequestException(`当前状态 ${match.status} 不能接受`);
+    }
+
+    // 校验是 legionB 的团长或副团长
+    const [membership] = await this.db
+      .select()
+      .from(legionMembers)
+      .where(
+        and(
+          eq(legionMembers.legionId, match.legionB),
+          eq(legionMembers.userId, userId),
+          isNull(legionMembers.leftAt),
+          inArray(legionMembers.role, ['leader', 'vice_leader']),
+        ),
+      )
+      .limit(1);
+
+    if (!membership) throw new ForbiddenException('只有被挑战方团长或副团长才能接受 PK');
+
+    await this.db
+      .update(pkMatches)
+      .set({ status: 'preparing', updatedAt: sql`now()` })
+      .where(eq(pkMatches.pkId, pkId));
+
+    this.logger.log(`PK accepted: ${pkId} by user ${userId}`);
+    return { pkId, status: 'preparing' };
+  }
+
+  /**
+   * 拒绝 PK 挑战
+   *
+   * 流程：
+   * 1. 校验 PK 存在且状态为 challenged
+   * 2. 校验当前用户是 legionB 的团长或副团长
+   * 3. 状态机流转：challenged → declined（终态）
+   */
+  async reject(userId: string, pkId: string) {
+    const [match] = await this.db
+      .select()
+      .from(pkMatches)
+      .where(eq(pkMatches.pkId, pkId))
+      .limit(1);
+
+    if (!match) throw new NotFoundException('PK 不存在');
+    if (match.status !== 'challenged') {
+      throw new BadRequestException(`当前状态 ${match.status} 不能拒绝`);
+    }
+
+    const [membership] = await this.db
+      .select()
+      .from(legionMembers)
+      .where(
+        and(
+          eq(legionMembers.legionId, match.legionB),
+          eq(legionMembers.userId, userId),
+          isNull(legionMembers.leftAt),
+          inArray(legionMembers.role, ['leader', 'vice_leader']),
+        ),
+      )
+      .limit(1);
+
+    if (!membership) throw new ForbiddenException('只有被挑战方团长或副团长才能拒绝 PK');
+
+    await this.db
+      .update(pkMatches)
+      .set({ status: 'declined', updatedAt: sql`now()` })
+      .where(eq(pkMatches.pkId, pkId));
+
+    this.logger.log(`PK rejected: ${pkId} by user ${userId}`);
+    return { pkId, status: 'declined' };
+  }
+
   async vote(userId: string, pkId: string, legionId: string) {
     // Verify PK is in battleground
     const [match] = await this.db.select().from(pkMatches).where(eq(pkMatches.pkId, pkId)).limit(1);
@@ -264,17 +353,54 @@ export class PKService {
       .where(eq(pkMatches.pkId, pkId));
 
     if (winnerId) {
-      // Update win/loss counts
+      const loserId = winnerId === match.legionA ? match.legionB : match.legionA;
+
+      // 1. 军团胜/负计数 +1
       await this.db
         .update(legions)
-        .set({ pkWins: sql`${legions.pkWins} + 1` })
+        .set({ pkWins: sql`${legions.pkWins} + 1`, updatedAt: sql`now()` })
+        .where(eq(legions.legionId, winnerId));
+      await this.db
+        .update(legions)
+        .set({ pkLosses: sql`${legions.pkLosses} + 1`, updatedAt: sql`now()` })
+        .where(eq(legions.legionId, loserId));
+
+      // 2. PRD §5 模块7 奖励：胜方军团整活分 +500
+      await this.db
+        .update(legions)
+        .set({
+          activityScore: sql`${legions.activityScore} + 500`,
+          updatedAt: sql`now()`,
+        })
         .where(eq(legions.legionId, winnerId));
 
-      const loserId = winnerId === match.legionA ? match.legionB : match.legionA;
+      // 3. 胜方参战成员梗力值 +50（members 表批量更新）
       await this.db
-        .update(legions)
-        .set({ pkLosses: sql`${legions.pkLosses} + 1` })
-        .where(eq(legions.legionId, loserId));
+        .update(legionMembers)
+        .set({ contribution: sql`${legionMembers.contribution} + 50` })
+        .where(
+          and(
+            eq(legionMembers.legionId, winnerId),
+            isNull(legionMembers.leftAt),
+          ),
+        );
+
+      // 4. 写入 reward_state（用于后续勋章发放定位）
+      await this.db
+        .update(pkMatches)
+        .set({
+          rewardState: {
+            legionActivityBonus: 500,
+            memberPowerBonus: 50,
+            settledAt: new Date().toISOString(),
+          },
+          updatedAt: sql`now()`,
+        })
+        .where(eq(pkMatches.pkId, pkId));
+
+      this.logger.log(
+        `PK rewards applied: pk=${pkId} winner=${winnerId} activity+500 power+50/members`,
+      );
     }
 
     this.logger.log(`PK settled: ${pkId} winner=${winnerId}`);
